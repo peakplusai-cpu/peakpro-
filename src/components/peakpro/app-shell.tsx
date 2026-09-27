@@ -13,12 +13,14 @@ export function PeakProAppShell({
   moduleId,
   cache,
   notice,
+  highlight,
 }: {
   locale: Locale;
   session: PeakProSession;
   moduleId: PeakProModule;
   cache: PeakProCacheSnapshot;
   notice?: 'revoked' | 'success' | null;
+  highlight?: string;
 }) {
   return (
     <PeakProProvider session={session} activeModule={moduleId}>
@@ -39,7 +41,13 @@ export function PeakProAppShell({
             {tPeakpro(locale, 'lastPrint')}: {cache.lastUpdated ?? '—'}
           </p>
           <p className="mb-8 text-sm text-zinc-500">{tPeakpro(locale, 'synchronizing')}</p>
-          <PeakProModuleView locale={locale} tier={session.tier} moduleId={moduleId} cache={cache} />
+          <PeakProModuleView
+            locale={locale}
+            tier={session.tier}
+            moduleId={moduleId}
+            cache={cache}
+            highlight={highlight}
+          />
         </main>
         <PeakProFooter locale={locale} />
       </div>

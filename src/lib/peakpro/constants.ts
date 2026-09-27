@@ -7,7 +7,7 @@ export const FREE_MONTHLY_SYMBOLS = ['TSM', 'NVDA', 'AAPL', 'MSFT', 'TSLA'] as c
 export type FreeMonthlySymbol = (typeof FREE_MONTHLY_SYMBOLS)[number];
 
 export const EQUITY_UNIVERSE = [
-  { symbol: 'TSM', name: 'TSMC', venue: 'NYSE ADR', region: 'Taiwan', free: true },
+  { symbol: 'TSM', name: 'TSMC', venue: 'NYSE ADR', region: 'United States', free: true },
   { symbol: 'NVDA', name: 'NVIDIA', venue: 'NASDAQ', region: 'United States', free: true },
   { symbol: 'AAPL', name: 'Apple', venue: 'NASDAQ', region: 'United States', free: true },
   { symbol: 'MSFT', name: 'Microsoft', venue: 'NASDAQ', region: 'United States', free: true },
@@ -30,7 +30,8 @@ export const GOLD_SYMBOL = 'XAUUSD';
 
 export const PEAKPRO_MODULES = [
   'overview',
-  'equities',
+  'taiwan',
+  'us',
   'crypto',
   'gold',
   'geopolitics',

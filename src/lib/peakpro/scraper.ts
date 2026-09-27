@@ -2,12 +2,13 @@ import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import type { MarketSeriesPayload, OhlcBar } from '@/lib/peakpro/types';
-
-const YAHOO_RANGE: Record<'daily' | 'monthly' | 'annual', { range: string; interval: string }> = {
-  daily: { range: '3mo', interval: '1d' },
-  monthly: { range: '2y', interval: '1mo' },
-  annual: { range: '10y', interval: '1mo' },
-};
+import {
+  chartMeta,
+  fetchYahooChart,
+  fetchYahooQuote,
+  yahooToBars,
+  type YahooQuote,
+} from '@/lib/peakpro/yahoo';
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   try {
@@ -28,74 +29,31 @@ async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> 
   }
 }
 
-type YahooChart = {
-  chart?: {
-    result?: Array<{
-      meta?: { shortName?: string; regularMarketPrice?: number; currency?: string };
-      timestamp?: number[];
-      indicators?: {
-        quote?: Array<{
-          open?: Array<number | null>;
-          high?: Array<number | null>;
-          low?: Array<number | null>;
-          close?: Array<number | null>;
-          volume?: Array<number | null>;
-        }>;
-      };
-    }>;
-  };
-};
-
-function yahooToBars(payload: YahooChart): OhlcBar[] {
-  const result = payload.chart?.result?.[0];
-  const quote = result?.indicators?.quote?.[0];
-  const stamps = result?.timestamp ?? [];
-  if (!result || !quote) return [];
-  const bars: OhlcBar[] = [];
-  for (let i = 0; i < stamps.length; i += 1) {
-    const o = quote.open?.[i];
-    const h = quote.high?.[i];
-    const l = quote.low?.[i];
-    const c = quote.close?.[i];
-    if (o == null || h == null || l == null || c == null) continue;
-    bars.push({
-      t: new Date(stamps[i] * 1000).toISOString().slice(0, 10),
-      o,
-      h,
-      l,
-      c,
-      v: quote.volume?.[i] ?? undefined,
-    });
-  }
-  return bars;
-}
-
 function toSeries(
   name: string,
   bars: OhlcBar[],
   thesis: string,
   thesisZh: string,
   currency: string,
+  quote?: YahooQuote | null,
+  exchange?: string,
 ): MarketSeriesPayload {
-  const last = bars[bars.length - 1]?.c ?? 0;
+  const last = quote?.regularMarketPrice ?? bars[bars.length - 1]?.c ?? 0;
   const prev = bars[bars.length - 2]?.c ?? last;
   return {
     name,
     currency,
     last,
-    changePct: prev ? ((last - prev) / prev) * 100 : 0,
-    high: Math.max(...bars.map((b) => b.h), last),
-    low: Math.min(...bars.map((b) => b.l), last),
+    changePct: quote?.regularMarketChangePercent ?? (prev ? ((last - prev) / prev) * 100 : 0),
+    high: quote?.fiftyTwoWeekHigh ?? Math.max(...bars.map((b) => b.h), last),
+    low: quote?.fiftyTwoWeekLow ?? Math.min(...bars.map((b) => b.l), last),
     thesis,
     thesisZh,
     bars,
+    exchange: quote?.fullExchangeName ?? exchange,
+    marketCap: quote?.marketCap,
+    pe: quote?.trailingPE,
   };
-}
-
-async function fetchYahooSeries(symbol: string, timeframe: 'daily' | 'monthly' | 'annual') {
-  const spec = YAHOO_RANGE[timeframe];
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=${spec.range}&interval=${spec.interval}`;
-  return fetchJson<YahooChart>(url);
 }
 
 async function upsertMarket(rows: Array<{
@@ -121,34 +79,74 @@ async function upsertMarket(rows: Array<{
   }
 }
 
-async function scrapeEquities() {
+async function extraEquitySymbols(): Promise<string[]> {
+  try {
+    const admin = peakproAdmin();
+    const { data } = await admin.from('market_data').select('symbol').eq('asset_class', 'equity');
+    const desk = new Set(EQUITY_UNIVERSE.map((row) => row.symbol));
+    return [...new Set((data ?? []).map((row) => String(row.symbol)))].filter((symbol) => !desk.has(symbol));
+  } catch {
+    return [];
+  }
+}
+
+async function scrapeOneEquity(symbol: string, fallbackName: string) {
   const rows: Array<{
     asset_class: string;
     symbol: string;
     timeframe: string;
     payload: unknown;
   }> = [];
+  const quote = await fetchYahooQuote(symbol);
 
-  for (const equity of EQUITY_UNIVERSE) {
-    for (const timeframe of ['daily', 'monthly', 'annual'] as const) {
-      const yahoo = await fetchYahooSeries(equity.symbol, timeframe);
-      const bars = yahoo ? yahooToBars(yahoo) : [];
-      const name = yahoo?.chart?.result?.[0]?.meta?.shortName ?? equity.name;
-      const currency = yahoo?.chart?.result?.[0]?.meta?.currency ?? (equity.symbol.endsWith('.TW') ? 'TWD' : 'USD');
-      const payload =
-        bars.length >= 4
-          ? toSeries(
-              name,
-              timeframe === 'annual' ? downsampleAnnual(bars) : bars,
-              `${equity.name} tape cached from the exchange print. Utilization, mix, and policy headlines remain the swing factors.`,
-              `${equity.name} 走勢已寫入交易所快取。產能利用率、產品組合與政策標題仍是波動因子。`,
-              currency,
-            )
-          : null;
-      if (payload) {
-        rows.push({ asset_class: 'equity', symbol: equity.symbol, timeframe, payload });
-      }
-    }
+  for (const timeframe of ['daily', 'monthly', 'annual'] as const) {
+    const yahoo = await fetchYahooChart(symbol, timeframe);
+    const bars = yahoo ? yahooToBars(yahoo) : [];
+    const meta = chartMeta(yahoo);
+    const name = quote?.shortName ?? quote?.longName ?? meta?.shortName ?? fallbackName;
+    const currency =
+      quote?.currency ?? meta?.currency ?? (symbol.endsWith('.TW') || symbol.endsWith('.TWO') ? 'TWD' : 'USD');
+    if (bars.length < 4) continue;
+    rows.push({
+      asset_class: 'equity',
+      symbol,
+      timeframe,
+      payload: toSeries(
+        name,
+        timeframe === 'annual' ? downsampleAnnual(bars) : bars,
+        `${name} tape cached from the Yahoo exchange print.`,
+        `${name} 走勢已從 Yahoo 寫入交易所快取。`,
+        currency,
+        quote,
+        meta?.exchangeName,
+      ),
+    });
+  }
+  return rows;
+}
+
+export async function ingestEquitySymbol(symbol: string): Promise<{ name: string; rows: number } | null> {
+  const rows = await scrapeOneEquity(symbol, symbol);
+  if (rows.length === 0) return null;
+  await upsertMarket(rows);
+  const payload = rows[0]?.payload as MarketSeriesPayload | undefined;
+  return { name: payload?.name ?? symbol, rows: rows.length };
+}
+
+async function scrapeEquities() {
+  const extras = await extraEquitySymbols();
+  const targets = [
+    ...EQUITY_UNIVERSE.map((equity) => ({ symbol: equity.symbol, name: equity.name })),
+    ...extras.map((symbol) => ({ symbol, name: symbol })),
+  ];
+  const rows: Array<{
+    asset_class: string;
+    symbol: string;
+    timeframe: string;
+    payload: unknown;
+  }> = [];
+  for (const target of targets) {
+    rows.push(...(await scrapeOneEquity(target.symbol, target.name)));
   }
   return rows;
 }
@@ -236,8 +234,8 @@ async function scrapeCrypto() {
 }
 
 async function scrapeGold() {
-  const yahoo = await fetchYahooSeries('GC=F', 'daily');
-  const monthly = await fetchYahooSeries('GC=F', 'monthly');
+  const yahoo = await fetchYahooChart('GC=F', 'daily');
+  const monthly = await fetchYahooChart('GC=F', 'monthly');
   const rows: Array<{
     asset_class: string;
     symbol: string;
@@ -366,6 +364,122 @@ function decode(value: string): string {
 
 const WAR_TERMS = /war|conflict|strike|missile|sanctions|troop|invasion|ceasefire|military|geopolit/i;
 
+function hasCjk(value: string | null | undefined): boolean {
+  return Boolean(value && /[\u3400-\u9fff]/.test(value));
+}
+
+async function translateEnToZh(text: string): Promise<string> {
+  const input = text.trim();
+  if (!input || hasCjk(input)) return input;
+  const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(input.slice(0, 480))}&langpair=en|zh-TW`;
+  const json = await fetchJson<{ responseData?: { translatedText?: string } }>(url);
+  const out = json?.responseData?.translatedText?.trim() ?? '';
+  if (!out || /MYMEMORY WARNING|QUERY LENGTH|INVALID/i.test(out)) return input;
+  return out;
+}
+
+async function translateNewsOpenRouter(
+  items: RssItem[],
+): Promise<Array<{ title_zh: string; summary_zh: string }> | null> {
+  const key = process.env.OPENROUTER_API_KEY?.trim();
+  if (!key || items.length === 0) return null;
+  try {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${key}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'openai/gpt-4o-mini',
+        messages: [
+          {
+            role: 'system',
+            content:
+              'Translate each news item into Traditional Chinese used in Taiwan. Return ONLY a JSON array of {"title_zh","summary_zh"} in the same order. No commentary.',
+          },
+          {
+            role: 'user',
+            content: JSON.stringify(items.map((item) => ({ title: item.title, summary: item.summary }))),
+          },
+        ],
+      }),
+      cache: 'no-store',
+    });
+    const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+    const raw = json.choices?.[0]?.message?.content ?? '';
+    const match = raw.match(/\[[\s\S]*\]/);
+    if (!match) return null;
+    const parsed = JSON.parse(match[0]) as Array<{ title_zh?: string; summary_zh?: string }>;
+    if (!Array.isArray(parsed) || parsed.length !== items.length) return null;
+    return parsed.map((row, index) => ({
+      title_zh: hasCjk(row.title_zh) ? row.title_zh!.trim() : items[index].title,
+      summary_zh: hasCjk(row.summary_zh) ? row.summary_zh!.trim() : items[index].summary,
+    }));
+  } catch (error) {
+    console.warn('[peakpro/scraper] news zh batch failed', error);
+    return null;
+  }
+}
+
+async function localizeNews(items: RssItem[]): Promise<Array<RssItem & { title_zh: string; summary_zh: string }>> {
+  const batched = await translateNewsOpenRouter(items);
+  if (batched) {
+    return items.map((item, index) => ({
+      ...item,
+      title_zh: batched[index]?.title_zh ?? item.title,
+      summary_zh: batched[index]?.summary_zh ?? item.summary,
+    }));
+  }
+
+  return Promise.all(
+    items.map(async (item) => ({
+      ...item,
+      title_zh: await translateEnToZh(item.title),
+      summary_zh: await translateEnToZh(item.summary),
+    })),
+  );
+}
+
+export async function ensureNewsTraditionalChinese<
+  T extends { id: string; title: string; title_zh: string; summary: string; summary_zh: string },
+>(news: T[]): Promise<T[]> {
+  const pending = news.filter((row) => !hasCjk(row.title_zh));
+  if (pending.length === 0) return news;
+
+  const localized = await localizeNews(
+    pending.map((row) => ({
+      title: row.title,
+      summary: row.summary,
+      url: '',
+      published: '',
+      source: '',
+    })),
+  );
+
+  const admin = peakproAdmin();
+  const now = new Date().toISOString();
+  const updates = new Map(pending.map((row, index) => [row.id, localized[index]]));
+
+  await Promise.all(
+    pending.map((row, index) =>
+      admin
+        .from('news_cache')
+        .update({
+          title_zh: localized[index].title_zh,
+          summary_zh: localized[index].summary_zh,
+          last_updated: now,
+        })
+        .eq('id', row.id),
+    ),
+  );
+
+  return news.map((row) => {
+    const next = updates.get(row.id);
+    return next ? { ...row, title_zh: next.title_zh, summary_zh: next.summary_zh } : row;
+  });
+}
+
 async function scrapeNews() {
   const feeds = await Promise.all([
     fetchRss('https://feeds.bbci.co.uk/news/world/rss.xml', 'BBC World'),
@@ -380,16 +494,28 @@ async function scrapeNews() {
   const now = new Date().toISOString();
   if (items.length === 0) return 0;
 
+  let localized: Array<RssItem & { title_zh: string; summary_zh: string }>;
+  try {
+    localized = await localizeNews(items);
+  } catch (error) {
+    console.warn('[peakpro/scraper] news zh localize failed', error);
+    localized = items.map((item) => ({
+      ...item,
+      title_zh: item.title,
+      summary_zh: item.summary,
+    }));
+  }
+
   await admin.from('news_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   const { error } = await admin.from('news_cache').insert(
-    items.map((item) => ({
+    localized.map((item) => ({
       category: /war|missile|troop|invasion|ceasefire|strike/i.test(`${item.title} ${item.summary}`)
         ? 'war'
         : 'geopolitics',
       title: item.title,
-      title_zh: item.title,
+      title_zh: item.title_zh,
       summary: item.summary,
-      summary_zh: item.summary,
+      summary_zh: item.summary_zh,
       source: item.source,
       url: item.url,
       published_at: item.published,

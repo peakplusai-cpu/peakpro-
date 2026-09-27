@@ -9,7 +9,7 @@ import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProSession } from '@/lib/peakpro/types';
 
 const FEATURES_EN = [
-  'Taiwan & U.S. equities — daily trends, monthly trends, annual macro outlook',
+  'Taiwan and U.S. equities on separate desks, plus Yahoo ticker lookup',
   'Crypto trends for BTC and ETH',
   'Spot gold charts and macro analysis',
   'Geopolitical & war news risk feed',
@@ -19,7 +19,7 @@ const FEATURES_EN = [
 ];
 
 const FEATURES_ZH = [
-  '台股與美股：日線、月線、年度總體展望',
+  '台股、美股分頁，並可用 Yahoo 查自己的股票',
   '比特幣與以太坊加密趨勢',
   '現貨黃金走勢與總體分析',
   '地緣政治與戰事新聞情報',

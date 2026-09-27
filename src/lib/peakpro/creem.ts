@@ -34,11 +34,34 @@ const REVOKE_EVENTS = new Set([
   'charge.failed',
 ]);
 
+const CREEM_API_HOSTS = ['https://api.creem.io', 'https://test-api.creem.io'] as const;
+
+function normalizeProductId(value: string | null): string | null {
+  const trimmed = value?.trim().replace(/^['"]|['"]$/g, '') ?? '';
+  return trimmed || null;
+}
+
+function creemErrorMessage(json: unknown, status: number): string {
+  if (!json || typeof json !== 'object') return `Creem API returned HTTP ${status}`;
+  const body = json as {
+    message?: string;
+    error?: string | { message?: string };
+    errors?: Array<{ message?: string }>;
+  };
+  if (typeof body.message === 'string' && body.message.trim()) return body.message;
+  if (typeof body.error === 'string' && body.error.trim()) return body.error;
+  if (body.error && typeof body.error === 'object' && body.error.message) return body.error.message;
+  if (body.errors?.[0]?.message) return body.errors[0].message;
+  return `Creem API returned HTTP ${status}`;
+}
+
+function isProductMissing(message: string): boolean {
+  return /product not found|product_not_found|invalid product/i.test(message);
+}
+
 export function getPeakProProductId(): string | null {
-  return (
-    process.env.CREEM_PRODUCT_ID?.trim() ||
-    process.env.CREEM_PEAKPRO_PRODUCT_ID?.trim() ||
-    null
+  return normalizeProductId(
+    process.env.CREEM_PRODUCT_ID?.trim() || process.env.CREEM_PEAKPRO_PRODUCT_ID?.trim() || null,
   );
 }
 
@@ -59,37 +82,38 @@ export async function createPeakProCheckoutUrl(input: {
   ];
   if (!apiKey || !productId) return { url: null, missing };
 
-  const response = await fetch(`${getCreemApiBase()}/v1/checkouts`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-    },
-    body: JSON.stringify({
-      product_id: productId,
-      request_id: randomUUID(),
-      customer: input.email ? { email: input.email } : undefined,
-      success_url: getPeakProSuccessUrl(input.origin),
-      metadata: {
-        peakpro_user_id: input.userId,
-        checkout_product: 'peakpro',
+  const preferred = getCreemApiBase();
+  const hosts = [preferred, ...CREEM_API_HOSTS.filter((host) => host !== preferred)];
+  let lastError = 'Creem checkout could not be created.';
+
+  for (const host of hosts) {
+    const response = await fetch(`${host}/v1/checkouts`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
       },
-    }),
-    cache: 'no-store',
-  });
+      body: JSON.stringify({
+        product_id: productId,
+        request_id: randomUUID(),
+        customer: input.email ? { email: input.email } : undefined,
+        success_url: getPeakProSuccessUrl(input.origin),
+        metadata: {
+          peakpro_user_id: input.userId,
+          checkout_product: 'peakpro',
+        },
+      }),
+      cache: 'no-store',
+    });
 
-  const json = (await response.json().catch(() => null)) as
-    | { checkout_url?: string; message?: string; error?: string }
-    | null;
+    const json = (await response.json().catch(() => null)) as { checkout_url?: string } | null;
+    if (response.ok && json?.checkout_url) return { url: json.checkout_url, missing: [] };
 
-  if (!response.ok || !json?.checkout_url) {
-    return {
-      url: null,
-      missing: [],
-      error: json?.message ?? json?.error ?? `Creem API returned HTTP ${response.status}`,
-    };
+    lastError = `${creemErrorMessage(json, response.status)} (${host} / ${productId})`;
+    if (!isProductMissing(lastError)) break;
   }
-  return { url: json.checkout_url, missing: [] };
+
+  return { url: null, missing: [], error: lastError };
 }
 
 function isPeakProPayload(object: CreemWebhookEntity): boolean {

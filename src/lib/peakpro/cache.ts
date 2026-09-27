@@ -1,5 +1,6 @@
 import { canAccessEquity, effectiveTier } from '@/lib/peakpro/access';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { ensureNewsTraditionalChinese } from '@/lib/peakpro/scraper';
 import type {
   AiSummaryRow,
   MarketDataRow,
@@ -16,7 +17,9 @@ function latestStamp(rows: Array<{ last_updated: string }>): string | null {
     .at(-1) ?? null;
 }
 
-export async function readPeakProCache(): Promise<PeakProCacheSnapshot> {
+export async function readPeakProCache(options?: {
+  localizeNews?: boolean;
+}): Promise<PeakProCacheSnapshot> {
   try {
     const admin = peakproAdmin();
     const [marketRes, newsRes, briefRes] = await Promise.all([
@@ -26,7 +29,15 @@ export async function readPeakProCache(): Promise<PeakProCacheSnapshot> {
     ]);
 
     const market = (marketRes.data ?? []) as MarketDataRow[];
-    const news = (newsRes.data ?? []) as NewsCacheRow[];
+    const rawNews = (newsRes.data ?? []) as NewsCacheRow[];
+    let news = rawNews;
+    if (options?.localizeNews) {
+      try {
+        news = await ensureNewsTraditionalChinese(rawNews);
+      } catch (error) {
+        console.warn('[peakpro/cache] news zh backfill failed', error);
+      }
+    }
     const briefs = (briefRes.data ?? []) as AiSummaryRow[];
 
     return {

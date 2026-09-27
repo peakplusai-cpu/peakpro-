@@ -10,7 +10,9 @@ import type {
   TrendingPayload,
 } from '@/lib/peakpro/types';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
+import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
+import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
 function formatPx(value: number, currency: string) {
   return new Intl.NumberFormat('en-US', {
@@ -55,6 +57,25 @@ function SeriesCard({
   );
 }
 
+function hasCjk(value: string | null | undefined): boolean {
+  return Boolean(value && /[\u3400-\u9fff]/.test(value));
+}
+
+function localizedText(locale: Locale, en: string, zh: string | null | undefined) {
+  if (locale === 'zh' && zh && (hasCjk(zh) || zh !== en)) return zh;
+  return en;
+}
+
+function newsCategoryLabel(locale: Locale, category: string) {
+  return tPeakpro(locale, category === 'war' ? 'catWar' : 'catGeopolitics');
+}
+
+function newsSourceLabel(locale: Locale, source: string) {
+  if (source === 'BBC World') return tPeakpro(locale, 'sourceBbc');
+  if (source === 'NYT World') return tPeakpro(locale, 'sourceNyt');
+  return source;
+}
+
 function EmptyCache({ locale }: { locale: Locale }) {
   return (
     <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
@@ -68,13 +89,15 @@ export function PeakProModuleView({
   tier,
   moduleId,
   cache,
+  highlight,
 }: {
   locale: Locale;
   tier: PeakProTier;
   moduleId: PeakProModule;
   cache: PeakProCacheSnapshot;
+  highlight?: string;
 }) {
-  const locked = !canAccessModule(tier, moduleId) && moduleId !== 'overview' && moduleId !== 'equities';
+  const locked = !canAccessModule(tier, moduleId) && moduleId !== 'overview' && moduleId !== 'us';
 
   if (locked) {
     return (
@@ -120,25 +143,18 @@ export function PeakProModuleView({
     );
   }
 
-  if (moduleId === 'equities') {
-    const daily = cache.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe) && row.timeframe === 'daily');
-    const monthly = cache.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe) && row.timeframe === 'monthly');
-    const annual = cache.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe) && row.timeframe === 'annual');
+  if (moduleId === 'taiwan' || moduleId === 'us') {
+    const rows = cache.equities.filter((row) =>
+      moduleId === 'taiwan' ? isTaiwanSymbol(row.symbol) : !isTaiwanSymbol(row.symbol),
+    );
     return (
-      <div className="space-y-10">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'equitiesTitle')}</h2>
-        {tier === 'premium' ? (
-          <TimeframeBlock locale={locale} titleKey="dailyTrends" rows={daily} />
-        ) : (
-          <PeakProPaywall locale={locale} />
-        )}
-        <TimeframeBlock locale={locale} titleKey="monthlyTrends" rows={monthly} />
-        {tier === 'premium' ? (
-          <TimeframeBlock locale={locale} titleKey="annualOutlook" rows={annual} />
-        ) : (
-          <PeakProPaywall locale={locale} />
-        )}
-      </div>
+      <PeakProEquityDesk
+        locale={locale}
+        tier={tier}
+        market={moduleId}
+        rows={rows}
+        highlight={highlight}
+      />
     );
   }
 
@@ -181,13 +197,13 @@ export function PeakProModuleView({
             {cache.news.map((item) => (
               <article key={item.id} className="rounded-2xl border border-gold/15 bg-black/60 p-5">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">
-                  {item.category} · {item.source}
+                  {newsCategoryLabel(locale, item.category)} · {newsSourceLabel(locale, item.source)}
                 </p>
                 <h3 className="mt-2 font-peakpro text-xl text-white">
-                  {locale === 'zh' && item.title_zh ? item.title_zh : item.title}
+                  {localizedText(locale, item.title, item.title_zh)}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                  {locale === 'zh' && item.summary_zh ? item.summary_zh : item.summary}
+                  {localizedText(locale, item.summary, item.summary_zh)}
                 </p>
               </article>
             ))}

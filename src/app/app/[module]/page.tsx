@@ -7,14 +7,27 @@ import { loadPeakProDesk } from '@/lib/peakpro/load-desk';
 
 export default async function ModulePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ module: string }>;
+  searchParams: Promise<{ highlight?: string }>;
 }) {
   const { module: moduleId } = await params;
   if (!isPeakProModule(moduleId) || moduleId === 'overview') notFound();
 
   const locale = await getLocale();
-  const { session, cache } = await loadPeakProDesk();
+  const { highlight } = await searchParams;
+  const { session, cache } = await loadPeakProDesk({
+    localizeNews: moduleId === 'geopolitics',
+  });
 
-  return <PeakProAppShell locale={locale} session={session} moduleId={moduleId} cache={cache} />;
+  return (
+    <PeakProAppShell
+      locale={locale}
+      session={session}
+      moduleId={moduleId}
+      cache={cache}
+      highlight={highlight?.trim()}
+    />
+  );
 }

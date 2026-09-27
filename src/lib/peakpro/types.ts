@@ -22,6 +22,9 @@ export interface MarketSeriesPayload {
   thesis: string;
   thesisZh: string;
   bars: OhlcBar[];
+  exchange?: string;
+  marketCap?: number;
+  pe?: number;
 }
 
 export interface MarketDataRow {
