@@ -83,8 +83,12 @@ async function extraEquitySymbols(): Promise<string[]> {
   try {
     const admin = peakproAdmin();
     const { data } = await admin.from('market_data').select('symbol').eq('asset_class', 'equity');
-    const desk = new Set(EQUITY_UNIVERSE.map((row) => row.symbol));
-    return [...new Set((data ?? []).map((row) => String(row.symbol)))].filter((symbol) => !desk.has(symbol));
+    const desk = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
+    const rows = (Array.isArray(data) ? data : []) as Array<{ symbol?: unknown }>;
+    const symbols = rows
+      .map((row) => (typeof row.symbol === 'string' ? row.symbol : ''))
+      .filter((symbol) => symbol.length > 0 && !desk.has(symbol));
+    return [...new Set(symbols)];
   } catch {
     return [];
   }
