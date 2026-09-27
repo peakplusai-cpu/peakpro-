@@ -58,5 +58,5 @@ export const WORLD_CLOCKS = [
   { id: 'ca', countryEn: 'Canada', countryZh: '加拿大', cityEn: 'Toronto', cityZh: '多倫多', timeZone: 'America/Toronto' },
 ] as const;
 
-export const PEAKPRO_PRICE_USD = 49;
+export const PEAKPRO_PRICE_USD = 20;
 export const PEAKPRO_BILLING_DAYS = 30;
