@@ -2,6 +2,7 @@ import type { Locale } from '@/i18n/locale';
 import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
+import { formatPct, formatPx } from '@/lib/peakpro/format';
 import type {
   FearGreedPayload,
   MarketDataRow,
@@ -13,14 +14,7 @@ import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
-
-function formatPx(value: number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency === 'TWD' ? 'TWD' : 'USD',
-    maximumFractionDigits: value >= 1000 ? 0 : 2,
-  }).format(value);
-}
+import Link from 'next/link';
 
 function SeriesCard({
   locale,
@@ -31,8 +25,12 @@ function SeriesCard({
 }) {
   const payload = row.payload;
   const up = payload.changePct >= 0;
-  return (
-    <article className="rounded-2xl border border-gold/15 bg-black/60 p-5">
+  const href =
+    row.asset_class === 'equity'
+      ? `/app/${isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us'}/${encodeURIComponent(row.symbol)}`
+      : null;
+  const body = (
+    <>
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{row.symbol}</p>
@@ -41,10 +39,7 @@ function SeriesCard({
         </div>
         <div className="text-right">
           <p className="font-peakpro text-2xl text-gold">{formatPx(payload.last, payload.currency)}</p>
-          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>
-            {up ? '+' : ''}
-            {payload.changePct.toFixed(2)}%
-          </p>
+          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </div>
       <div className="mt-4">
@@ -53,8 +48,21 @@ function SeriesCard({
       <p className="mt-4 text-sm leading-relaxed text-zinc-400">
         {locale === 'zh' ? payload.thesisZh : payload.thesis}
       </p>
-    </article>
+    </>
   );
+
+  if (href) {
+    return (
+      <Link
+        href={href}
+        className="block rounded-2xl border border-gold/15 bg-black/60 p-5 transition-colors hover:border-gold/50"
+      >
+        {body}
+      </Link>
+    );
+  }
+
+  return <article className="rounded-2xl border border-gold/15 bg-black/60 p-5">{body}</article>;
 }
 
 function hasCjk(value: string | null | undefined): boolean {

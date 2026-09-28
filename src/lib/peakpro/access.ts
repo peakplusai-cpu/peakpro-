@@ -27,6 +27,11 @@ export function canAccessEquity(tier: PeakProTier, symbol: string, timeframe: st
   );
 }
 
+export function canOpenEquity(tier: PeakProTier, symbol: string): boolean {
+  if (tier === 'premium') return true;
+  return (FREE_MONTHLY_SYMBOLS as readonly string[]).includes(symbol);
+}
+
 export function premiumExpiresInDays(expiresAt: string | null): number | null {
   if (!expiresAt) return null;
   const ms = new Date(expiresAt).getTime() - Date.now();

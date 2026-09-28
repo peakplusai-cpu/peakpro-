@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -8,34 +9,19 @@ import { PeakProPaywall } from '@/components/peakpro/paywall';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
+import { formatCap, formatPct, formatPx } from '@/lib/peakpro/format';
 import type { MarketDataRow, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
 
-function formatPx(value: number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currency === 'TWD' ? 'TWD' : 'USD',
-    maximumFractionDigits: value >= 1000 ? 0 : 2,
-  }).format(value);
-}
-
-function formatCap(value: number | undefined, currency: string) {
-  if (!value || value <= 0) return null;
-  const unit = value >= 1_000_000_000_000
-    ? { n: value / 1_000_000_000_000, s: 'T' }
-    : value >= 1_000_000_000
-      ? { n: value / 1_000_000_000, s: 'B' }
-      : { n: value / 1_000_000, s: 'M' };
-  return `${currency === 'TWD' ? 'NT$' : '$'}${unit.n.toFixed(1)}${unit.s}`;
-}
-
 function SeriesCard({
   locale,
+  market,
   row,
   highlight,
 }: {
   locale: Locale;
+  market: EquityMarket;
   row: MarketDataRow;
   highlight?: boolean;
 }) {
@@ -43,9 +29,10 @@ function SeriesCard({
   const up = payload.changePct >= 0;
   const cap = formatCap(payload.marketCap, payload.currency);
   return (
-    <article
+    <Link
+      href={`/app/${market}/${encodeURIComponent(row.symbol)}`}
       className={cn(
-        'rounded-2xl border bg-black/60 p-5',
+        'block rounded-2xl border bg-black/60 p-5 transition-colors hover:border-gold/50',
         highlight ? 'border-gold' : 'border-gold/15',
       )}
     >
@@ -60,17 +47,14 @@ function SeriesCard({
         </div>
         <div className="text-right">
           <p className="font-peakpro text-2xl text-gold">{formatPx(payload.last, payload.currency)}</p>
-          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>
-            {up ? '+' : ''}
-            {payload.changePct.toFixed(2)}%
-          </p>
+          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </div>
       {(cap || payload.pe) && (
         <p className="mt-2 text-[11px] tracking-wide text-zinc-500">
-          {cap ? `${locale === 'zh' ? '市值' : 'Mkt cap'} ${cap}` : null}
+          {cap ? `${tPeakpro(locale, 'mktCap')} ${cap}` : null}
           {cap && payload.pe ? ' · ' : null}
-          {payload.pe ? `P/E ${payload.pe.toFixed(1)}` : null}
+          {payload.pe ? `${tPeakpro(locale, 'peLabel')} ${payload.pe.toFixed(1)}` : null}
         </p>
       )}
       <div className="mt-4">
@@ -79,17 +63,19 @@ function SeriesCard({
       <p className="mt-4 text-sm leading-relaxed text-zinc-400">
         {locale === 'zh' ? payload.thesisZh : payload.thesis}
       </p>
-    </article>
+    </Link>
   );
 }
 
 function TimeframeBlock({
   locale,
+  market,
   titleKey,
   rows,
   highlight,
 }: {
   locale: Locale;
+  market: EquityMarket;
   titleKey: string;
   rows: MarketDataRow[];
   highlight?: string;
@@ -107,6 +93,7 @@ function TimeframeBlock({
             <SeriesCard
               key={row.id}
               locale={locale}
+              market={market}
               row={row}
               highlight={highlight === row.symbol}
             />
@@ -183,8 +170,7 @@ export function PeakProEquityDesk({
         return;
       }
       setMessage(tPeakpro(locale, 'searchOk'));
-      router.replace(`/app/${market}?highlight=${encodeURIComponent(json?.symbol ?? query)}`);
-      router.refresh();
+      router.push(`/app/${market}/${encodeURIComponent(json?.symbol ?? query)}`);
     } finally {
       setPending(false);
     }
@@ -216,13 +202,13 @@ export function PeakProEquityDesk({
       </div>
       {tier === 'premium' ? (
         <>
-          <TimeframeBlock locale={locale} titleKey="dailyTrends" rows={daily} highlight={highlight} />
-          <TimeframeBlock locale={locale} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
-          <TimeframeBlock locale={locale} titleKey="annualOutlook" rows={annual} highlight={highlight} />
+          <TimeframeBlock locale={locale} market={market} titleKey="dailyTrends" rows={daily} highlight={highlight} />
+          <TimeframeBlock locale={locale} market={market} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
+          <TimeframeBlock locale={locale} market={market} titleKey="annualOutlook" rows={annual} highlight={highlight} />
         </>
       ) : (
         <>
-          <TimeframeBlock locale={locale} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
+          <TimeframeBlock locale={locale} market={market} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
           <PeakProPaywall locale={locale} />
         </>
       )}

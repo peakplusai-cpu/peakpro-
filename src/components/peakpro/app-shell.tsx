@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react';
+
 import { PeakProFooter } from '@/components/peakpro/footer';
 import { PeakProModuleView } from '@/components/peakpro/modules';
 import { PeakProNav } from '@/components/peakpro/nav';
@@ -14,6 +16,7 @@ export function PeakProAppShell({
   cache,
   notice,
   highlight,
+  children,
 }: {
   locale: Locale;
   session: PeakProSession;
@@ -21,6 +24,7 @@ export function PeakProAppShell({
   cache: PeakProCacheSnapshot;
   notice?: 'revoked' | 'success' | null;
   highlight?: string;
+  children?: ReactNode;
 }) {
   return (
     <PeakProProvider session={session} activeModule={moduleId}>
@@ -41,13 +45,15 @@ export function PeakProAppShell({
             {tPeakpro(locale, 'lastPrint')}: {cache.lastUpdated ?? '—'}
           </p>
           <p className="mb-8 text-sm text-zinc-500">{tPeakpro(locale, 'synchronizing')}</p>
-          <PeakProModuleView
-            locale={locale}
-            tier={session.tier}
-            moduleId={moduleId}
-            cache={cache}
-            highlight={highlight}
-          />
+          {children ?? (
+            <PeakProModuleView
+              locale={locale}
+              tier={session.tier}
+              moduleId={moduleId}
+              cache={cache}
+              highlight={highlight}
+            />
+          )}
         </main>
         <PeakProFooter locale={locale} />
       </div>

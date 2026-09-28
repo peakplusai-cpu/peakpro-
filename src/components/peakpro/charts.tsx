@@ -1,20 +1,32 @@
 import type { FearGreedPayload, OhlcBar } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
-export function SparkCandles({ bars, className }: { bars: OhlcBar[]; className?: string }) {
+export function SparkCandles({
+  bars,
+  className,
+  width = 320,
+  height = 120,
+}: {
+  bars: OhlcBar[];
+  className?: string;
+  width?: number;
+  height?: number;
+}) {
   if (bars.length === 0) return null;
   const min = Math.min(...bars.map((b) => b.l));
   const max = Math.max(...bars.map((b) => b.h));
   const span = Math.max(max - min, 1);
-  const width = 320;
-  const height = 120;
+  const padTop = 8;
+  const padBottom = height > 200 ? 22 : 8;
+  const innerH = height - padTop - padBottom;
   const candleW = Math.max(2, width / bars.length - 1.4);
+  const y = (v: number) => ((max - v) / span) * innerH + padTop;
+  const labelIdx = [0, Math.floor((bars.length - 1) / 2), bars.length - 1];
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className={cn('h-28 w-full', className)}>
       {bars.map((bar, index) => {
         const x = (index / bars.length) * width;
-        const y = (v: number) => ((max - v) / span) * (height - 8) + 4;
         const up = bar.c >= bar.o;
         return (
           <g key={`${bar.t}-${index}`}>
@@ -38,6 +50,20 @@ export function SparkCandles({ bars, className }: { bars: OhlcBar[]; className?:
           </g>
         );
       })}
+      {height > 200
+        ? labelIdx.map((index) => (
+            <text
+              key={`label-${index}`}
+              x={(index / bars.length) * width + candleW / 2}
+              y={height - 6}
+              textAnchor={index === 0 ? 'start' : index === bars.length - 1 ? 'end' : 'middle'}
+              fill="#71717a"
+              fontSize="10"
+            >
+              {bars[index]?.t}
+            </text>
+          ))
+        : null}
     </svg>
   );
 }
