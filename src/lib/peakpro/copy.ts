@@ -77,16 +77,18 @@ const en: CopyTree = {
   searchPlaceholderTw: 'Search a TWSE code — 2330 or 2330.TW',
   searchPlaceholderUs: 'Search a U.S. ticker — AAPL, NVDA',
   searchCta: 'Look up',
-  searchHint: 'Server fetches Yahoo and writes the local cache. The browser never calls Yahoo.',
+  searchHint: 'Look up a ticker to add it to the local cache.',
   searchWrongMarketTw: 'That looks like a U.S. ticker. Open U.S. Equities to look it up.',
   searchWrongMarketUs: 'That looks like a Taiwan code. Open Taiwan Equities to look it up.',
   searchInvalid: 'Enter a valid ticker.',
-  searchNotFound: 'Yahoo has no daily tape for that symbol.',
+  searchNotFound: 'No daily tape found for that symbol.',
   searchPremiumOnly: 'Custom tickers are a Premium desk feature.',
-  searchOk: 'Cached from Yahoo.',
+  searchOk: 'Added to the desk cache.',
   backToDesk: 'Back to desk',
   tapeReadout: 'Tape readout',
-  missingSymbol: 'This ticker is not in the warehouse yet. Look it up from the desk first — we only fetch Yahoo when someone asks.',
+  missingSymbol: 'This ticker is not in the warehouse yet. Look it up from the desk first.',
+  missingNews: 'This briefing is no longer in the cache.',
+  readOriginal: 'Read original',
   monthlyOnlyChart: 'Free desk shows the monthly cache only.',
   mktCap: 'Mkt cap',
   peLabel: 'P/E',
@@ -172,16 +174,18 @@ const zh: CopyTree = {
   searchPlaceholderTw: '查台股代碼 — 2330 或 2330.TW',
   searchPlaceholderUs: '查美股代碼 — AAPL、NVDA',
   searchCta: '查詢',
-  searchHint: '由伺服器向 Yahoo 抓取並寫入快取。瀏覽器不會連 Yahoo。',
+  searchHint: '查詢代碼後會加入快取。',
   searchWrongMarketTw: '這比較像美股代碼，請到美股頁查詢。',
   searchWrongMarketUs: '這比較像台股代碼，請到台股頁查詢。',
   searchInvalid: '請輸入有效代碼。',
-  searchNotFound: 'Yahoo 沒有這檔的日線資料。',
+  searchNotFound: '找不到這檔的日線資料。',
   searchPremiumOnly: '自選代碼需 Premium。',
-  searchOk: '已從 Yahoo 寫入快取。',
+  searchOk: '已加入快取。',
   backToDesk: '返回列表',
   tapeReadout: '走勢讀數',
-  missingSymbol: '這檔還沒進快取。請先在列表頁查詢 — 有人查才向 Yahoo 抓取。',
+  missingSymbol: '這檔還沒進快取。請先在列表頁查詢。',
+  missingNews: '這則情報已不在快取中。',
+  readOriginal: '閱讀原文',
   monthlyOnlyChart: '免費桌僅顯示月線快取。',
   mktCap: '市值',
   peLabel: '本益比',
@@ -202,6 +206,25 @@ export function peakproCopy(locale: Locale): CopyTree {
 
 export function tPeakpro(locale: Locale, key: string): string {
   return dictionaries[locale][key] ?? dictionaries.en[key] ?? key;
+}
+
+function hasCjk(value: string | null | undefined): boolean {
+  return Boolean(value && /[\u3400-\u9fff]/.test(value));
+}
+
+export function localizedNewsText(locale: Locale, en: string, zh: string | null | undefined) {
+  if (locale === 'zh' && zh && (hasCjk(zh) || zh !== en)) return zh;
+  return en;
+}
+
+export function newsCategoryLabel(locale: Locale, category: string) {
+  return tPeakpro(locale, category === 'war' ? 'catWar' : 'catGeopolitics');
+}
+
+export function newsSourceLabel(locale: Locale, source: string) {
+  if (source === 'BBC World') return tPeakpro(locale, 'sourceBbc');
+  if (source === 'NYT World') return tPeakpro(locale, 'sourceNyt');
+  return source;
 }
 
 export const MODULE_HREF: Record<PeakProModule, string> = {

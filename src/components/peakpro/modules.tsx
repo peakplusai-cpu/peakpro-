@@ -1,8 +1,8 @@
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
 import type { PeakProModule } from '@/lib/peakpro/constants';
-import { tPeakpro } from '@/lib/peakpro/copy';
-import { formatPct, formatPx } from '@/lib/peakpro/format';
+import { localizedNewsText, newsCategoryLabel, newsSourceLabel, tPeakpro } from '@/lib/peakpro/copy';
+import { formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
 import type {
   FearGreedPayload,
   MarketDataRow,
@@ -45,9 +45,11 @@ function SeriesCard({
       <div className="mt-4">
         <SparkCandles bars={payload.bars} />
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-        {locale === 'zh' ? payload.thesisZh : payload.thesis}
-      </p>
+      {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
+        <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+          {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
+        </p>
+      ) : null}
     </>
   );
 
@@ -63,25 +65,6 @@ function SeriesCard({
   }
 
   return <article className="rounded-2xl border border-gold/15 bg-black/60 p-5">{body}</article>;
-}
-
-function hasCjk(value: string | null | undefined): boolean {
-  return Boolean(value && /[\u3400-\u9fff]/.test(value));
-}
-
-function localizedText(locale: Locale, en: string, zh: string | null | undefined) {
-  if (locale === 'zh' && zh && (hasCjk(zh) || zh !== en)) return zh;
-  return en;
-}
-
-function newsCategoryLabel(locale: Locale, category: string) {
-  return tPeakpro(locale, category === 'war' ? 'catWar' : 'catGeopolitics');
-}
-
-function newsSourceLabel(locale: Locale, source: string) {
-  if (source === 'BBC World') return tPeakpro(locale, 'sourceBbc');
-  if (source === 'NYT World') return tPeakpro(locale, 'sourceNyt');
-  return source;
 }
 
 function EmptyCache({ locale }: { locale: Locale }) {
@@ -203,17 +186,21 @@ export function PeakProModuleView({
         {cache.news.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="space-y-4">
             {cache.news.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-gold/15 bg-black/60 p-5">
+              <Link
+                key={item.id}
+                href={`/app/geopolitics/${encodeURIComponent(item.id)}`}
+                className="block rounded-2xl border border-gold/15 bg-black/60 p-5 transition-colors hover:border-gold/50"
+              >
                 <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">
                   {newsCategoryLabel(locale, item.category)} · {newsSourceLabel(locale, item.source)}
                 </p>
                 <h3 className="mt-2 font-peakpro text-xl text-white">
-                  {localizedText(locale, item.title, item.title_zh)}
+                  {localizedNewsText(locale, item.title, item.title_zh)}
                 </h3>
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
-                  {localizedText(locale, item.summary, item.summary_zh)}
+                <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-400">
+                  {localizedNewsText(locale, item.summary, item.summary_zh)}
                 </p>
-              </article>
+              </Link>
             ))}
           </div>
         )}

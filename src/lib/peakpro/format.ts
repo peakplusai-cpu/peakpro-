@@ -21,3 +21,9 @@ export function formatPct(value: number) {
   const sign = value >= 0 ? '+' : '';
   return `${sign}${value.toFixed(2)}%`;
 }
+
+export function publicThesis(text: string | null | undefined) {
+  const value = text?.trim() ?? '';
+  if (!value || /yahoo/i.test(value)) return '';
+  return value;
+}

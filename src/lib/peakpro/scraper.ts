@@ -118,8 +118,8 @@ async function scrapeOneEquity(symbol: string, fallbackName: string) {
       payload: toSeries(
         name,
         timeframe === 'annual' ? downsampleAnnual(bars) : bars,
-        `${name} tape cached from the Yahoo exchange print.`,
-        `${name} 走勢已從 Yahoo 寫入交易所快取。`,
+        `${name} tape from the exchange print.`,
+        `${name} 走勢已寫入快取。`,
         currency,
         quote,
         meta?.exchangeName,
@@ -335,7 +335,7 @@ async function fetchRss(url: string, source: string): Promise<RssItem[]> {
     const blocks = xml.split(/<item[\s>]/i).slice(1);
     return blocks.slice(0, 8).map((block) => {
       const title = decode(matchTag(block, 'title'));
-      const summary = decode(matchTag(block, 'description')).replace(/<[^>]+>/g, '').slice(0, 360);
+      const summary = decode(matchTag(block, 'description')).replace(/<[^>]+>/g, '').slice(0, 1200);
       const link = matchTag(block, 'link') || matchTag(block, 'guid');
       const published = matchTag(block, 'pubDate');
       return {

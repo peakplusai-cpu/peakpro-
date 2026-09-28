@@ -9,7 +9,7 @@ import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
-import { formatCap, formatPct, formatPx } from '@/lib/peakpro/format';
+import { formatCap, formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
@@ -70,8 +70,8 @@ export function PeakProEquityDetail({
 
   const readout =
     locale === 'zh'
-      ? `最新價 ${formatPx(payload.last, payload.currency)}，漲跌 ${formatPct(payload.changePct)}。快取區間高 ${formatPx(payload.high, payload.currency)}、低 ${formatPx(payload.low, payload.currency)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}以上為 Yahoo 寫入之快取，非盤中逐筆，亦不構成投資建議。`
-      : `Last print ${formatPx(payload.last, payload.currency)}, change ${formatPct(payload.changePct)}. Cached range high ${formatPx(payload.high, payload.currency)} / low ${formatPx(payload.low, payload.currency)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''} Figures are Yahoo warehouse prints, not a live tape, and are not investment advice.`;
+      ? `最新價 ${formatPx(payload.last, payload.currency)}，漲跌 ${formatPct(payload.changePct)}。快取區間高 ${formatPx(payload.high, payload.currency)}、低 ${formatPx(payload.low, payload.currency)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}以上為快取報價，非盤中逐筆，亦不構成投資建議。`
+      : `Last print ${formatPx(payload.last, payload.currency)}, change ${formatPct(payload.changePct)}. Cached range high ${formatPx(payload.high, payload.currency)} / low ${formatPx(payload.low, payload.currency)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''} Figures are cached prints, not a live tape, and are not investment advice.`;
 
   const stats: Array<[string, string]> = [];
   if (cap) stats.push([tPeakpro(locale, 'mktCap'), cap]);
@@ -151,9 +151,11 @@ export function PeakProEquityDetail({
       <section className="rounded-3xl border border-gold/15 bg-black/60 p-6">
         <h2 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeReadout')}</h2>
         <p className="mt-4 text-sm leading-relaxed text-zinc-300">{readout}</p>
-        <p className="mt-4 text-sm leading-relaxed text-zinc-500">
-          {locale === 'zh' ? payload.thesisZh : payload.thesis}
-        </p>
+        {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
+          <p className="mt-4 text-sm leading-relaxed text-zinc-500">
+            {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
+          </p>
+        ) : null}
         <p className="mt-6 text-[11px] leading-relaxed text-zinc-600">
           {locale === 'zh' ? PEAKPRO_DISCLAIMER_ZH : PEAKPRO_DISCLAIMER_EN}
         </p>

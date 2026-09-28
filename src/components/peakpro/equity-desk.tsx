@@ -9,7 +9,7 @@ import { PeakProPaywall } from '@/components/peakpro/paywall';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { formatCap, formatPct, formatPx } from '@/lib/peakpro/format';
+import { formatCap, formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
@@ -60,9 +60,11 @@ function SeriesCard({
       <div className="mt-4">
         <SparkCandles bars={payload.bars} />
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-zinc-400">
-        {locale === 'zh' ? payload.thesisZh : payload.thesis}
-      </p>
+      {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
+        <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+          {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
+        </p>
+      ) : null}
     </Link>
   );
 }
