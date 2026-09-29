@@ -315,9 +315,23 @@ function fearGreedRow(): MarketDataRow {
       value >= 75 ? '極度貪婪' : value >= 55 ? '貪婪' : value >= 45 ? '中性' : value >= 25 ? '恐慌' : '極度恐慌',
     history,
     commentary:
-      'Cross-asset positioning is modestly risk-on. Breadth is constructive, but geopolitical headlines keep a hedge bid under gold and the dollar.',
+      'This print is the Bitcoin Fear & Greed reading — crypto positioning only, not Taiwan or U.S. cash equities.',
     commentaryZh:
-      '跨資產部位略偏風險偏好。廣度偏正向，但地緣標題使黃金與美元仍保有避險買盤。',
+      '此讀數為比特幣恐懼與貪婪指數，只反映加密部位，不是台股或美股現貨。',
+    taiwan: {
+      value: 58,
+      classification: 'Bid',
+      classificationZh: '利多',
+      avgChangePct: 0.9,
+      sampleSize: 3,
+    },
+    us: {
+      value: 62,
+      classification: 'Bid',
+      classificationZh: '利多',
+      avgChangePct: 1.2,
+      sampleSize: 9,
+    },
   };
   return {
     id: 'index:FNG:daily',

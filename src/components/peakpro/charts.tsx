@@ -1,4 +1,5 @@
-import type { FearGreedPayload, OhlcBar } from '@/lib/peakpro/types';
+import type { Locale } from '@/i18n/locale';
+import type { SentimentGauge } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
 export function SparkCandles({
@@ -68,15 +69,24 @@ export function SparkCandles({
   );
 }
 
-export function FearGreedGauge({ data }: { data: FearGreedPayload }) {
+export function FearGreedGauge({
+  data,
+  locale,
+  compact = false,
+}: {
+  data: Pick<SentimentGauge, 'value' | 'classification' | 'classificationZh'>;
+  locale?: Locale;
+  compact?: boolean;
+}) {
   const clamped = Math.max(0, Math.min(100, data.value));
   const angle = Math.PI * (1 - clamped / 100);
   const x = 100 + Math.cos(angle) * 72;
   const y = 100 - Math.sin(angle) * 72;
+  const label = locale === 'zh' ? data.classificationZh : data.classification;
 
   return (
     <div className="flex flex-col items-center">
-      <svg viewBox="0 0 200 120" className="h-40 w-full max-w-sm">
+      <svg viewBox="0 0 200 120" className={cn('w-full max-w-sm', compact ? 'h-28' : 'h-40')}>
         <path
           d="M20 100 A80 80 0 0 1 180 100"
           fill="none"
@@ -95,8 +105,8 @@ export function FearGreedGauge({ data }: { data: FearGreedPayload }) {
         <line x1="100" y1="100" x2={x} y2={y} stroke="#f8e7b0" strokeWidth="3" />
         <circle cx="100" cy="100" r="5" fill="#D4AF37" />
       </svg>
-      <p className="font-peakpro text-4xl text-gold">{clamped}</p>
-      <p className="mt-1 text-xs uppercase tracking-[0.28em] text-zinc-400">{data.classification}</p>
+      <p className={cn('font-peakpro text-gold', compact ? 'text-3xl' : 'text-4xl')}>{clamped}</p>
+      <p className="mt-1 text-xs uppercase tracking-[0.28em] text-zinc-400">{label}</p>
     </div>
   );
 }

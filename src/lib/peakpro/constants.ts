@@ -38,7 +38,12 @@ export const PEAKPRO_MODULES = [
   'sentiment',
   'trending',
   'brief',
+  'advisor',
 ] as const;
+
+export const ADVISOR_DAILY_LIMIT = 30;
+export const ADVISOR_MAX_INPUT = 2000;
+export const ADVISOR_MAX_HISTORY = 12;
 
 export type PeakProModule = (typeof PEAKPRO_MODULES)[number];
 

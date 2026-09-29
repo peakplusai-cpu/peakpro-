@@ -3,14 +3,17 @@ import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { localizedNewsText, newsCategoryLabel, newsSourceLabel, tPeakpro } from '@/lib/peakpro/copy';
 import { formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
+import { deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type {
   FearGreedPayload,
   MarketDataRow,
   PeakProCacheSnapshot,
   PeakProTier,
+  SentimentGauge,
   TrendingPayload,
 } from '@/lib/peakpro/types';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
+import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -72,6 +75,47 @@ function EmptyCache({ locale }: { locale: Locale }) {
     <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
       {tPeakpro(locale, 'emptyCache')}
     </div>
+  );
+}
+
+function SentimentCard({
+  locale,
+  titleKey,
+  hintKey,
+  data,
+  kind,
+}: {
+  locale: Locale;
+  titleKey: 'fearTaiwan' | 'fearUs' | 'fearCrypto';
+  hintKey: 'fearTaiwanHint' | 'fearUsHint' | 'fearCryptoHint';
+  data: SentimentGauge | Pick<FearGreedPayload, 'value' | 'classification' | 'classificationZh'> | null;
+  kind: 'desk' | 'crypto';
+}) {
+  const gauge = data
+    ? {
+        value: data.value,
+        classification: data.classification,
+        classificationZh: data.classificationZh,
+      }
+    : null;
+  const sample = kind === 'desk' && data && 'sampleSize' in data ? data : null;
+
+  return (
+    <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-6">
+      <p className="text-center text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, titleKey)}</p>
+      {gauge ? (
+        <FearGreedGauge data={gauge} locale={locale} compact />
+      ) : (
+        <p className="px-4 py-12 text-center text-sm text-zinc-500">{tPeakpro(locale, 'emptyCache')}</p>
+      )}
+      {sample && sample.sampleSize > 0 ? (
+        <p className="mt-2 text-center text-[11px] text-zinc-500">
+          {sample.sampleSize} {tPeakpro(locale, 'fearSample')}
+          {sample.avgChangePct != null ? ` · ${tPeakpro(locale, 'fearAvg')} ${formatPct(sample.avgChangePct)}` : ''}
+        </p>
+      ) : null}
+      <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-500">{tPeakpro(locale, hintKey)}</p>
+    </article>
   );
 }
 
@@ -210,19 +254,46 @@ export function PeakProModuleView({
 
   if (moduleId === 'sentiment') {
     const payload = cache.fearGreed?.payload as unknown as FearGreedPayload | undefined;
+    const bias = deskBiasGauges(cache.equities);
+    const hasAnything = Boolean(payload) || bias.taiwan.sampleSize + bias.us.sampleSize > 0;
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'fearTitle')}</h2>
-        {!payload ? (
+        <div>
+          <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'fearTitle')}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
+        </div>
+        {!hasAnything ? (
           <EmptyCache locale={locale} />
         ) : (
-          <div className="rounded-3xl border border-gold/15 bg-black/60 p-8">
-            <FearGreedGauge data={payload} />
-            <p className="mx-auto mt-6 max-w-2xl text-center text-sm leading-relaxed text-zinc-400">
-              {locale === 'zh' ? payload.commentaryZh : payload.commentary}
-            </p>
+          <div className="grid gap-4 md:grid-cols-3">
+            <SentimentCard
+              locale={locale}
+              titleKey="fearTaiwan"
+              hintKey="fearTaiwanHint"
+              data={bias.taiwan.sampleSize > 0 ? bias.taiwan : null}
+              kind="desk"
+            />
+            <SentimentCard
+              locale={locale}
+              titleKey="fearUs"
+              hintKey="fearUsHint"
+              data={bias.us.sampleSize > 0 ? bias.us : null}
+              kind="desk"
+            />
+            <SentimentCard
+              locale={locale}
+              titleKey="fearCrypto"
+              hintKey="fearCryptoHint"
+              data={payload ?? null}
+              kind="crypto"
+            />
           </div>
         )}
+        {payload && (locale === 'zh' ? payload.commentaryZh : payload.commentary) ? (
+          <p className="text-center text-sm leading-relaxed text-zinc-500">
+            {locale === 'zh' ? payload.commentaryZh : payload.commentary}
+          </p>
+        ) : null}
       </div>
     );
   }
@@ -260,6 +331,10 @@ export function PeakProModuleView({
         )}
       </div>
     );
+  }
+
+  if (moduleId === 'advisor') {
+    return <PeakProAdvisorChat locale={locale} />;
   }
 
   const brief = cache.briefs.find((row) => row.locale === locale) ?? cache.briefs[0];

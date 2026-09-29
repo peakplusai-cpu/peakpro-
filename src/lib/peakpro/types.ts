@@ -74,6 +74,14 @@ export interface PeakProProfile {
   updated_at: string;
 }
 
+export interface SentimentGauge {
+  value: number;
+  classification: string;
+  classificationZh: string;
+  avgChangePct: number | null;
+  sampleSize: number;
+}
+
 export interface FearGreedPayload {
   value: number;
   classification: string;
@@ -81,6 +89,8 @@ export interface FearGreedPayload {
   history: Array<{ t: string; value: number }>;
   commentary: string;
   commentaryZh: string;
+  taiwan?: SentimentGauge;
+  us?: SentimentGauge;
 }
 
 export interface TrendingPayload {

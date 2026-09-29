@@ -13,9 +13,10 @@ const FEATURES_EN = [
   'Crypto trends for BTC and ETH',
   'Spot gold charts and macro analysis',
   'Geopolitical & war news risk feed',
-  'Market Fear & Greed Index',
+  'Taiwan / U.S. bid-offer gauges and crypto Fear & Greed, labeled on one page',
   'Weekly trending assets ranking',
   'AI weekly market summary',
+  'Finance-only Desk Advisor (OpenRouter, cache-grounded, 30 turns/day)',
 ];
 
 const FEATURES_ZH = [
@@ -23,9 +24,10 @@ const FEATURES_ZH = [
   '比特幣與以太坊加密趨勢',
   '現貨黃金走勢與總體分析',
   '地緣政治與戰事新聞情報',
-  '市場恐慌與貪婪指數',
+  '台股、美股利多利空與加密恐懼貪婪，同一頁分別標示',
   '本週熱門資產排名',
   'AI 每週市場總結',
+  '金融專用桌面顧問（OpenRouter、對齊快取、每日 30 則）',
 ];
 
 export function PeakProSubscribeView({

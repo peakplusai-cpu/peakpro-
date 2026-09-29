@@ -1,6 +1,7 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
+import { deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type { MarketSeriesPayload, OhlcBar } from '@/lib/peakpro/types';
 import {
   chartMeta,
@@ -306,8 +307,9 @@ async function scrapeFearGreed() {
         classificationZh: classifyZh(classification),
         history,
         commentary:
-          'Sentiment is inferred from the cached Fear & Greed print. Positioning can reverse faster than the monthly equity trend.',
-        commentaryZh: '情緒取自快取的恐慌與貪婪讀數。部位翻轉可能快於股票月線。',
+          'This print is the Bitcoin Fear & Greed reading cached from alternative.me — crypto positioning only, not Taiwan or U.S. cash equities.',
+        commentaryZh:
+          '此讀數為比特幣恐懼與貪婪指數（alternative.me 快取），只反映加密部位，不是台股或美股現貨。',
       },
     },
   ];
@@ -644,6 +646,19 @@ export async function runPeakProMarketScrape(): Promise<{
   let crypto = await scrapeCrypto();
   let gold = await scrapeGold();
   let fear = await scrapeFearGreed();
+  const bias = deskBiasGauges(equities);
+  fear = fear.map((row) => ({
+    ...row,
+    payload: {
+      ...(row.payload as object),
+      taiwan: bias.taiwan,
+      us: bias.us,
+      commentary:
+        'Three cached gauges on one desk: Taiwan and U.S. bid/offer from the hot-list daily prints; crypto Fear & Greed from the Bitcoin index.',
+      commentaryZh:
+        '同一頁三個快取儀表：台股、美股利多利空取自熱門清單日線；加密恐懼與貪婪取自比特幣指數。',
+    },
+  }));
   const liveCount = equities.length + crypto.length + gold.length + fear.length;
 
   if (liveCount < 8) {
