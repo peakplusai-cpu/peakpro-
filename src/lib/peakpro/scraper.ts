@@ -284,7 +284,14 @@ type FearGreedResponse = {
   data?: Array<{ value?: string; value_classification?: string; timestamp?: string }>;
 };
 
-async function scrapeFearGreed() {
+type WarehouseRow = {
+  asset_class: string;
+  symbol: string;
+  timeframe: string;
+  payload: unknown;
+};
+
+async function scrapeFearGreed(): Promise<WarehouseRow[]> {
   const json = await fetchJson<FearGreedResponse>('https://api.alternative.me/fng/?limit=30&format=json');
   const points = json?.data ?? [];
   if (points.length === 0) return [];
@@ -645,12 +652,16 @@ export async function runPeakProMarketScrape(): Promise<{
   let equities = await scrapeEquities();
   let crypto = await scrapeCrypto();
   let gold = await scrapeGold();
-  let fear = await scrapeFearGreed();
+  const fearRaw = await scrapeFearGreed();
   const bias = deskBiasGauges(equities);
-  fear = fear.map((row) => ({
-    ...row,
+  const fear: WarehouseRow[] = fearRaw.map((row) => ({
+    asset_class: row.asset_class,
+    symbol: row.symbol,
+    timeframe: row.timeframe,
     payload: {
-      ...(row.payload as object),
+      ...(row.payload && typeof row.payload === 'object'
+        ? (row.payload as Record<string, unknown>)
+        : {}),
       taiwan: bias.taiwan,
       us: bias.us,
       commentary:
