@@ -1,5 +1,5 @@
 import type { Locale } from '@/i18n/locale';
-import type { SentimentGauge } from '@/lib/peakpro/types';
+import type { OhlcBar, SentimentGauge } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
 export function SparkCandles({
