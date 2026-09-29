@@ -6,8 +6,14 @@ type BiasRow = {
   asset_class: string;
   symbol: string;
   timeframe: string;
-  payload: { changePct?: number };
+  payload: unknown;
 };
+
+function changePctOf(payload: unknown): number | null {
+  if (!payload || typeof payload !== 'object') return null;
+  const value = (payload as { changePct?: unknown }).changePct;
+  return typeof value === 'number' && Number.isFinite(value) ? value : null;
+}
 
 function clampScore(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
@@ -52,8 +58,8 @@ function deskDailyChanges(rows: BiasRow[], market: 'taiwan' | 'us'): number[] {
         desk.has(row.symbol) &&
         (market === 'taiwan' ? isTaiwanSymbol(row.symbol) : !isTaiwanSymbol(row.symbol)),
     )
-    .map((row) => row.payload.changePct)
-    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
+    .map((row) => changePctOf(row.payload))
+    .filter((value): value is number => value != null);
 }
 
 export function deskBiasGauges(rows: BiasRow[]): { taiwan: SentimentGauge; us: SentimentGauge } {
