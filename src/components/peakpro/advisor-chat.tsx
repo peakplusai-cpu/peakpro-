@@ -94,12 +94,17 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
     setDraft('');
     setPending(true);
     setError(null);
+    let assistant = '';
+
+    const abort = new AbortController();
+    const timer = window.setTimeout(() => abort.abort(), 45_000);
 
     try {
       const response = await fetch('/api/advisor', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
+        signal: abort.signal,
         body: JSON.stringify({ messages: nextTurns }),
       });
 
@@ -133,7 +138,6 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
       }
 
       const decoder = new TextDecoder();
-      let assistant = '';
       setTurns([...nextTurns, { role: 'assistant', content: '' }]);
 
       for (;;) {
@@ -144,12 +148,15 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
         setTurns([...nextTurns, { role: 'assistant', content: snapshot }]);
       }
       assistant += decoder.decode();
-      setTurns([...nextTurns, { role: 'assistant', content: assistant }]);
+      if (assistant) setTurns([...nextTurns, { role: 'assistant', content: assistant }]);
     } catch {
-      setTurns(nextTurns.slice(0, -1));
-      setDraft(text);
-      setError(tPeakpro(locale, 'advisorFailed'));
+      if (!assistant) {
+        setTurns(nextTurns.slice(0, -1));
+        setDraft(text);
+        setError(tPeakpro(locale, 'advisorFailed'));
+      }
     } finally {
+      window.clearTimeout(timer);
       setPending(false);
       boxRef.current?.focus();
     }
@@ -205,7 +212,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
               onChange={(event) => setDraft(event.target.value.slice(0, ADVISOR_MAX_INPUT))}
               onKeyDown={onKeyDown}
               rows={3}
-              disabled={pending}
+              disabled={false}
               placeholder={tPeakpro(locale, 'advisorPlaceholder')}
               className="min-h-[4.5rem] flex-1 resize-none rounded-2xl border border-gold/20 bg-black px-4 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-gold/50"
             />

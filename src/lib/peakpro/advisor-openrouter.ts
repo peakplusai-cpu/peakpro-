@@ -10,6 +10,18 @@ export function getOpenRouterApiKey(): string | null {
 
 type ChatTurn = { role: 'system' | 'user' | 'assistant'; content: string };
 
+function closeStream(
+  controller: ReadableStreamDefaultController<Uint8Array>,
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+) {
+  try {
+    controller.close();
+  } catch {
+    // already closed
+  }
+  void reader.cancel().catch(() => undefined);
+}
+
 export async function streamOpenRouterText(
   messages: ChatTurn[],
   signal?: AbortSignal,
@@ -45,38 +57,55 @@ export async function streamOpenRouterText(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  let finished = false;
 
   const stream = new ReadableStream<Uint8Array>({
     async pull(controller) {
-      const emitLine = (raw: string) => {
+      if (finished) {
+        closeStream(controller, reader);
+        return;
+      }
+
+      const emitLine = (raw: string): boolean => {
         const line = raw.trim();
-        if (!line.startsWith('data:')) return;
+        if (!line.startsWith('data:')) return false;
         const data = line.slice(5).trim();
-        if (!data || data === '[DONE]') return;
+        if (!data) return false;
+        if (data === '[DONE]') return true;
         try {
           const json = JSON.parse(data) as {
-            choices?: Array<{ delta?: { content?: string } }>;
+            choices?: Array<{ delta?: { content?: string }; finish_reason?: string | null }>;
           };
           const token = json.choices?.[0]?.delta?.content;
           if (token) controller.enqueue(new TextEncoder().encode(token));
+          if (json.choices?.[0]?.finish_reason) return true;
         } catch {
           // ignore partial JSON
         }
+        return false;
       };
 
       const { done, value } = await reader.read();
       if (done) {
         if (buffer.trim()) emitLine(buffer);
-        controller.close();
+        finished = true;
+        closeStream(controller, reader);
         return;
       }
       buffer += decoder.decode(value, { stream: true });
       const chunks = buffer.split('\n');
       buffer = chunks.pop() ?? '';
-      for (const raw of chunks) emitLine(raw);
+      for (const raw of chunks) {
+        if (emitLine(raw)) {
+          finished = true;
+          closeStream(controller, reader);
+          return;
+        }
+      }
     },
     cancel() {
-      reader.cancel().catch(() => undefined);
+      finished = true;
+      void reader.cancel().catch(() => undefined);
     },
   });
 

@@ -83,6 +83,7 @@ export async function POST(request: Request) {
     headers: {
       'Content-Type': 'text/plain; charset=utf-8',
       'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
       'X-Advisor-Used': String(quota.used),
       'X-Advisor-Limit': String(quota.limit),
       'X-Advisor-Remaining': quota.remaining == null ? '' : String(quota.remaining),
