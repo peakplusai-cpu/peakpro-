@@ -1,6 +1,7 @@
+import { unstable_cache } from 'next/cache';
+
 import { canAccessEquity, effectiveTier } from '@/lib/peakpro/access';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import { ensureNewsTraditionalChinese } from '@/lib/peakpro/scraper';
 import type {
   AiSummaryRow,
   MarketDataRow,
@@ -17,9 +18,20 @@ function latestStamp(rows: Array<{ last_updated: string }>): string | null {
     .at(-1) ?? null;
 }
 
-export async function readPeakProCache(options?: {
-  localizeNews?: boolean;
-}): Promise<PeakProCacheSnapshot> {
+function emptySnapshot(): PeakProCacheSnapshot {
+  return {
+    equities: [],
+    crypto: [],
+    gold: [],
+    news: [],
+    fearGreed: null,
+    trending: null,
+    briefs: [],
+    lastUpdated: null,
+  };
+}
+
+async function queryPeakProWarehouse(): Promise<PeakProCacheSnapshot> {
   try {
     const admin = peakproAdmin();
     const [marketRes, newsRes, briefRes] = await Promise.all([
@@ -29,15 +41,7 @@ export async function readPeakProCache(options?: {
     ]);
 
     const market = (marketRes.data ?? []) as MarketDataRow[];
-    const rawNews = (newsRes.data ?? []) as NewsCacheRow[];
-    let news = rawNews;
-    if (options?.localizeNews) {
-      try {
-        news = await ensureNewsTraditionalChinese(rawNews);
-      } catch (error) {
-        console.warn('[peakpro/cache] news zh backfill failed', error);
-      }
-    }
+    const news = (newsRes.data ?? []) as NewsCacheRow[];
     const briefs = (briefRes.data ?? []) as AiSummaryRow[];
 
     return {
@@ -52,17 +56,39 @@ export async function readPeakProCache(options?: {
     };
   } catch (error) {
     console.warn('[peakpro/cache] local warehouse unavailable', error);
-    return {
-      equities: [],
-      crypto: [],
-      gold: [],
-      news: [],
-      fearGreed: null,
-      trending: null,
-      briefs: [],
-      lastUpdated: null,
-    };
+    return emptySnapshot();
   }
+}
+
+const readPeakProWarehouseCached = unstable_cache(queryPeakProWarehouse, ['peakpro-warehouse-v1'], {
+  revalidate: 90,
+  tags: ['peakpro-warehouse'],
+});
+
+export async function readPeakProCache(): Promise<PeakProCacheSnapshot> {
+  return readPeakProWarehouseCached();
+}
+
+function stripBarsFromRow(row: MarketDataRow): MarketDataRow {
+  return {
+    ...row,
+    payload: { ...row.payload, bars: row.payload.bars?.slice(-1) ?? [] },
+  };
+}
+
+export function slimCacheForModule(
+  snapshot: PeakProCacheSnapshot,
+  moduleId: string,
+): PeakProCacheSnapshot {
+  const chartModules = new Set(['overview', 'taiwan', 'us', 'crypto', 'gold']);
+  if (chartModules.has(moduleId)) return snapshot;
+
+  return {
+    ...snapshot,
+    equities: snapshot.equities.map(stripBarsFromRow),
+    crypto: snapshot.crypto.map(stripBarsFromRow),
+    gold: snapshot.gold.map(stripBarsFromRow),
+  };
 }
 
 export function filterCacheForTier(

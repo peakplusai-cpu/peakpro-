@@ -14,20 +14,21 @@ export function SparkCandles({
   height?: number;
 }) {
   if (bars.length === 0) return null;
-  const min = Math.min(...bars.map((b) => b.l));
-  const max = Math.max(...bars.map((b) => b.h));
+  const visible = height > 200 ? bars : bars.length > 48 ? bars.slice(-48) : bars;
+  const min = Math.min(...visible.map((b) => b.l));
+  const max = Math.max(...visible.map((b) => b.h));
   const span = Math.max(max - min, 1);
   const padTop = 8;
   const padBottom = height > 200 ? 22 : 8;
   const innerH = height - padTop - padBottom;
-  const candleW = Math.max(2, width / bars.length - 1.4);
+  const candleW = Math.max(2, width / visible.length - 1.4);
   const y = (v: number) => ((max - v) / span) * innerH + padTop;
-  const labelIdx = [0, Math.floor((bars.length - 1) / 2), bars.length - 1];
+  const labelIdx = [0, Math.floor((visible.length - 1) / 2), visible.length - 1];
 
   return (
     <svg viewBox={`0 0 ${width} ${height}`} className={cn('h-28 w-full', className)}>
-      {bars.map((bar, index) => {
-        const x = (index / bars.length) * width;
+      {visible.map((bar, index) => {
+        const x = (index / visible.length) * width;
         const up = bar.c >= bar.o;
         return (
           <g key={`${bar.t}-${index}`}>
@@ -55,13 +56,13 @@ export function SparkCandles({
         ? labelIdx.map((index) => (
             <text
               key={`label-${index}`}
-              x={(index / bars.length) * width + candleW / 2}
+              x={(index / visible.length) * width + candleW / 2}
               y={height - 6}
-              textAnchor={index === 0 ? 'start' : index === bars.length - 1 ? 'end' : 'middle'}
+              textAnchor={index === 0 ? 'start' : index === visible.length - 1 ? 'end' : 'middle'}
               fill="#71717a"
               fontSize="10"
             >
-              {bars[index]?.t}
+              {visible[index]?.t}
             </text>
           ))
         : null}

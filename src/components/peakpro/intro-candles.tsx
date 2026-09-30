@@ -7,7 +7,7 @@ import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { anonymousGrowthBars } from '@/lib/peakpro/seed-data';
 
-const INTRO_KEY = 'peakpro-intro-seen-v2';
+const INTRO_KEY = 'peakpro-intro-seen-v3';
 
 export function IntroCandles({
   locale,
@@ -16,21 +16,30 @@ export function IntroCandles({
   locale: Locale;
   onComplete: () => void;
 }) {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(false);
   const bars = useMemo(() => anonymousGrowthBars(36), []);
 
   useEffect(() => {
-    if (sessionStorage.getItem(INTRO_KEY) === '1') {
-      setVisible(false);
+    try {
+      if (window.localStorage.getItem(INTRO_KEY) === '1') {
+        onComplete();
+        return;
+      }
+    } catch {
       onComplete();
       return;
     }
 
+    setVisible(true);
     const done = window.setTimeout(() => {
-      sessionStorage.setItem(INTRO_KEY, '1');
+      try {
+        window.localStorage.setItem(INTRO_KEY, '1');
+      } catch {
+        // ignore quota
+      }
       setVisible(false);
       onComplete();
-    }, 3400);
+    }, 900);
     return () => window.clearTimeout(done);
   }, [onComplete]);
 

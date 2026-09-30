@@ -707,6 +707,13 @@ export async function runPeakProMarketScrape(): Promise<{
   });
   await writeAiBrief(context);
 
+  try {
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag('peakpro-warehouse');
+  } catch (error) {
+    console.warn('[peakpro/scraper] cache revalidate skipped', error);
+  }
+
   return {
     equities: equities.length,
     crypto: crypto.length,

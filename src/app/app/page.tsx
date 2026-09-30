@@ -9,7 +9,7 @@ export default async function DeskPage({
 }) {
   const locale = await getLocale();
   const { payment } = await searchParams;
-  const { session, cache } = await loadPeakProDesk();
+  const { session, cache } = await loadPeakProDesk({ moduleId: 'overview' });
 
   return (
     <PeakProAppShell

@@ -27,7 +27,7 @@ export default async function EquityDetailPage({
   if (moduleId === 'taiwan' ? !isTaiwanSymbol(symbol) : isTaiwanSymbol(symbol)) notFound();
 
   const locale = await getLocale();
-  const { session, cache } = await loadPeakProDesk();
+  const { session, cache } = await loadPeakProDesk({ moduleId });
   const rows = cache.equities.filter((row) => row.symbol === symbol);
 
   return (

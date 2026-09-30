@@ -18,7 +18,7 @@ export default async function ModulePage({
   const locale = await getLocale();
   const { highlight } = await searchParams;
   const { session, cache } = await loadPeakProDesk({
-    localizeNews: moduleId === 'geopolitics',
+    moduleId,
   });
 
   return (

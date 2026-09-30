@@ -12,7 +12,7 @@ export default async function GeopoliticsDetailPage({
 }) {
   const { id } = await params;
   const locale = await getLocale();
-  const { session, cache } = await loadPeakProDesk({ localizeNews: true });
+  const { session, cache } = await loadPeakProDesk({ moduleId: 'geopolitics' });
   const item = cache.news.find((row) => row.id === decodeURIComponent(id)) ?? null;
 
   return (
