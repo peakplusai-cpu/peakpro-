@@ -41,8 +41,8 @@ export async function streamOpenRouterText(
     body: JSON.stringify({
       model: getAdvisorModel(),
       stream: true,
-      temperature: 0.4,
-      max_tokens: 900,
+      temperature: 0.7,
+      max_tokens: 1200,
       messages,
     }),
     cache: 'no-store',
