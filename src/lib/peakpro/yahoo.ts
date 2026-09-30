@@ -116,12 +116,24 @@ export async function fetchYahooChart(symbol: string, timeframe: 'daily' | 'mont
   return fetchYahooJson<YahooChart>(url);
 }
 
-export async function fetchYahooQuote(symbol: string): Promise<YahooQuote | null> {
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${encodeURIComponent(symbol)}`;
+export async function fetchYahooQuotes(symbols: string[]): Promise<Array<YahooQuote & { symbol: string }>> {
+  const unique = [...new Set(symbols.map((symbol) => symbol.trim()).filter(Boolean))].slice(0, 24);
+  if (unique.length === 0) return [];
+  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${unique.map(encodeURIComponent).join(',')}`;
   const json = await fetchYahooJson<{
-    quoteResponse?: { result?: YahooQuote[] };
+    quoteResponse?: { result?: Array<YahooQuote & { symbol?: string }> };
   }>(url);
-  return json?.quoteResponse?.result?.[0] ?? null;
+  return (json?.quoteResponse?.result ?? [])
+    .map((row, index) => ({
+      ...row,
+      symbol: row.symbol?.trim() || unique[index] || '',
+    }))
+    .filter((row) => row.symbol.length > 0);
+}
+
+export async function fetchYahooQuote(symbol: string): Promise<YahooQuote | null> {
+  const [row] = await fetchYahooQuotes([symbol]);
+  return row ?? null;
 }
 
 export function chartMeta(payload: YahooChart | null) {

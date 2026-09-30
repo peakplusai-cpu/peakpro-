@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { getOpenRouterApiKey, streamOpenRouterText } from '@/lib/peakpro/advisor-openrouter';
+import { buildAdvisorLiveContext } from '@/lib/peakpro/advisor-live';
 import { ADVISOR_SYSTEM_PROMPT, buildAdvisorDeskContext } from '@/lib/peakpro/advisor-prompt';
 import { consumeAdvisorQuota, readAdvisorQuota } from '@/lib/peakpro/advisor-quota';
 import { ADVISOR_MAX_HISTORY, ADVISOR_MAX_INPUT } from '@/lib/peakpro/constants';
@@ -65,11 +66,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'limit', ...quota }, { status: 429 });
   }
 
-  const cache = await readPeakProCache();
+  const [cache, live] = await Promise.all([readPeakProCache(), buildAdvisorLiveContext(last.content)]);
   const desk = buildAdvisorDeskContext(cache);
   const upstream = await streamOpenRouterText(
     [
-      { role: 'system', content: `${ADVISOR_SYSTEM_PROMPT}\n\nCACHED_DESK:\n${desk}` },
+      {
+        role: 'system',
+        content: `${ADVISOR_SYSTEM_PROMPT}\n\nLIVE_DESK:\n${live}\n\nCACHED_DESK:\n${desk}`,
+      },
       ...history,
     ],
     request.signal,
