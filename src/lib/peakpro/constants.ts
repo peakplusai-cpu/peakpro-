@@ -30,6 +30,7 @@ export const GOLD_SYMBOL = 'XAUUSD';
 
 export const PEAKPRO_MODULES = [
   'overview',
+  'portfolio',
   'taiwan',
   'us',
   'crypto',

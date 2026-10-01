@@ -17,6 +17,7 @@ const FEATURES_EN = [
   'Weekly trending assets ranking',
   'AI weekly market summary',
   'Finance-only Desk Advisor (OpenRouter, cache-grounded, 30 turns/day)',
+  'Personal book with cost basis and marked P&L',
 ];
 
 const FEATURES_ZH = [
@@ -28,6 +29,7 @@ const FEATURES_ZH = [
   '本週熱門資產排名',
   'AI 每週市場總結',
   '金融專用桌面顧問（OpenRouter、對齊快取、每日 30 則）',
+  '自選組合與持有成本、估算損益',
 ];
 
 export function PeakProSubscribeView({
