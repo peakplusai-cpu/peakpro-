@@ -71,8 +71,8 @@ export function PeakProEquityDetail({
 
   const readout =
     locale === 'zh'
-      ? `最新價 ${formatPx(payload.last, payload.currency)}，漲跌 ${formatPct(payload.changePct)}。快取區間高 ${formatPx(payload.high, payload.currency)}、低 ${formatPx(payload.low, payload.currency)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}以上為快取報價，非盤中逐筆，亦不構成投資建議。`
-      : `Last print ${formatPx(payload.last, payload.currency)}, change ${formatPct(payload.changePct)}. Cached range high ${formatPx(payload.high, payload.currency)} / low ${formatPx(payload.low, payload.currency)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''} Figures are cached prints, not a live tape, and are not investment advice.`;
+      ? `最新價 ${formatPx(payload.last, payload.currency)}，漲跌 ${formatPct(payload.changePct)}。區間高 ${formatPx(payload.high, payload.currency)}、低 ${formatPx(payload.low, payload.currency)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}`
+      : `Last ${formatPx(payload.last, payload.currency)}, change ${formatPct(payload.changePct)}. Range high ${formatPx(payload.high, payload.currency)} / low ${formatPx(payload.low, payload.currency)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''}`;
 
   const stats: Array<[string, string]> = [];
   if (cap) stats.push([tPeakpro(locale, 'mktCap'), cap]);

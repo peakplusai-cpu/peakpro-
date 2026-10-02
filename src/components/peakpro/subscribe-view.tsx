@@ -16,7 +16,7 @@ const FEATURES_EN = [
   'Taiwan / U.S. bid-offer gauges and crypto Fear & Greed, labeled on one page',
   'Weekly trending assets ranking',
   'AI weekly market summary',
-  'Finance-only Desk Advisor (OpenRouter, cache-grounded, 30 turns/day)',
+  'Desk Advisor, 30 messages per day',
   'Personal book with cost basis and marked P&L',
   'Session tape: volume-price turns, relative strength, official after-close institutions',
 ];
@@ -29,7 +29,7 @@ const FEATURES_ZH = [
   '台股、美股利多利空與加密恐懼貪婪，同一頁分別標示',
   '本週熱門資產排名',
   'AI 每週市場總結',
-  '金融專用桌面顧問（OpenRouter、對齊快取、每日 30 則）',
+  '桌面顧問，每日 30 則',
   '自選組合與持有成本、估算損益',
   '動能轉折：盤中量價強弱、相對指數、盤後官方三大法人',
 ];

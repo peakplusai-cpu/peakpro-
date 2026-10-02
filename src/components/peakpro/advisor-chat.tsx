@@ -30,7 +30,6 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
   const quotaLabel = useMemo(() => {
     if (!quota) return tPeakpro(locale, 'advisorQuotaLoading');
     if (!quota.configured) return tPeakpro(locale, 'advisorOffline');
-    if (!quota.ready || quota.remaining == null) return tPeakpro(locale, 'advisorQuotaPending');
     return tPeakpro(locale, 'advisorQuota')
       .replace('{used}', String(quota.used))
       .replace('{limit}', String(quota.limit));
@@ -173,14 +172,20 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
     <div className="space-y-6">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'advisorTitle')}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'advisorLead')}</p>
-        <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">{quotaLabel}</p>
+        {tPeakpro(locale, 'advisorLead') ? (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'advisorLead')}</p>
+        ) : null}
+        {quotaLabel ? (
+          <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">{quotaLabel}</p>
+        ) : null}
       </div>
 
       <div className="overflow-hidden rounded-3xl border border-gold/15 bg-black/60">
         <div className="max-h-[min(28rem,55vh)] space-y-4 overflow-y-auto px-5 py-6">
           {turns.length === 0 ? (
-            <p className="text-sm leading-relaxed text-zinc-500">{tPeakpro(locale, 'advisorEmpty')}</p>
+            tPeakpro(locale, 'advisorEmpty') ? (
+              <p className="text-sm leading-relaxed text-zinc-500">{tPeakpro(locale, 'advisorEmpty')}</p>
+            ) : null
           ) : (
             turns.map((turn, index) => (
               <div
@@ -238,7 +243,9 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
               </button>
             </div>
           </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'advisorFoot')}</p>
+          {tPeakpro(locale, 'advisorFoot') ? (
+            <p className="mt-3 text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'advisorFoot')}</p>
+          ) : null}
         </form>
       </div>
     </div>

@@ -233,7 +233,9 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
         </>
       )}
 
-      <p className="text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'tapeFoot')}</p>
+      {tPeakpro(locale, 'tapeFoot') ? (
+        <p className="text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'tapeFoot')}</p>
+      ) : null}
     </div>
   );
 }

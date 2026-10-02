@@ -251,7 +251,9 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
           </table>
         </div>
       )}
-      <p className="text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'bookFoot')}</p>
+      {tPeakpro(locale, 'bookFoot') ? (
+        <p className="text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'bookFoot')}</p>
+      ) : null}
     </div>
   );
 }

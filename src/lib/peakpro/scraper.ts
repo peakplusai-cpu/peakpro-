@@ -125,8 +125,8 @@ async function scrapeOneEquity(symbol: string, fallbackName: string) {
       payload: toSeries(
         name,
         timeframe === 'annual' ? downsampleAnnual(bars) : bars,
-        `${name} tape from the exchange print.`,
-        `${name} 走勢已寫入快取。`,
+        '',
+        '',
         currency,
         quote,
         meta?.exchangeName,
@@ -323,10 +323,8 @@ async function scrapeFearGreed(): Promise<WarehouseRow[]> {
         classification,
         classificationZh: classifyZh(classification),
         history,
-        commentary:
-          'This print is the Bitcoin Fear & Greed reading cached from alternative.me — crypto positioning only, not Taiwan or U.S. cash equities.',
-        commentaryZh:
-          '此讀數為比特幣恐懼與貪婪指數（alternative.me 快取），只反映加密部位，不是台股或美股現貨。',
+        commentary: '',
+        commentaryZh: '',
       },
     },
   ];
@@ -675,10 +673,8 @@ export async function runPeakProMarketScrape(): Promise<{
         : {}),
       taiwan: bias.taiwan,
       us: bias.us,
-      commentary:
-        'Three cached gauges on one desk: Taiwan and U.S. bid/offer from the hot-list daily prints; crypto Fear & Greed from the Bitcoin index.',
-      commentaryZh:
-        '同一頁三個快取儀表：台股、美股利多利空取自熱門清單日線；加密恐懼與貪婪取自比特幣指數。',
+      commentary: '',
+      commentaryZh: '',
     },
   }));
   const liveCount = equities.length + crypto.length + gold.length + fear.length;

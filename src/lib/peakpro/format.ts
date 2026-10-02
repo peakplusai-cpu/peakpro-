@@ -42,6 +42,6 @@ export function formatZhang(shares: number) {
 
 export function publicThesis(text: string | null | undefined) {
   const value = text?.trim() ?? '';
-  if (!value || /yahoo/i.test(value)) return '';
+  if (!value || /yahoo|warehouse|scraper|快取|cache print/i.test(value)) return '';
   return value;
 }

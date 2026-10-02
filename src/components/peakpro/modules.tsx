@@ -83,13 +83,11 @@ function EmptyCache({ locale }: { locale: Locale }) {
 function SentimentCard({
   locale,
   titleKey,
-  hintKey,
   data,
   kind,
 }: {
   locale: Locale;
   titleKey: 'fearTaiwan' | 'fearUs' | 'fearCrypto';
-  hintKey: 'fearTaiwanHint' | 'fearUsHint' | 'fearCryptoHint';
   data: SentimentGauge | Pick<FearGreedPayload, 'value' | 'classification' | 'classificationZh'> | null;
   kind: 'desk' | 'crypto';
 }) {
@@ -116,7 +114,6 @@ function SentimentCard({
           {sample.avgChangePct != null ? ` · ${tPeakpro(locale, 'fearAvg')} ${formatPct(sample.avgChangePct)}` : ''}
         </p>
       ) : null}
-      <p className="mt-3 text-center text-[11px] leading-relaxed text-zinc-500">{tPeakpro(locale, hintKey)}</p>
     </article>
   );
 }
@@ -152,7 +149,6 @@ export function PeakProModuleView({
     const freeMonthly = cache.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe));
     return (
       <div className="space-y-8">
-        <p className="text-sm text-zinc-400">{tPeakpro(locale, 'overviewLead')}</p>
         <section>
           <h2 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">
             {tPeakpro(locale, 'monthlyOnly')}
@@ -271,31 +267,23 @@ export function PeakProModuleView({
             <SentimentCard
               locale={locale}
               titleKey="fearTaiwan"
-              hintKey="fearTaiwanHint"
               data={bias.taiwan.sampleSize > 0 ? bias.taiwan : null}
               kind="desk"
             />
             <SentimentCard
               locale={locale}
               titleKey="fearUs"
-              hintKey="fearUsHint"
               data={bias.us.sampleSize > 0 ? bias.us : null}
               kind="desk"
             />
             <SentimentCard
               locale={locale}
               titleKey="fearCrypto"
-              hintKey="fearCryptoHint"
               data={payload ?? null}
               kind="crypto"
             />
           </div>
         )}
-        {payload && (locale === 'zh' ? payload.commentaryZh : payload.commentary) ? (
-          <p className="text-center text-sm leading-relaxed text-zinc-500">
-            {locale === 'zh' ? payload.commentaryZh : payload.commentary}
-          </p>
-        ) : null}
       </div>
     );
   }

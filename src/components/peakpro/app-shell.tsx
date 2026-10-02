@@ -41,10 +41,17 @@ export function PeakProAppShell({
               {tPeakpro(locale, 'paymentSuccess')}
             </p>
           ) : null}
-          <p className="mb-8 text-[11px] uppercase tracking-[0.28em] text-zinc-500">
-            {tPeakpro(locale, 'lastPrint')}: {cache.lastUpdated ?? '—'}
-          </p>
-          <p className="mb-8 text-sm text-zinc-500">{tPeakpro(locale, 'synchronizing')}</p>
+          {cache.lastUpdated ? (
+            <p className="mb-8 text-[11px] uppercase tracking-[0.28em] text-zinc-500">
+              {tPeakpro(locale, 'lastPrint')}:{' '}
+              {new Date(cache.lastUpdated).toLocaleString(locale === 'zh' ? 'zh-TW' : 'en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+              })}
+            </p>
+          ) : null}
           {children ?? (
             <PeakProModuleView
               locale={locale}
