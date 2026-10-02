@@ -348,10 +348,13 @@ export function PeakProModuleView({
 
   if (moduleId === 'trending') {
     const payload = cache.trending?.payload as unknown as TrendingPayload | undefined;
-    const taiwan = payload?.taiwan?.length ? payload.taiwan : payload?.items?.filter((item) => isTaiwanSymbol(item.symbol)) ?? [];
-    const us = payload?.us?.length
+    const taiwan = (payload?.taiwan?.length ? payload.taiwan : payload?.items?.filter((item) => isTaiwanSymbol(item.symbol)) ?? []).map(
+      (item, index) => ({ ...item, rank: index + 1 }),
+    );
+    const us = (payload?.us?.length
       ? payload.us
-      : payload?.items?.filter((item) => item.assetClass === 'equity' && !isTaiwanSymbol(item.symbol)) ?? [];
+      : payload?.items?.filter((item) => item.assetClass === 'equity' && !isTaiwanSymbol(item.symbol)) ?? []
+    ).map((item, index) => ({ ...item, rank: index + 1 }));
     const empty = taiwan.length + us.length === 0;
     return (
       <div className="space-y-8">

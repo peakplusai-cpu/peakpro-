@@ -76,20 +76,25 @@ export function normalizeEquityQuery(
 }
 
 async function fetchYahooJson<T>(url: string): Promise<T | null> {
-  try {
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: {
-        Accept: 'application/json',
-        'User-Agent': 'PeakProPlus-CacheDesk/1.0',
-      },
-    });
-    if (!response.ok) return null;
-    return (await response.json()) as T;
-  } catch (error) {
-    console.warn('[peakpro/yahoo] fetch failed', url, error);
-    return null;
+  const urls = url.includes('query1.finance.yahoo.com')
+    ? [url, url.replace('query1.finance.yahoo.com', 'query2.finance.yahoo.com')]
+    : [url];
+  for (const candidate of urls) {
+    try {
+      const response = await fetch(candidate, {
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': 'PeakProPlus-CacheDesk/1.0',
+        },
+      });
+      if (!response.ok) continue;
+      return (await response.json()) as T;
+    } catch (error) {
+      console.warn('[peakpro/yahoo] fetch failed', candidate, error);
+    }
   }
+  return null;
 }
 
 export function yahooToBars(payload: YahooChart): OhlcBar[] {
@@ -125,16 +130,23 @@ export async function fetchYahooChart(symbol: string, timeframe: 'daily' | 'mont
 export async function fetchYahooQuotes(symbols: string[], limit = 24): Promise<Array<YahooQuote & { symbol: string }>> {
   const unique = [...new Set(symbols.map((symbol) => symbol.trim()).filter(Boolean))].slice(0, limit);
   if (unique.length === 0) return [];
-  const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${unique.map(encodeURIComponent).join(',')}`;
-  const json = await fetchYahooJson<{
-    quoteResponse?: { result?: Array<YahooQuote & { symbol?: string }> };
-  }>(url);
-  return (json?.quoteResponse?.result ?? [])
-    .map((row, index) => ({
-      ...row,
-      symbol: row.symbol?.trim() || unique[index] || '',
-    }))
-    .filter((row) => row.symbol.length > 0);
+  const chunks: string[][] = [];
+  for (let i = 0; i < unique.length; i += 20) chunks.push(unique.slice(i, i + 20));
+  const batches = await Promise.all(
+    chunks.map(async (chunk) => {
+      const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.map(encodeURIComponent).join(',')}`;
+      const json = await fetchYahooJson<{
+        quoteResponse?: { result?: Array<YahooQuote & { symbol?: string }> };
+      }>(url);
+      return (json?.quoteResponse?.result ?? [])
+        .map((row, index) => ({
+          ...row,
+          symbol: row.symbol?.trim() || chunk[index] || '',
+        }))
+        .filter((row) => row.symbol.length > 0);
+    }),
+  );
+  return batches.flat();
 }
 
 export async function fetchYahooQuote(symbol: string): Promise<YahooQuote | null> {

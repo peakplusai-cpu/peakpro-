@@ -1,10 +1,10 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import { fetchMarketWideTrending } from '@/lib/peakpro/market-trending';
+import { fetchMarketWideTrending, rerankTrending } from '@/lib/peakpro/market-trending';
 import { insertSessionPrints, persistTapeFromScrape, printFromQuote } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
-import type { MarketSeriesPayload, OhlcBar, TrendingPayload } from '@/lib/peakpro/types';
+import type { MarketSeriesPayload, OhlcBar, TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
 import {
   chartMeta,
   fetchYahooChart,
@@ -576,6 +576,20 @@ async function scrapeNews() {
   return items.length;
 }
 
+function mergeTrendingSide(primary: TrendingItem[] | undefined, fallback: TrendingItem[], minCount: number) {
+  const start = primary ?? [];
+  if (start.length >= minCount) return rerankTrending(start);
+  const seen = new Set(start.map((item) => item.symbol));
+  const merged = [...start];
+  for (const item of fallback) {
+    if (seen.has(item.symbol)) continue;
+    seen.add(item.symbol);
+    merged.push(item);
+    if (merged.length >= minCount) break;
+  }
+  return rerankTrending(merged);
+}
+
 function deskTrendingFallback(rows: Array<{ payload: unknown; symbol: string; asset_class: string }>): TrendingPayload {
   const items = rows
     .filter((row) => row.asset_class === 'equity')
@@ -725,10 +739,10 @@ export async function runPeakProMarketScrape(): Promise<{
 
   const trendingSource = equities.filter((row) => row.timeframe === 'daily');
   const [fx, marketTrend] = await Promise.all([scrapeUsdTwd(), fetchMarketWideTrending()]);
-  const trendPayload =
-    (marketTrend.taiwan?.length ?? 0) + (marketTrend.us?.length ?? 0) > 0
-      ? marketTrend
-      : deskTrendingFallback(trendingSource);
+  const deskTrend = deskTrendingFallback(trendingSource);
+  const taiwan = mergeTrendingSide(marketTrend.taiwan, deskTrend.taiwan ?? [], 10);
+  const us = mergeTrendingSide(marketTrend.us, deskTrend.us ?? [], 8);
+  const trendPayload: TrendingPayload = { taiwan, us, items: [...taiwan, ...us] };
   const trending = [
     {
       asset_class: 'ranking',
