@@ -34,14 +34,16 @@ function LiveTape({
   if (tier !== 'premium') {
     return <p className="text-xs text-zinc-500">{tPeakpro(locale, 'tvLocked')}</p>;
   }
+  const tvSymbol = toTradingViewSymbol(market, symbol, exchange);
   return (
     <section className="overflow-hidden rounded-3xl border border-gold/15 bg-black">
       <div className="border-b border-gold/10 px-5 py-3">
         <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{tPeakpro(locale, 'tvTitle')}</p>
         <p className="mt-1 text-xs text-zinc-500">{tPeakpro(locale, 'tvLead')}</p>
+        <p className="mt-1 font-mono text-[10px] tracking-wide text-zinc-600">{tvSymbol}</p>
       </div>
       <PeakProTradingViewChart
-        symbol={toTradingViewSymbol(market, symbol, exchange)}
+        symbol={tvSymbol}
         locale={locale}
         timezone={tradingviewTimezone(market)}
       />
