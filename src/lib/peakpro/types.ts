@@ -93,16 +93,23 @@ export interface FearGreedPayload {
   us?: SentimentGauge;
 }
 
+export interface TrendingItem {
+  rank: number;
+  symbol: string;
+  name: string;
+  assetClass: MarketAssetClass;
+  market?: 'taiwan' | 'us';
+  changePct: number;
+  last?: number;
+  currency?: string;
+  catalyst: string;
+  catalystZh: string;
+}
+
 export interface TrendingPayload {
-  items: Array<{
-    rank: number;
-    symbol: string;
-    name: string;
-    assetClass: MarketAssetClass;
-    changePct: number;
-    catalyst: string;
-    catalystZh: string;
-  }>;
+  items: TrendingItem[];
+  taiwan?: TrendingItem[];
+  us?: TrendingItem[];
 }
 
 export interface PeakProCacheSnapshot {

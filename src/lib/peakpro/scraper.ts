@@ -1,13 +1,15 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { fetchMarketWideTrending } from '@/lib/peakpro/market-trending';
 import { insertSessionPrints, persistTapeFromScrape, printFromQuote } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
-import type { MarketSeriesPayload, OhlcBar } from '@/lib/peakpro/types';
+import type { MarketSeriesPayload, OhlcBar, TrendingPayload } from '@/lib/peakpro/types';
 import {
   chartMeta,
   fetchYahooChart,
   fetchYahooQuote,
+  isTaiwanSymbol,
   yahooToBars,
   type YahooQuote,
 } from '@/lib/peakpro/yahoo';
@@ -574,24 +576,29 @@ async function scrapeNews() {
   return items.length;
 }
 
-function buildTrending(rows: Array<{ payload: unknown; symbol: string; asset_class: string }>) {
+function deskTrendingFallback(rows: Array<{ payload: unknown; symbol: string; asset_class: string }>): TrendingPayload {
   const items = rows
+    .filter((row) => row.asset_class === 'equity')
     .map((row) => {
       const payload = row.payload as MarketSeriesPayload;
+      const market = isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us';
       return {
         rank: 0,
         symbol: row.symbol,
         name: payload.name,
-        assetClass: row.asset_class,
+        assetClass: 'equity' as const,
+        market: market as 'taiwan' | 'us',
         changePct: payload.changePct ?? 0,
-        catalyst: payload.thesis,
-        catalystZh: payload.thesisZh,
+        last: payload.last,
+        currency: payload.currency,
+        catalyst: 'Desk watchlist mover',
+        catalystZh: '桌上觀察名單',
       };
     })
-    .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
-    .slice(0, 8)
-    .map((item, index) => ({ ...item, rank: index + 1 }));
-  return { items };
+    .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct));
+  const taiwan = items.filter((row) => row.market === 'taiwan').slice(0, 15).map((item, index) => ({ ...item, rank: index + 1 }));
+  const us = items.filter((row) => row.market === 'us').slice(0, 15).map((item, index) => ({ ...item, rank: index + 1 }));
+  return { taiwan, us, items: [...taiwan, ...us] };
 }
 
 async function writeAiBrief(context: string) {
@@ -716,19 +723,21 @@ export async function runPeakProMarketScrape(): Promise<{
     };
   }
 
-  const trendingSource = [...equities, ...crypto, ...gold].filter((row) =>
-    ['daily', 'spot', 'monthly'].includes(row.timeframe),
-  );
+  const trendingSource = equities.filter((row) => row.timeframe === 'daily');
+  const [fx, marketTrend] = await Promise.all([scrapeUsdTwd(), fetchMarketWideTrending()]);
+  const trendPayload =
+    (marketTrend.taiwan?.length ?? 0) + (marketTrend.us?.length ?? 0) > 0
+      ? marketTrend
+      : deskTrendingFallback(trendingSource);
   const trending = [
     {
       asset_class: 'ranking',
       symbol: 'WEEKLY',
       timeframe: 'weekly',
-      payload: buildTrending(trendingSource),
+      payload: trendPayload,
     },
   ];
 
-  const fx = await scrapeUsdTwd();
   await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending, ...fx]);
   try {
     await persistTapeFromScrape(

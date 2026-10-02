@@ -10,6 +10,7 @@ import type {
   PeakProCacheSnapshot,
   PeakProTier,
   SentimentGauge,
+  TrendingItem,
   TrendingPayload,
 } from '@/lib/peakpro/types';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
@@ -72,6 +73,61 @@ function SeriesCard({
   }
 
   return <article className="rounded-2xl border border-gold/15 bg-black/60 p-5">{body}</article>;
+}
+
+function TrendingBoard({
+  locale,
+  titleKey,
+  items,
+  usdTwd,
+}: {
+  locale: Locale;
+  titleKey: 'trendingTaiwan' | 'trendingUs';
+  items: TrendingItem[];
+  usdTwd?: number | null;
+}) {
+  return (
+    <section>
+      <h3 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, titleKey)}</h3>
+      {items.length === 0 ? (
+        <EmptyCache locale={locale} />
+      ) : (
+        <ol className="space-y-3">
+          {items.map((item) => {
+            const market = item.market ?? (isTaiwanSymbol(item.symbol) ? 'taiwan' : 'us');
+            return (
+              <li key={`${market}-${item.symbol}-${item.rank}`}>
+                <Link
+                  href={`/app/${market}/${encodeURIComponent(item.symbol)}`}
+                  className="flex items-start justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4 transition-colors hover:border-gold/50"
+                >
+                  <div>
+                    <p className="text-[10px] uppercase tracking-[0.28em] text-gold">#{item.rank}</p>
+                    <p className="mt-1 font-peakpro text-xl text-white">
+                      {item.symbol} <span className="text-zinc-500">{item.name}</span>
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-400">
+                      {locale === 'zh' ? item.catalystZh : item.catalyst}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    {item.last != null ? (
+                      <p className="font-peakpro text-lg text-gold">
+                        {displayPx(item.last, item.currency ?? (market === 'taiwan' ? 'TWD' : 'USD'), locale, usdTwd)}
+                      </p>
+                    ) : null}
+                    <p className={item.changePct >= 0 ? 'font-peakpro text-2xl text-emerald-400' : 'font-peakpro text-2xl text-red-400'}>
+                      {formatPct(item.changePct)}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
+        </ol>
+      )}
+    </section>
+  );
 }
 
 function EmptyCache({ locale }: { locale: Locale }) {
@@ -292,34 +348,24 @@ export function PeakProModuleView({
 
   if (moduleId === 'trending') {
     const payload = cache.trending?.payload as unknown as TrendingPayload | undefined;
+    const taiwan = payload?.taiwan?.length ? payload.taiwan : payload?.items?.filter((item) => isTaiwanSymbol(item.symbol)) ?? [];
+    const us = payload?.us?.length
+      ? payload.us
+      : payload?.items?.filter((item) => item.assetClass === 'equity' && !isTaiwanSymbol(item.symbol)) ?? [];
+    const empty = taiwan.length + us.length === 0;
     return (
-      <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'trendingTitle')}</h2>
-        {!payload?.items?.length ? (
+      <div className="space-y-8">
+        <div>
+          <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'trendingTitle')}</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'trendingLead')}</p>
+        </div>
+        {empty ? (
           <EmptyCache locale={locale} />
         ) : (
-          <ol className="space-y-3">
-            {payload.items.map((item) => (
-              <li
-                key={item.symbol + item.rank}
-                className="flex items-start justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4"
-              >
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-gold">#{item.rank}</p>
-                  <p className="mt-1 font-peakpro text-xl text-white">
-                    {item.symbol} <span className="text-zinc-500">{item.name}</span>
-                  </p>
-                  <p className="mt-2 text-sm text-zinc-400">
-                    {locale === 'zh' ? item.catalystZh : item.catalyst}
-                  </p>
-                </div>
-                <p className={item.changePct >= 0 ? 'font-peakpro text-2xl text-emerald-400' : 'font-peakpro text-2xl text-red-400'}>
-                  {item.changePct >= 0 ? '+' : ''}
-                  {item.changePct.toFixed(2)}%
-                </p>
-              </li>
-            ))}
-          </ol>
+          <div className="grid gap-8 lg:grid-cols-2">
+            <TrendingBoard locale={locale} titleKey="trendingTaiwan" items={taiwan} usdTwd={cache.usdTwd} />
+            <TrendingBoard locale={locale} titleKey="trendingUs" items={us} usdTwd={cache.usdTwd} />
+          </div>
         )}
       </div>
     );

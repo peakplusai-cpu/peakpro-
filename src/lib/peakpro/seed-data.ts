@@ -344,16 +344,15 @@ function fearGreedRow(): MarketDataRow {
 }
 
 function trendingRow(): MarketDataRow {
-  const payload: TrendingPayload = {
-    items: [
-      { rank: 1, symbol: 'NVDA', name: 'NVIDIA', assetClass: 'equity', changePct: 6.4, catalyst: 'Accelerator order book revision', catalystZh: '加速器訂單下修／上修傳聞' },
-      { rank: 2, symbol: 'BTC', name: 'Bitcoin', assetClass: 'crypto', changePct: 4.1, catalyst: 'Spot ETF primary-market create', catalystZh: '現貨 ETF 初級市場申購' },
-      { rank: 3, symbol: 'XAUUSD', name: 'Spot Gold', assetClass: 'gold', changePct: 2.2, catalyst: 'Official-sector bid + real-rate ease', catalystZh: '官方買盤與實質利率回落' },
-      { rank: 4, symbol: 'TSM', name: 'TSMC', assetClass: 'equity', changePct: 3.8, catalyst: 'Leading-edge utilization print', catalystZh: '先進製程利用率數據' },
-      { rank: 5, symbol: 'ETH', name: 'Ethereum', assetClass: 'crypto', changePct: 3.1, catalyst: 'L2 fee compression vs staking yield', catalystZh: 'L2 費用壓縮對比質押收益' },
-      { rank: 6, symbol: '2330.TW', name: '台積電', assetClass: 'equity', changePct: 2.9, catalyst: 'Domestic flow into the foundry complex', catalystZh: '本土資金流入晶圓代工族群' },
-    ],
-  };
+  const taiwan: TrendingPayload['items'] = [
+    { rank: 1, symbol: '2330.TW', name: '台積電', assetClass: 'equity', market: 'taiwan', changePct: 2.9, catalyst: 'Market-wide volume leader', catalystZh: '全市場成交量領先' },
+    { rank: 2, symbol: '2317.TW', name: '鴻海', assetClass: 'equity', market: 'taiwan', changePct: 1.8, catalyst: 'Market-wide trending tape', catalystZh: '全市場熱門走勢' },
+  ];
+  const us: TrendingPayload['items'] = [
+    { rank: 1, symbol: 'NVDA', name: 'NVIDIA', assetClass: 'equity', market: 'us', changePct: 6.4, catalyst: 'Market-wide session gainer', catalystZh: '全市場漲幅領先' },
+    { rank: 2, symbol: 'TSM', name: 'TSMC', assetClass: 'equity', market: 'us', changePct: 3.8, catalyst: 'Market-wide trending tape', catalystZh: '全市場熱門走勢' },
+  ];
+  const payload: TrendingPayload = { taiwan, us, items: [...taiwan, ...us] };
   return {
     id: 'ranking:WEEKLY:weekly',
     asset_class: 'ranking',
