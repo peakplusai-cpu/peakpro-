@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 
 import { runPeakProMarketScrape } from '@/lib/peakpro/scraper';
 
@@ -23,6 +23,19 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const result = await runPeakProMarketScrape();
-  return NextResponse.json({ ok: true, ...result });
+  const wait = new URL(request.url).searchParams.get('wait') === '1';
+  if (wait) {
+    const result = await runPeakProMarketScrape();
+    return NextResponse.json({ ok: true, ...result });
+  }
+
+  after(async () => {
+    try {
+      await runPeakProMarketScrape();
+    } catch (error) {
+      console.warn('[peakpro/cron] scrape failed', error);
+    }
+  });
+
+  return NextResponse.json({ ok: true, accepted: true });
 }
