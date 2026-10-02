@@ -10,7 +10,8 @@ import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
-import { formatCap, formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
+import { usePeakPro } from '@/components/peakpro/provider';
+import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
@@ -46,6 +47,7 @@ export function PeakProEquityDetail({
       ),
     [rows, tier, symbol],
   );
+  const { usdTwd } = usePeakPro();
   const defaultTab = available.find((tab) => tab.id === 'daily')?.id ?? available[0]?.id ?? 'monthly';
   const [tab, setTab] = useState<MarketTimeframe>(defaultTab);
   const resolvedTab = available.some((item) => item.id === tab) ? tab : defaultTab;
@@ -53,7 +55,7 @@ export function PeakProEquityDetail({
   const payload = active?.payload;
   const bar = lastBar(active);
   const up = (payload?.changePct ?? 0) >= 0;
-  const cap = formatCap(payload?.marketCap, payload?.currency ?? 'USD');
+  const cap = displayCap(payload?.marketCap, payload?.currency ?? 'USD', locale, usdTwd);
 
   if (!payload) {
     return (
@@ -71,20 +73,20 @@ export function PeakProEquityDetail({
 
   const readout =
     locale === 'zh'
-      ? `最新價 ${formatPx(payload.last, payload.currency)}，漲跌 ${formatPct(payload.changePct)}。區間高 ${formatPx(payload.high, payload.currency)}、低 ${formatPx(payload.low, payload.currency)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}`
-      : `Last ${formatPx(payload.last, payload.currency)}, change ${formatPct(payload.changePct)}. Range high ${formatPx(payload.high, payload.currency)} / low ${formatPx(payload.low, payload.currency)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''}`;
+      ? `最新價 ${displayPx(payload.last, payload.currency, locale, usdTwd)}，漲跌 ${formatPct(payload.changePct)}。區間高 ${displayPx(payload.high, payload.currency, locale, usdTwd)}、低 ${displayPx(payload.low, payload.currency, locale, usdTwd)}。${cap ? `市值 ${cap}。` : ''}${payload.pe ? `本益比 ${payload.pe.toFixed(1)}。` : ''}`
+      : `Last ${displayPx(payload.last, payload.currency, locale, usdTwd)}, change ${formatPct(payload.changePct)}. Range high ${displayPx(payload.high, payload.currency, locale, usdTwd)} / low ${displayPx(payload.low, payload.currency, locale, usdTwd)}.${cap ? ` Market cap ${cap}.` : ''}${payload.pe ? ` P/E ${payload.pe.toFixed(1)}.` : ''}`;
 
   const stats: Array<[string, string]> = [];
   if (cap) stats.push([tPeakpro(locale, 'mktCap'), cap]);
   if (payload.pe) stats.push([tPeakpro(locale, 'peLabel'), payload.pe.toFixed(1)]);
   stats.push([
     tPeakpro(locale, 'weekRange'),
-    `${formatPx(payload.low, payload.currency)} – ${formatPx(payload.high, payload.currency)}`,
+    `${displayPx(payload.low, payload.currency, locale, usdTwd)} – ${displayPx(payload.high, payload.currency, locale, usdTwd)}`,
   ]);
   if (bar) {
     stats.push([
       `${tPeakpro(locale, 'open')} / ${tPeakpro(locale, 'close')}`,
-      `${formatPx(bar.o, payload.currency)} / ${formatPx(bar.c, payload.currency)}`,
+      `${displayPx(bar.o, payload.currency, locale, usdTwd)} / ${displayPx(bar.c, payload.currency, locale, usdTwd)}`,
     ]);
   }
 
@@ -104,7 +106,7 @@ export function PeakProEquityDetail({
           </p>
         </div>
         <div className="text-left md:text-right">
-          <p className="font-peakpro text-4xl text-white">{formatPx(payload.last, payload.currency)}</p>
+          <p className="font-peakpro text-4xl text-white">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
           <p className={up ? 'text-lg text-emerald-400' : 'text-lg text-red-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </header>

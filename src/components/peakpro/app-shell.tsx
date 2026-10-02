@@ -27,7 +27,7 @@ export function PeakProAppShell({
   children?: ReactNode;
 }) {
   return (
-    <PeakProProvider session={session} activeModule={moduleId}>
+    <PeakProProvider session={session} activeModule={moduleId} usdTwd={cache.usdTwd}>
       <div className="min-h-screen bg-black text-zinc-100">
         <PeakProNav locale={locale} tier={session.tier} signedIn={Boolean(session.userId)} />
         <main className="mx-auto max-w-6xl px-4 py-10">

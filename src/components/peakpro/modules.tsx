@@ -2,7 +2,7 @@ import type { Locale } from '@/i18n/locale';
 import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { localizedNewsText, newsCategoryLabel, newsSourceLabel, tPeakpro } from '@/lib/peakpro/copy';
-import { formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
+import { displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type {
   FearGreedPayload,
@@ -24,9 +24,11 @@ import Link from 'next/link';
 function SeriesCard({
   locale,
   row,
+  usdTwd,
 }: {
   locale: Locale;
   row: MarketDataRow;
+  usdTwd?: number | null;
 }) {
   const payload = row.payload;
   const up = payload.changePct >= 0;
@@ -43,7 +45,7 @@ function SeriesCard({
           <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-zinc-500">{row.timeframe}</p>
         </div>
         <div className="text-right">
-          <p className="font-peakpro text-2xl text-gold">{formatPx(payload.last, payload.currency)}</p>
+          <p className="font-peakpro text-2xl text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
           <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </div>
@@ -138,7 +140,7 @@ export function PeakProModuleView({
       <PeakProPaywall locale={locale}>
         <div className="grid gap-4 p-6 md:grid-cols-2">
           {cache.equities.slice(0, 4).map((row) => (
-            <SeriesCard key={row.id} locale={locale} row={row} />
+            <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
           ))}
         </div>
       </PeakProPaywall>
@@ -158,7 +160,7 @@ export function PeakProModuleView({
           ) : (
             <div className="grid gap-4 md:grid-cols-2">
               {freeMonthly.map((row) => (
-                <SeriesCard key={row.id} locale={locale} row={row} />
+                <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
               ))}
             </div>
           )}
@@ -168,7 +170,7 @@ export function PeakProModuleView({
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.crypto.slice(0, 2).map((row) => (
-              <SeriesCard key={row.id} locale={locale} row={row} />
+              <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
             ))}
           </div>
         )}
@@ -198,7 +200,7 @@ export function PeakProModuleView({
         {cache.crypto.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.crypto.map((row) => (
-              <SeriesCard key={row.id} locale={locale} row={row} />
+              <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
             ))}
           </div>
         )}
@@ -213,7 +215,7 @@ export function PeakProModuleView({
         {cache.gold.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.gold.map((row) => (
-              <SeriesCard key={row.id} locale={locale} row={row} />
+              <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
             ))}
           </div>
         )}
@@ -360,10 +362,12 @@ function TimeframeBlock({
   locale,
   titleKey,
   rows,
+  usdTwd,
 }: {
   locale: Locale;
   titleKey: string;
   rows: MarketDataRow[];
+  usdTwd?: number | null;
 }) {
   return (
     <section>
@@ -373,7 +377,7 @@ function TimeframeBlock({
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {rows.map((row) => (
-            <SeriesCard key={row.id} locale={locale} row={row} />
+            <SeriesCard key={row.id} locale={locale} row={row} usdTwd={usdTwd} />
           ))}
         </div>
       )}

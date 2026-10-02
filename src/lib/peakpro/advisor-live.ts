@@ -1,5 +1,5 @@
-import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
-import { formatPct, formatPx } from '@/lib/peakpro/format';
+import { EQUITY_UNIVERSE, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import { displayPx, formatPct } from '@/lib/peakpro/format';
 import { fetchYahooQuotes } from '@/lib/peakpro/yahoo';
 
 const PULSE_SYMBOLS = [
@@ -70,15 +70,23 @@ async function fetchFearGreed(): Promise<string | null> {
 
 export async function buildAdvisorLiveContext(userText: string): Promise<string> {
   const fetchedAt = new Date().toISOString();
+  const zh = /[\u3400-\u9fff]/.test(userText);
   const symbols = collectAdvisorSymbols(userText);
-  const [quotes, fear] = await Promise.all([fetchYahooQuotes(symbols), fetchFearGreed()]);
+  const [quotes, fear] = await Promise.all([
+    fetchYahooQuotes(zh ? [...symbols, USDTWD_YAHOO] : symbols),
+    fetchFearGreed(),
+  ]);
+  const fx = quotes.find((row) => row.symbol === USDTWD_YAHOO || row.symbol === 'TWD=X')?.regularMarketPrice;
+  const usdTwd = typeof fx === 'number' && fx > 20 && fx < 50 ? fx : null;
+  const locale = zh ? 'zh' : 'en';
   const lines = quotes
     .filter((row) => typeof row.regularMarketPrice === 'number')
+    .filter((row) => row.symbol !== USDTWD_YAHOO && row.symbol !== 'TWD=X')
     .map((row) => {
       const name = row.shortName ?? row.longName ?? row.symbol;
       const currency = row.currency ?? (row.symbol.endsWith('.TW') || row.symbol.endsWith('.TWO') ? 'TWD' : 'USD');
       const change = row.regularMarketChangePercent ?? 0;
-      return `${row.symbol} ${name}: ${formatPx(row.regularMarketPrice ?? 0, currency)} (${formatPct(change)})`;
+      return `${row.symbol} ${name}: ${displayPx(row.regularMarketPrice ?? 0, currency, locale, usdTwd)} (${formatPct(change)})`;
     });
 
   return [

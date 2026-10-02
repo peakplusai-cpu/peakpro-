@@ -1,9 +1,26 @@
+import type { Locale } from '@/i18n/locale';
+
 export function formatPx(value: number, currency: string) {
-  return new Intl.NumberFormat('en-US', {
+  const ccy = currency === 'TWD' ? 'TWD' : 'USD';
+  return new Intl.NumberFormat(ccy === 'TWD' ? 'zh-TW' : 'en-US', {
     style: 'currency',
-    currency: currency === 'TWD' ? 'TWD' : 'USD',
+    currency: ccy,
     maximumFractionDigits: value >= 1000 ? 0 : 2,
   }).format(value);
+}
+
+export function toDisplayAmount(value: number, currency: string, locale: Locale, usdTwd?: number | null) {
+  if (locale === 'zh' && currency !== 'TWD' && usdTwd && usdTwd > 0) return value * usdTwd;
+  return value;
+}
+
+export function displayCurrency(currency: string, locale: Locale, usdTwd?: number | null) {
+  if (locale === 'zh' && currency !== 'TWD' && usdTwd && usdTwd > 0) return 'TWD';
+  return currency === 'TWD' ? 'TWD' : 'USD';
+}
+
+export function displayPx(value: number, currency: string, locale: Locale, usdTwd?: number | null) {
+  return formatPx(toDisplayAmount(value, currency, locale, usdTwd), displayCurrency(currency, locale, usdTwd));
 }
 
 export function formatCap(value: number | undefined, currency: string) {
@@ -15,6 +32,15 @@ export function formatCap(value: number | undefined, currency: string) {
         ? { n: value / 1_000_000_000, s: 'B' }
         : { n: value / 1_000_000, s: 'M' };
   return `${currency === 'TWD' ? 'NT$' : '$'}${unit.n.toFixed(1)}${unit.s}`;
+}
+
+export function displayCap(
+  value: number | undefined,
+  currency: string,
+  locale: Locale,
+  usdTwd?: number | null,
+) {
+  return formatCap(toDisplayAmount(value ?? 0, currency, locale, usdTwd), displayCurrency(currency, locale, usdTwd));
 }
 
 export function formatPct(value: number) {

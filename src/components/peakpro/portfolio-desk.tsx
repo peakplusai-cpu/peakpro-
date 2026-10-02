@@ -6,7 +6,8 @@ import { Loader2, Trash2 } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { formatPct, formatPx } from '@/lib/peakpro/format';
+import { usePeakPro } from '@/components/peakpro/provider';
+import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarkedLot, PortfolioBook } from '@/lib/peakpro/portfolio';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,7 @@ function lotHref(lot: MarkedLot) {
 }
 
 export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
+  const { usdTwd } = usePeakPro();
   const [lots, setLots] = useState<MarkedLot[]>([]);
   const [totals, setTotals] = useState<Totals>({
     TWD: { cost: 0, market: 0, pnl: 0 },
@@ -135,11 +137,11 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
             <article key={ccy} className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{ccy}</p>
               <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'bookCost')}</p>
-              <p className="font-peakpro text-2xl text-white">{formatPx(row.cost, ccy)}</p>
+              <p className="font-peakpro text-2xl text-white">{displayPx(row.cost, ccy, locale, usdTwd)}</p>
               <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'bookMarket')}</p>
-              <p className="font-peakpro text-2xl text-gold">{formatPx(row.market, ccy)}</p>
+              <p className="font-peakpro text-2xl text-gold">{displayPx(row.market, ccy, locale, usdTwd)}</p>
               <p className={cn('mt-2 text-sm', row.pnl >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                {formatPx(row.pnl, ccy)} ({formatPct(pct)})
+                {displayPx(row.pnl, ccy, locale, usdTwd)} ({formatPct(pct)})
               </p>
             </article>
           );
@@ -227,12 +229,14 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
                     <p className="text-xs text-zinc-500">{lot.name}</p>
                   </td>
                   <td className="px-4 py-3 text-zinc-200">{lot.quantity}</td>
-                  <td className="px-4 py-3 text-zinc-200">{formatPx(lot.cost, lot.currency)}</td>
+                  <td className="px-4 py-3 text-zinc-200">{displayPx(lot.cost, lot.currency, locale, usdTwd)}</td>
                   <td className="px-4 py-3 text-zinc-200">
-                    {lot.last != null ? formatPx(lot.last, lot.currency) : '—'}
+                    {lot.last != null ? displayPx(lot.last, lot.currency, locale, usdTwd) : '—'}
                   </td>
                   <td className={cn('px-4 py-3', (lot.pnl ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                    {lot.pnl != null ? `${formatPx(lot.pnl, lot.currency)} (${formatPct(lot.pnlPct ?? 0)})` : '—'}
+                    {lot.pnl != null
+                      ? `${displayPx(lot.pnl, lot.currency, locale, usdTwd)} (${formatPct(lot.pnlPct ?? 0)})`
+                      : '—'}
                   </td>
                   <td className="px-4 py-3 text-zinc-500">{lot.bought_on ?? '—'}</td>
                   <td className="px-4 py-3 text-right">

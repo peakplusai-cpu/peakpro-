@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 
 import { canAccessEquity, effectiveTier } from '@/lib/peakpro/access';
+import { USDTWD_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import type {
   AiSummaryRow,
@@ -28,6 +29,7 @@ function emptySnapshot(): PeakProCacheSnapshot {
     trending: null,
     briefs: [],
     lastUpdated: null,
+    usdTwd: null,
   };
 }
 
@@ -43,6 +45,8 @@ async function queryPeakProWarehouse(): Promise<PeakProCacheSnapshot> {
     const market = (marketRes.data ?? []) as MarketDataRow[];
     const news = (newsRes.data ?? []) as NewsCacheRow[];
     const briefs = (briefRes.data ?? []) as AiSummaryRow[];
+    const fx = market.find((row) => row.symbol === USDTWD_SYMBOL)?.payload.last;
+    const usdTwd = typeof fx === 'number' && fx > 20 && fx < 50 ? fx : null;
 
     return {
       equities: market.filter((row) => row.asset_class === 'equity'),
@@ -53,6 +57,7 @@ async function queryPeakProWarehouse(): Promise<PeakProCacheSnapshot> {
       trending: market.find((row) => row.symbol === 'WEEKLY') ?? null,
       briefs,
       lastUpdated: latestStamp([...market, ...news, ...briefs]),
+      usdTwd,
     };
   } catch (error) {
     console.warn('[peakpro/cache] local warehouse unavailable', error);

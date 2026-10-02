@@ -6,10 +6,11 @@ import { useRouter } from 'next/navigation';
 
 import { SparkCandles } from '@/components/peakpro/charts';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
+import { usePeakPro } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { formatCap, formatPct, formatPx, publicThesis } from '@/lib/peakpro/format';
+import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
@@ -25,9 +26,10 @@ function SeriesCard({
   row: MarketDataRow;
   highlight?: boolean;
 }) {
+  const { usdTwd } = usePeakPro();
   const payload = row.payload;
   const up = payload.changePct >= 0;
-  const cap = formatCap(payload.marketCap, payload.currency);
+  const cap = displayCap(payload.marketCap, payload.currency, locale, usdTwd);
   return (
     <Link
       href={`/app/${market}/${encodeURIComponent(row.symbol)}`}
@@ -46,7 +48,7 @@ function SeriesCard({
           </p>
         </div>
         <div className="text-right">
-          <p className="font-peakpro text-2xl text-gold">{formatPx(payload.last, payload.currency)}</p>
+          <p className="font-peakpro text-2xl text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
           <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </div>

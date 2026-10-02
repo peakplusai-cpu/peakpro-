@@ -114,6 +114,7 @@ export interface PeakProCacheSnapshot {
   trending: MarketDataRow | null;
   briefs: AiSummaryRow[];
   lastUpdated: string | null;
+  usdTwd: number | null;
 }
 
 export interface PeakProSession {

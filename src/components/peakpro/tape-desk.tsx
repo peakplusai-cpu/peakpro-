@@ -5,7 +5,8 @@ import { useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { formatPct, formatPx, formatVol, formatZhang } from '@/lib/peakpro/format';
+import { usePeakPro } from '@/components/peakpro/provider';
+import { displayPx, formatPct, formatVol, formatZhang } from '@/lib/peakpro/format';
 import type { TapeDesk, TapeRow, TapeRs, TapeTurn } from '@/lib/peakpro/tape';
 import { cn } from '@/lib/utils';
 
@@ -37,9 +38,11 @@ function hrefFor(row: TapeRow) {
 function TapeTable({
   locale,
   rows,
+  usdTwd,
 }: {
   locale: Locale;
   rows: TapeRow[];
+  usdTwd?: number | null;
 }) {
   return (
     <div className="overflow-x-auto rounded-3xl border border-gold/15">
@@ -65,7 +68,9 @@ function TapeTable({
                 <p className="text-xs text-zinc-500">{row.name}</p>
               </td>
               <td className="px-4 py-3">
-                <p className="text-zinc-100">{row.last != null ? formatPx(row.last, row.currency) : '—'}</p>
+                <p className="text-zinc-100">
+                  {row.last != null ? displayPx(row.last, row.currency, locale, usdTwd) : '—'}
+                </p>
                 <p className={cn('text-xs', (row.changePct ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
                   {row.changePct != null ? formatPct(row.changePct) : '—'}
                 </p>
@@ -119,6 +124,7 @@ function TapeTable({
 }
 
 export function PeakProTapeDesk({ locale }: { locale: Locale }) {
+  const { usdTwd } = usePeakPro();
   const [desk, setDesk] = useState<TapeDesk | null>(null);
   const [setup, setSetup] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -216,7 +222,7 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
           {book.length > 0 ? (
             <section className="space-y-3">
               <h3 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeBook')}</h3>
-              <TapeTable locale={locale} rows={book} />
+              <TapeTable locale={locale} rows={book} usdTwd={usdTwd} />
             </section>
           ) : null}
 
@@ -227,7 +233,7 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
                 {tPeakpro(locale, 'tapeEmpty')}
               </p>
             ) : (
-              <TapeTable locale={locale} rows={rest} />
+              <TapeTable locale={locale} rows={rest} usdTwd={usdTwd} />
             )}
           </section>
         </>

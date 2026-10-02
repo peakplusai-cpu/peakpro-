@@ -1,4 +1,4 @@
-import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
+import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { insertSessionPrints, persistTapeFromScrape, printFromQuote } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
@@ -164,6 +164,30 @@ async function scrapeEquities() {
     if (one.print) prints.push(one.print);
   }
   return { rows, prints };
+}
+
+async function scrapeUsdTwd(): Promise<WarehouseRow[]> {
+  const quote = await fetchYahooQuote(USDTWD_YAHOO);
+  const rate = quote?.regularMarketPrice;
+  if (!rate || rate < 20 || rate > 50) return [];
+  return [
+    {
+      asset_class: 'index',
+      symbol: USDTWD_SYMBOL,
+      timeframe: 'spot',
+      payload: {
+        name: 'USD/TWD',
+        currency: 'TWD',
+        last: rate,
+        changePct: quote?.regularMarketChangePercent ?? 0,
+        high: quote?.fiftyTwoWeekHigh ?? rate,
+        low: quote?.fiftyTwoWeekLow ?? rate,
+        thesis: '',
+        thesisZh: '',
+        bars: [],
+      },
+    },
+  ];
 }
 
 function downsampleAnnual(bars: OhlcBar[]): OhlcBar[] {
@@ -681,6 +705,7 @@ export async function runPeakProMarketScrape(): Promise<{
 
   if (liveCount < 8) {
     await seedWarehouse();
+    await upsertMarket(await scrapeUsdTwd());
     return {
       equities: equities.length,
       crypto: crypto.length,
@@ -703,7 +728,8 @@ export async function runPeakProMarketScrape(): Promise<{
     },
   ];
 
-  await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending]);
+  const fx = await scrapeUsdTwd();
+  await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending, ...fx]);
   try {
     await persistTapeFromScrape(
       equityPack.prints,
