@@ -10,7 +10,6 @@ import {
   type PortfolioLot,
 } from '@/lib/peakpro/portfolio';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
-import { fetchYahooQuote } from '@/lib/peakpro/yahoo';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -78,11 +77,6 @@ export async function POST(request: Request) {
   }
   if (!Number.isFinite(cost) || cost < 0 || cost >= 1_000_000_000) {
     return NextResponse.json({ error: 'invalid' }, { status: 400 });
-  }
-
-  const quote = await fetchYahooQuote(parsed.symbol === 'GC=F' ? 'GC=F' : parsed.symbol);
-  if (!quote?.regularMarketPrice) {
-    return NextResponse.json({ error: 'not_found' }, { status: 404 });
   }
 
   const boughtOn =

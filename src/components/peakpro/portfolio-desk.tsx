@@ -45,6 +45,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
     if (code === 'setup') return tPeakpro(locale, 'bookSetup');
     if (code === 'limit') return tPeakpro(locale, 'bookLimit');
     if (code === 'not_found') return tPeakpro(locale, 'bookNotFound');
+    if (code === 'invalid' || code === 'empty') return tPeakpro(locale, 'bookInvalid');
     if (code === 'wrong_market') return tPeakpro(locale, 'bookWrongMarket');
     if (code === 'premium') return tPeakpro(locale, 'lockedTitle');
     return tPeakpro(locale, 'bookFailed');
@@ -165,7 +166,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={tPeakpro(locale, 'bookSymbol')}
+            placeholder={tPeakpro(locale, book === 'gold' ? 'bookGoldHint' : book === 'crypto' ? 'bookCryptoHint' : 'bookSymbol')}
             className="rounded-2xl border border-gold/20 bg-black px-3 py-2 text-sm"
           />
           <input

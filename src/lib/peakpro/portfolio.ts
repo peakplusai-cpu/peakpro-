@@ -1,4 +1,4 @@
-import { normalizeEquityQuery, type EquityMarket } from '@/lib/peakpro/yahoo';
+import { normalizeEquityQuery } from '@/lib/peakpro/yahoo';
 
 export const PORTFOLIO_MAX_LOTS = 40;
 
@@ -44,10 +44,17 @@ export function parseLotSymbol(
   const raw = query.trim();
   if (!raw) return { symbol: '', currency: 'USD', error: 'empty' };
 
-  if (book === 'taiwan' || book === 'us') {
-    const parsed = normalizeEquityQuery(raw, book as EquityMarket);
-    if (parsed.error) return { symbol: parsed.symbol, currency: book === 'taiwan' ? 'TWD' : 'USD', error: parsed.error };
-    return { symbol: parsed.symbol, currency: book === 'taiwan' ? 'TWD' : 'USD' };
+  if (book === 'taiwan') {
+    const compact = raw.toUpperCase().replace(/\s+/g, '');
+    if (/^\d{5,}/.test(compact)) return { symbol: compact, currency: 'TWD', error: 'invalid' };
+    const parsed = normalizeEquityQuery(compact, 'taiwan');
+    if (parsed.error) return { symbol: parsed.symbol, currency: 'TWD', error: parsed.error };
+    return { symbol: parsed.symbol, currency: 'TWD' };
+  }
+  if (book === 'us') {
+    const parsed = normalizeEquityQuery(raw, 'us');
+    if (parsed.error) return { symbol: parsed.symbol, currency: 'USD', error: parsed.error };
+    return { symbol: parsed.symbol, currency: 'USD' };
   }
 
   const key = raw.toUpperCase().replace(/\s+/g, '');
@@ -61,10 +68,19 @@ export function parseLotSymbol(
     return { symbol: key, currency: 'USD', error: 'invalid' };
   }
 
-  if (key === 'GC=F' || key === 'XAUUSD' || key === 'XAU' || key === 'GOLD') {
+  const goldKey = key.replace(/[^A-Z0-9=]/g, '');
+  if (
+    goldKey === 'GC=F' ||
+    goldKey === 'XAUUSD' ||
+    goldKey === 'XAUUSD=X' ||
+    goldKey === 'XAU' ||
+    goldKey === 'XAUU' ||
+    goldKey === 'GOLD' ||
+    goldKey.startsWith('XAU')
+  ) {
     return { symbol: 'GC=F', currency: 'USD' };
   }
-  return { symbol: key, currency: 'USD', error: 'invalid' };
+  return { symbol: goldKey, currency: 'USD', error: 'invalid' };
 }
 
 export function markLot(

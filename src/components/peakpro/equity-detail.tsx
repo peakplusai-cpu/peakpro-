@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { SparkCandles } from '@/components/peakpro/charts';
 import { PeakProTapeStrip } from '@/components/peakpro/tape-strip';
+import { PeakProTradingViewChart } from '@/components/peakpro/tradingview-chart';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
@@ -13,8 +14,40 @@ import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disc
 import { usePeakPro } from '@/components/peakpro/provider';
 import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
+import { toTradingViewSymbol, tradingviewTimezone } from '@/lib/peakpro/tradingview';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
+
+function LiveTape({
+  locale,
+  tier,
+  market,
+  symbol,
+  exchange,
+}: {
+  locale: Locale;
+  tier: PeakProTier;
+  market: EquityMarket;
+  symbol: string;
+  exchange?: string;
+}) {
+  if (tier !== 'premium') {
+    return <p className="text-xs text-zinc-500">{tPeakpro(locale, 'tvLocked')}</p>;
+  }
+  return (
+    <section className="overflow-hidden rounded-3xl border border-gold/15 bg-black">
+      <div className="border-b border-gold/10 px-5 py-3">
+        <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{tPeakpro(locale, 'tvTitle')}</p>
+        <p className="mt-1 text-xs text-zinc-500">{tPeakpro(locale, 'tvLead')}</p>
+      </div>
+      <PeakProTradingViewChart
+        symbol={toTradingViewSymbol(market, symbol, exchange)}
+        locale={locale}
+        timezone={tradingviewTimezone(market)}
+      />
+    </section>
+  );
+}
 
 const TABS: Array<{ id: 'daily' | 'monthly' | 'annual'; titleKey: string }> = [
   { id: 'daily', titleKey: 'dailyTrends' },
@@ -67,6 +100,7 @@ export function PeakProEquityDetail({
         <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'missingSymbol')}
         </div>
+        <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} />
       </div>
     );
   }
@@ -121,6 +155,8 @@ export function PeakProEquityDetail({
       </dl>
 
       {tier === 'premium' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
+
+      <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} exchange={payload.exchange} />
 
       <div className="flex flex-wrap gap-2">
         {TABS.map((item) => {
