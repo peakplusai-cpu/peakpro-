@@ -670,7 +670,7 @@ async function writeAiBrief(context: string) {
             {
               role: 'system',
               content:
-                'You are a sell-side cross-asset strategist. Write two weekly wrap-ups (English, then Traditional Chinese) using only the cached prints provided. No investment advice. Markdown headings: Tape, Equities, Crypto & bullion, Geopolitics, Positioning.',
+                'You are a sell-side cross-asset strategist writing for a private desk. Write two weekly wrap-ups (English, then Traditional Chinese) using only the cached prints provided. Be bold: in Positioning, state what is 適合買進 / add, 適合減碼 / trim, or 先觀望 / wait, and why. Do not write order tickets, share counts, or how to place a trade. Do not say "no investment advice" in the body. Markdown headings: Tape, Equities, Crypto & bullion, Geopolitics, Positioning. Separate the two languages with a line of --- . End each wrap-up with one disclaimer line: snapshot commentary, not a broker ticket.',
             },
             { role: 'user', content: context.slice(0, 8000) },
           ],
