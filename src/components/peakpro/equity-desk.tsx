@@ -138,7 +138,9 @@ export function PeakProEquityDesk({
     return scoped.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe));
   }, [query, rows, tier]);
 
-  const daily = visible.filter((row) => row.timeframe === 'daily');
+  const daily = visible
+    .filter((row) => row.timeframe === 'daily')
+    .sort((a, b) => Math.abs(b.payload.changePct) - Math.abs(a.payload.changePct));
   const monthly = visible.filter((row) => row.timeframe === 'monthly');
   const annual = visible.filter((row) => row.timeframe === 'annual');
 

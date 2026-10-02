@@ -32,9 +32,17 @@ export async function GET(request: Request) {
     .filter(Boolean);
 
   const cache = await readPeakProCache();
+  const trend = cache.trending?.payload as {
+    taiwan?: Array<{ symbol?: string; last?: number }>;
+    us?: Array<{ symbol?: string; last?: number }>;
+  } | undefined;
+  const marketSymbols = [...(trend?.taiwan ?? []), ...(trend?.us ?? [])]
+    .filter((item) => typeof item.last === 'number' && item.last > 0)
+    .map((item) => String(item.symbol ?? ''))
+    .filter(Boolean);
   const { desk, setup } = await loadTapeDesk({
     bookSymbols,
-    extraSymbols: extra,
+    extraSymbols: [...new Set([...extra, ...marketSymbols])],
     dailyRows: cache.equities,
   });
 

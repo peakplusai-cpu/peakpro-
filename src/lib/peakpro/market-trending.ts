@@ -1,5 +1,6 @@
 import { previousCalendarDates, taipeiCalendarDate } from '@/lib/peakpro/session-clock';
-import type { TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
+import { biasFromChanges } from '@/lib/peakpro/sentiment';
+import type { SentimentGauge, TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
 import { fetchYahooQuotes, isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
 const UA =
@@ -7,16 +8,48 @@ const UA =
 
 const SKIP = /^(?:\^|BRK\.B$)/i;
 const TARGET = 15;
+const US_LIQUID = [
+  'AAPL',
+  'NVDA',
+  'MSFT',
+  'AMZN',
+  'GOOGL',
+  'META',
+  'TSLA',
+  'AVGO',
+  'TSM',
+  'AMD',
+  'NFLX',
+  'JPM',
+  'ORCL',
+  'WMT',
+  'XOM',
+  'COST',
+  'PLTR',
+  'BAC',
+  'INTC',
+  'QCOM',
+];
 
 type SeedWhy = 'volume' | 'gainer' | 'trending';
 
-type OfficialPrint = {
+export type OfficialPrint = {
   symbol: string;
   name: string;
   last: number;
   changePct: number;
   volume: number;
+  open?: number;
+  high?: number;
+  low?: number;
+  tradeDate?: string;
   why: SeedWhy;
+};
+
+export type TaiwanMarketHarvest = {
+  leaders: OfficialPrint[];
+  universe: OfficialPrint[];
+  breadth: SentimentGauge;
 };
 
 type Seed = {
@@ -33,7 +66,7 @@ type QuoteRow = {
   currency?: string;
 };
 
-async function fetchJson(url: string, referer?: string, timeoutMs = 12_000): Promise<unknown> {
+async function fetchJson(url: string, referer?: string, timeoutMs = 8_000): Promise<unknown> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -61,7 +94,7 @@ async function fetchYahooJson(url: string): Promise<unknown> {
     ? [url, url.replace('query1.finance.yahoo.com', 'query2.finance.yahoo.com')]
     : [url];
   for (const candidate of urls) {
-    const json = await fetchJson(candidate, undefined, 8_000);
+    const json = await fetchJson(candidate, undefined, 6_000);
     if (json) return json;
   }
   return null;
@@ -74,6 +107,18 @@ function asSymbol(value: unknown) {
 function listedCode(value: unknown) {
   const raw = String(value ?? '').trim();
   return /^\d{4}$/.test(raw) ? raw : '';
+}
+
+function recordValue(rec: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    if (rec[key] != null && rec[key] !== '') return rec[key];
+  }
+  const lower = new Map(Object.entries(rec).map(([key, value]) => [key.toLowerCase(), value]));
+  for (const key of keys) {
+    const hit = lower.get(key.toLowerCase());
+    if (hit != null && hit !== '') return hit;
+  }
+  return undefined;
 }
 
 function parseNum(value: unknown): number | null {
@@ -104,6 +149,46 @@ function fieldIndex(fields: string[], needles: string[]) {
   return fields.findIndex((field) => needles.some((needle) => field.includes(needle)));
 }
 
+function taiwanSymbol(code: string, otc: boolean) {
+  return otc ? `${code}.TWO` : `${code}.TW`;
+}
+
+function rocYmdToIso(value: unknown): string | undefined {
+  const raw = String(value ?? '').replace(/\D/g, '');
+  if (raw.length === 8 && raw.startsWith('20')) {
+    return `${raw.slice(0, 4)}-${raw.slice(4, 6)}-${raw.slice(6, 8)}`;
+  }
+  if (raw.length === 7) {
+    const year = Number(raw.slice(0, 3)) + 1911;
+    if (!Number.isFinite(year)) return undefined;
+    return `${year}-${raw.slice(3, 5)}-${raw.slice(5, 7)}`;
+  }
+  return undefined;
+}
+
+function asPrint(
+  code: string,
+  name: unknown,
+  last: number,
+  change: number | null,
+  volume: number,
+  otc: boolean,
+  extras?: { open?: number | null; high?: number | null; low?: number | null; tradeDate?: string; why?: SeedWhy },
+): OfficialPrint {
+  return {
+    symbol: taiwanSymbol(code, otc),
+    name: String(name ?? '').trim() || code,
+    last,
+    changePct: change == null ? 0 : changePctFromClose(last, change),
+    volume,
+    open: extras?.open ?? undefined,
+    high: extras?.high ?? undefined,
+    low: extras?.low ?? undefined,
+    tradeDate: extras?.tradeDate,
+    why: extras?.why ?? 'volume',
+  };
+}
+
 async function yahooTrending(region: 'US' | 'TW'): Promise<string[]> {
   const json = (await fetchYahooJson(`https://query1.finance.yahoo.com/v1/finance/trending/${region}?count=24`)) as {
     finance?: { result?: Array<{ quotes?: Array<{ symbol?: string }> }> };
@@ -121,12 +206,15 @@ async function yahooScreener(scrId: string, region: 'US' | 'TW' = 'US'): Promise
   return (json?.finance?.result?.[0]?.quotes ?? []).map((row) => asSymbol(row.symbol)).filter(Boolean);
 }
 
-function parseTwseStockTable(fields: string[], data: unknown[][]): OfficialPrint[] {
-  const codeIdx = fieldIndex(fields, ['證券代號', '代號']);
-  const nameIdx = fieldIndex(fields, ['證券名稱', '名稱']);
+function parseTwseStockTable(fields: string[], data: unknown[][], tradeDate?: string): OfficialPrint[] {
+  const codeIdx = fieldIndex(fields, ['證券代號']);
+  const nameIdx = fieldIndex(fields, ['證券名稱']);
   const volIdx = fieldIndex(fields, ['成交股數']);
   const closeIdx = fieldIndex(fields, ['收盤價']);
-  const signIdx = fieldIndex(fields, ['漲跌(+/-)', '漲跌']);
+  const openIdx = fieldIndex(fields, ['開盤價']);
+  const highIdx = fieldIndex(fields, ['最高價']);
+  const lowIdx = fieldIndex(fields, ['最低價']);
+  const signIdx = fieldIndex(fields, ['漲跌(+/-)']);
   const diffIdx = fieldIndex(fields, ['漲跌價差']);
   if (codeIdx < 0 || volIdx < 0 || closeIdx < 0) return [];
 
@@ -139,37 +227,16 @@ function parseTwseStockTable(fields: string[], data: unknown[][]): OfficialPrint
     const volume = parseNum(line[volIdx]);
     const change = signedChange(signIdx >= 0 ? line[signIdx] : '', diffIdx >= 0 ? line[diffIdx] : null);
     if (last == null || last <= 0 || volume == null || volume <= 0) continue;
-    rows.push({
-      symbol: `${code}.TW`,
-      name: String(line[nameIdx] ?? code),
-      last,
-      changePct: change == null ? 0 : changePctFromClose(last, change),
-      volume,
-      why: 'volume',
-    });
+    rows.push(
+      asPrint(code, nameIdx >= 0 ? line[nameIdx] : code, last, change, volume, false, {
+        open: openIdx >= 0 ? parseNum(line[openIdx]) : null,
+        high: highIdx >= 0 ? parseNum(line[highIdx]) : null,
+        low: lowIdx >= 0 ? parseNum(line[lowIdx]) : null,
+        tradeDate,
+      }),
+    );
   }
   return rows;
-}
-
-async function twseMiIndexAll(): Promise<OfficialPrint[]> {
-  for (const iso of previousCalendarDates(taipeiCalendarDate(), 5)) {
-    const json = (await fetchJson(
-      `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=${iso.replace(/-/g, '')}&type=ALLBUT0999&response=json`,
-      'https://www.twse.com.tw/',
-      15_000,
-    )) as {
-      stat?: string;
-      tables?: Array<{ title?: string; fields?: string[]; data?: unknown[][] }>;
-    } | null;
-    if (!json || (json.stat && json.stat !== 'OK') || !Array.isArray(json.tables)) continue;
-    for (const table of json.tables) {
-      const fields = table.fields ?? [];
-      if (!fields.some((field) => field.includes('證券代號'))) continue;
-      const rows = parseTwseStockTable(fields, table.data ?? []);
-      if (rows.length >= 50) return rows;
-    }
-  }
-  return [];
 }
 
 async function twseStockDayAll(): Promise<OfficialPrint[]> {
@@ -179,20 +246,20 @@ async function twseStockDayAll(): Promise<OfficialPrint[]> {
   for (const row of json) {
     if (!row || typeof row !== 'object') continue;
     const rec = row as Record<string, unknown>;
-    const code = listedCode(rec.Code);
+    const code = listedCode(recordValue(rec, ['Code', '證券代號']));
     if (!code) continue;
-    const last = parseNum(rec.ClosingPrice);
-    const change = parseNum(rec.Change);
-    const volume = parseNum(rec.TradeVolume);
+    const last = parseNum(recordValue(rec, ['ClosingPrice', '收盤價']));
+    const change = parseNum(recordValue(rec, ['Change', '漲跌價差']));
+    const volume = parseNum(recordValue(rec, ['TradeVolume', '成交股數']));
     if (last == null || last <= 0 || volume == null || volume <= 0) continue;
-    rows.push({
-      symbol: `${code}.TW`,
-      name: String(rec.Name ?? code),
-      last,
-      changePct: change == null ? 0 : changePctFromClose(last, change),
-      volume,
-      why: 'volume',
-    });
+    rows.push(
+      asPrint(code, recordValue(rec, ['Name', '證券名稱']), last, change, volume, false, {
+        open: parseNum(recordValue(rec, ['OpeningPrice', '開盤價'])),
+        high: parseNum(recordValue(rec, ['HighestPrice', '最高價'])),
+        low: parseNum(recordValue(rec, ['LowestPrice', '最低價'])),
+        tradeDate: rocYmdToIso(recordValue(rec, ['Date', '日期'])),
+      }),
+    );
   }
   return rows;
 }
@@ -204,35 +271,41 @@ async function tpexQuotes(): Promise<OfficialPrint[]> {
   for (const row of json) {
     if (!row || typeof row !== 'object') continue;
     const rec = row as Record<string, unknown>;
-    const code = listedCode(rec.SecuritiesCompanyCode);
+    const code = listedCode(recordValue(rec, ['SecuritiesCompanyCode', 'Code', '證券代號']));
     if (!code) continue;
-    const last = parseNum(rec.Close);
-    const change = parseNum(rec.Change);
-    const volume = parseNum(rec.TradingShares);
+    const last = parseNum(recordValue(rec, ['Close', 'ClosingPrice', '收盤價']));
+    const change = parseNum(recordValue(rec, ['Change', '漲跌價差']));
+    const volume = parseNum(recordValue(rec, ['TradingShares', 'TradeVolume', '成交股數']));
     if (last == null || last <= 0 || volume == null || volume <= 0) continue;
-    rows.push({
-      symbol: `${code}.TWO`,
-      name: String(rec.CompanyName ?? code),
-      last,
-      changePct: change == null ? 0 : changePctFromClose(last, change),
-      volume,
-      why: 'volume',
-    });
+    rows.push(
+      asPrint(code, recordValue(rec, ['CompanyName', 'Name', '證券名稱']), last, change, volume, true, {
+        open: parseNum(recordValue(rec, ['Open', 'OpeningPrice', '開盤價'])),
+        high: parseNum(recordValue(rec, ['High', 'HighestPrice', '最高價'])),
+        low: parseNum(recordValue(rec, ['Low', 'LowestPrice', '最低價'])),
+        tradeDate: rocYmdToIso(recordValue(rec, ['Date', '日期'])),
+      }),
+    );
   }
   return rows;
 }
 
-async function twseVolumeLeaders(): Promise<OfficialPrint[]> {
-  const dates = previousCalendarDates(taipeiCalendarDate(), 4);
-  for (const iso of dates) {
-    const json = (await fetchJson(
-      `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX20?date=${iso.replace(/-/g, '')}&response=json`,
-      'https://www.twse.com.tw/',
-      8_000,
-    )) as { stat?: string; fields?: string[]; data?: unknown[][] } | null;
-    if (!json || (json.stat && json.stat !== 'OK') || !Array.isArray(json.data)) continue;
-    const rows = parseTwseStockTable(json.fields ?? [], json.data);
-    if (rows.length > 0) return rows;
+async function twseMiIndexOnce(): Promise<OfficialPrint[]> {
+  const iso = previousCalendarDates(taipeiCalendarDate(), 1)[0];
+  if (!iso) return [];
+  const json = (await fetchJson(
+    `https://www.twse.com.tw/rwd/zh/afterTrading/MI_INDEX?date=${iso.replace(/-/g, '')}&type=ALLBUT0999&response=json`,
+    'https://www.twse.com.tw/',
+    6_000,
+  )) as {
+    stat?: string;
+    tables?: Array<{ title?: string; fields?: string[]; data?: unknown[][] }>;
+  } | null;
+  if (!json || (json.stat && json.stat !== 'OK') || !Array.isArray(json.tables)) return [];
+  for (const table of json.tables) {
+    const fields = table.fields ?? [];
+    if (!fields.some((field) => field.includes('證券代號'))) continue;
+    const rows = parseTwseStockTable(fields, table.data ?? [], rocYmdToIso((json as { date?: string }).date) ?? iso);
+    if (rows.length >= 50) return rows;
   }
   return [];
 }
@@ -242,16 +315,16 @@ function pickTaiwanPrints(boards: OfficialPrint[][]): OfficialPrint[] {
   const seen = new Set<string>();
   for (const board of boards) {
     for (const row of board) {
-      if (seen.has(row.symbol)) continue;
+      if (row.last <= 0 || seen.has(row.symbol)) continue;
       seen.add(row.symbol);
       all.push(row);
     }
   }
-  const byVol = [...all].sort((a, b) => b.volume - a.volume).slice(0, 12);
+  const byVol = [...all].sort((a, b) => b.volume - a.volume).slice(0, 8);
   const liquid = all.filter((row) => row.volume >= 1_000_000);
   const byMove = [...liquid]
     .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct))
-    .slice(0, 12)
+    .slice(0, 8)
     .map((row) => ({ ...row, why: 'gainer' as const }));
   const picked: OfficialPrint[] = [];
   const pickedSeen = new Set<string>();
@@ -260,18 +333,19 @@ function pickTaiwanPrints(boards: OfficialPrint[][]): OfficialPrint[] {
     pickedSeen.add(row.symbol);
     picked.push(row);
   }
-  return picked.slice(0, 20);
+  return picked.slice(0, TARGET);
 }
 
 function normalize(symbol: string, market: 'taiwan' | 'us') {
+  const raw = symbol.trim().toUpperCase();
   if (market === 'taiwan') {
-    if (/^\d{4}$/.test(symbol)) return `${symbol}.TW`;
-    if (/\.(TW|TWO)$/i.test(symbol)) return symbol.replace(/\.tw$/i, '.TW').replace(/\.two$/i, '.TWO');
+    if (/^\d{4}$/.test(raw)) return `${raw}.TW`;
+    if (/^\d{4}\.(TW|TWO)$/.test(raw)) return raw;
     return '';
   }
-  if (isTaiwanSymbol(symbol) || /^\d{4}$/.test(symbol)) return '';
-  if (SKIP.test(symbol) || symbol.includes('=')) return '';
-  return symbol;
+  if (isTaiwanSymbol(raw) || /^\d{4}$/.test(raw) || /^\d{4}\.(TW|TWO)$/.test(raw)) return '';
+  if (SKIP.test(raw) || raw.includes('=')) return '';
+  return raw;
 }
 
 function whyCopy(why: SeedWhy): Pick<TrendingItem, 'catalyst' | 'catalystZh'> {
@@ -288,27 +362,29 @@ export function rerankTrending(items: TrendingItem[]): TrendingItem[] {
   return items.slice(0, TARGET).map((item, index) => ({ ...item, rank: index + 1 }));
 }
 
-function itemsFromPrints(prints: OfficialPrint[], quotes: QuoteRow[]): TrendingItem[] {
-  const quoteBy = new Map(quotes.map((row) => [row.symbol.toUpperCase(), row]));
+export function pricedTrending(items: TrendingItem[] | undefined): TrendingItem[] {
+  return (items ?? []).filter((item) => typeof item.last === 'number' && item.last > 0);
+}
+
+export function itemsFromPrints(prints: OfficialPrint[]): TrendingItem[] {
   return rerankTrending(
-    prints
-      .map((print) => {
-        const quote = quoteBy.get(print.symbol.toUpperCase());
+    pricedTrending(
+      prints.map((print) => {
         const copy = whyCopy(print.why);
         return {
           rank: 0,
           symbol: print.symbol,
-          name: print.name || quote?.shortName || quote?.longName || print.symbol,
+          name: print.name || print.symbol,
           assetClass: 'equity' as const,
           market: 'taiwan' as const,
-          changePct: quote?.regularMarketChangePercent ?? print.changePct,
-          last: quote?.regularMarketPrice ?? print.last,
-          currency: quote?.currency ?? 'TWD',
+          changePct: print.changePct,
+          last: print.last,
+          currency: 'TWD',
           catalyst: copy.catalyst,
           catalystZh: copy.catalystZh,
         };
-      })
-      .sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)),
+      }),
+    ),
   );
 }
 
@@ -321,7 +397,7 @@ function rankSide(seeds: Seed[], quotes: QuoteRow[], market: 'taiwan' | 'us'): T
     if (!symbol || seen.has(symbol)) continue;
     seen.add(symbol);
     const quote = quoteBy.get(symbol);
-    if (!quote?.regularMarketPrice && quote?.regularMarketChangePercent == null) continue;
+    if (!quote?.regularMarketPrice || quote.regularMarketPrice <= 0) continue;
     const copy = whyCopy(seed.why);
     rows.push({
       rank: 0,
@@ -339,7 +415,7 @@ function rankSide(seeds: Seed[], quotes: QuoteRow[], market: 'taiwan' | 'us'): T
   return rerankTrending(rows.sort((a, b) => Math.abs(b.changePct) - Math.abs(a.changePct)));
 }
 
-async function fetchUsBoard(): Promise<TrendingItem[]> {
+export async function harvestUsLeaders(): Promise<TrendingItem[]> {
   const actives = await yahooScreener('most_actives', 'US');
   const gainers = actives.length >= 12 ? [] : await yahooScreener('day_gainers', 'US');
   const trend = actives.length + gainers.length >= 12 ? [] : await yahooTrending('US');
@@ -347,46 +423,35 @@ async function fetchUsBoard(): Promise<TrendingItem[]> {
     ...actives.map((symbol) => ({ symbol, why: 'volume' as const })),
     ...gainers.map((symbol) => ({ symbol, why: 'gainer' as const })),
     ...trend.map((symbol) => ({ symbol, why: 'trending' as const })),
+    ...US_LIQUID.map((symbol) => ({ symbol, why: 'volume' as const })),
   ];
   const symbols = [...new Set(seeds.map((row) => normalize(row.symbol, 'us')).filter(Boolean))];
   const quotes = await fetchYahooQuotes(symbols, 40);
   return rankSide(seeds, quotes, 'us');
 }
 
-async function fetchTaiwanBoard(): Promise<TrendingItem[]> {
-  const [miIndex, otc, volume20] = await Promise.all([twseMiIndexAll(), tpexQuotes(), twseVolumeLeaders()]);
-  const listed = miIndex.length >= 50 ? miIndex : await twseStockDayAll();
-  let prints = pickTaiwanPrints([listed, otc, volume20]);
-
-  if (prints.length < 10) {
-    const [twTrend, twActives] = await Promise.all([yahooTrending('TW'), yahooScreener('most_actives', 'TW')]);
-    const extra = [...twTrend, ...twActives]
-      .map((symbol) => normalize(symbol, 'taiwan'))
-      .filter(Boolean)
-      .filter((symbol) => !prints.some((row) => row.symbol === symbol))
-      .slice(0, 12)
-      .map((symbol) => ({
-        symbol,
-        name: symbol,
-        last: 0,
-        changePct: 0,
-        volume: 0,
-        why: 'trending' as const,
-      }));
-    prints = [...prints, ...extra].slice(0, 20);
-  }
-
-  const quotes = await fetchYahooQuotes(
-    prints.map((row) => row.symbol),
-    20,
-  );
-  const withTape = prints.filter((row) => row.last > 0 || row.changePct !== 0);
-  if (withTape.length >= 8) return itemsFromPrints(withTape, quotes);
-  return itemsFromPrints(prints, quotes);
+export async function harvestTaiwanMarket(): Promise<TaiwanMarketHarvest> {
+  const [dayAll, otc] = await Promise.all([twseStockDayAll(), tpexQuotes()]);
+  const listed = dayAll.length >= 50 ? dayAll : (await twseMiIndexOnce()).concat(dayAll);
+  const universe = [...listed, ...otc].filter((row, index, rows) => rows.findIndex((item) => item.symbol === row.symbol) === index);
+  const leaders = pickTaiwanPrints([listed, otc]);
+  console.warn('[peakpro/trending] taiwan sources', {
+    dayAll: dayAll.length,
+    otc: otc.length,
+    listed: listed.length,
+    universe: universe.length,
+    picked: leaders.length,
+  });
+  return {
+    leaders,
+    universe,
+    breadth: biasFromChanges(universe.map((row) => row.changePct)),
+  };
 }
 
 export async function fetchMarketWideTrending(): Promise<TrendingPayload> {
-  const [taiwan, us] = await Promise.all([fetchTaiwanBoard(), fetchUsBoard()]);
+  const [taiwanHarvest, us] = await Promise.all([harvestTaiwanMarket(), harvestUsLeaders()]);
+  const taiwan = itemsFromPrints(taiwanHarvest.leaders);
   return {
     taiwan,
     us,

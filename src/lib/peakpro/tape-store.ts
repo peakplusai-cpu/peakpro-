@@ -1,6 +1,7 @@
 import { TAPE_TW_BENCH, TAPE_US_BENCH } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import { marketCalendarDate, tapeMarketFor } from '@/lib/peakpro/session-clock';
+import type { OfficialPrint } from '@/lib/peakpro/market-trending';
+import { marketCalendarDate, taipeiCalendarDate, tapeMarketFor } from '@/lib/peakpro/session-clock';
 import {
   buildTapeDesk,
   type InstitutionalPrint,
@@ -8,7 +9,7 @@ import {
   type TapeDesk,
 } from '@/lib/peakpro/tape';
 import { fetchOfficialInstitutional, type InstitutionalRow } from '@/lib/peakpro/twse';
-import type { MarketDataRow, OhlcBar } from '@/lib/peakpro/types';
+import type { MarketDataRow, OhlcBar, TrendingItem } from '@/lib/peakpro/types';
 import { fetchYahooQuotes, isTaiwanSymbol, type YahooQuote } from '@/lib/peakpro/yahoo';
 
 const SETUP_RE = /peakpro_session_prints|peakpro_institutional|does not exist|schema cache/i;
@@ -45,6 +46,45 @@ export function printFromQuote(
     day_low: quote?.regularMarketDayLow ?? lastBar?.l ?? null,
     prev_close: quote?.regularMarketPreviousClose ?? null,
     currency: quote?.currency === 'TWD' || isTaiwanSymbol(symbol) ? 'TWD' : 'USD',
+  };
+}
+
+export function printFromOfficial(row: OfficialPrint): SessionPrint {
+  const prev = row.changePct !== 0 ? row.last / (1 + row.changePct / 100) : row.last;
+  return {
+    symbol: row.symbol,
+    name: row.name,
+    market: 'taiwan',
+    session_date: row.tradeDate || taipeiCalendarDate(),
+    scraped_at: new Date().toISOString(),
+    price: row.last,
+    change_pct: row.changePct,
+    volume: row.volume,
+    day_open: row.open ?? null,
+    day_high: row.high ?? null,
+    day_low: row.low ?? null,
+    prev_close: Number.isFinite(prev) ? prev : null,
+    currency: 'TWD',
+  };
+}
+
+export function printFromTrendingItem(item: TrendingItem): SessionPrint | null {
+  if (item.last == null || item.last <= 0) return null;
+  const market = item.market === 'taiwan' || isTaiwanSymbol(item.symbol) ? 'taiwan' : 'us';
+  return {
+    symbol: item.symbol,
+    name: item.name,
+    market,
+    session_date: marketCalendarDate(new Date(), market),
+    scraped_at: new Date().toISOString(),
+    price: item.last,
+    change_pct: item.changePct,
+    volume: null,
+    day_open: null,
+    day_high: null,
+    day_low: null,
+    prev_close: null,
+    currency: item.currency === 'TWD' || market === 'taiwan' ? 'TWD' : 'USD',
   };
 }
 
@@ -128,7 +168,7 @@ export async function persistTapeFromScrape(prints: SessionPrint[], warehouseSym
   }
 
   const printResult = await insertSessionPrints(prints);
-  const includeOtc = warehouseSymbols.some((symbol) => /\.TWO$/i.test(symbol));
+  const includeOtc = true;
   let institutional = 0;
   try {
     const admin = peakproAdmin();
@@ -139,7 +179,9 @@ export async function persistTapeFromScrape(prints: SessionPrint[], warehouseSym
       .limit(1);
     const hasHistory = Boolean(latest?.[0]?.trade_date);
     const board = await fetchOfficialInstitutional({ days: hasHistory ? 3 : 8, includeOtc });
-    const saved = await upsertInstitutional(board);
+    const twKeep = new Set(warehouseSymbols.filter((symbol) => /\.(TW|TWO)$/i.test(symbol)));
+    const focused = twKeep.size > 0 ? board.filter((row) => twKeep.has(row.symbol)) : board;
+    const saved = await upsertInstitutional(focused);
     institutional = saved.upserted;
   } catch (error) {
     console.warn('[peakpro/tape] institutional scrape failed', error);
@@ -201,13 +243,13 @@ export async function loadTapeDesk(options: {
       .select('*')
       .in('symbol', symbols.length > 0 ? symbols : ['__none__'])
       .order('scraped_at', { ascending: false })
-      .limit(400),
+      .limit(800),
     admin
       .from('peakpro_institutional')
       .select('*')
       .in('symbol', twSymbols.length > 0 ? twSymbols : ['__none__'])
       .order('trade_date', { ascending: false })
-      .limit(400),
+      .limit(800),
   ]);
 
   if (printRes.error && isTapeSetupError(printRes.error.message)) {

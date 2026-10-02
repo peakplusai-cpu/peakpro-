@@ -1,9 +1,9 @@
-import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, TAPE_TW_BENCH, TAPE_US_BENCH, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import { fetchMarketWideTrending, rerankTrending } from '@/lib/peakpro/market-trending';
-import { insertSessionPrints, persistTapeFromScrape, printFromQuote } from '@/lib/peakpro/tape-store';
+import { harvestTaiwanMarket, harvestUsLeaders, itemsFromPrints, pricedTrending, rerankTrending } from '@/lib/peakpro/market-trending';
+import { insertSessionPrints, persistTapeFromScrape, printFromOfficial, printFromQuote, printFromTrendingItem } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
-import { deskBiasGauges } from '@/lib/peakpro/sentiment';
+import { biasFromChanges, deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type { MarketSeriesPayload, OhlcBar, TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
 import {
   chartMeta,
@@ -61,6 +61,35 @@ function toSeries(
   };
 }
 
+function seriesFromLeader(input: {
+  name: string;
+  last: number;
+  changePct: number;
+  currency: string;
+  open?: number;
+  high?: number;
+  low?: number;
+  volume?: number;
+  date: string;
+}): MarketSeriesPayload {
+  const prev = input.changePct !== 0 ? input.last / (1 + input.changePct / 100) : input.last;
+  const o = input.open ?? prev;
+  const h = input.high ?? Math.max(o, input.last);
+  const l = input.low ?? Math.min(o, input.last);
+  return {
+    name: input.name,
+    currency: input.currency,
+    last: input.last,
+    changePct: input.changePct,
+    high: h,
+    low: l,
+    thesis: '',
+    thesisZh: '',
+    bars: [{ t: input.date, o, h, l, c: input.last, v: input.volume }],
+    source: 'market-wide',
+  };
+}
+
 async function upsertMarket(rows: Array<{
   asset_class: string;
   symbol: string;
@@ -87,13 +116,14 @@ async function upsertMarket(rows: Array<{
 async function extraEquitySymbols(): Promise<string[]> {
   try {
     const admin = peakproAdmin();
-    const { data } = await admin.from('market_data').select('symbol').eq('asset_class', 'equity');
+    const { data } = await admin.from('market_data').select('symbol, payload').eq('asset_class', 'equity');
     const desk = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
-    const rows = (Array.isArray(data) ? data : []) as Array<{ symbol?: unknown }>;
+    const rows = (Array.isArray(data) ? data : []) as Array<{ symbol?: unknown; payload?: { source?: unknown } }>;
     const symbols = rows
+      .filter((row) => row.payload?.source !== 'market-wide')
       .map((row) => (typeof row.symbol === 'string' ? row.symbol : ''))
       .filter((symbol) => symbol.length > 0 && !desk.has(symbol));
-    return [...new Set(symbols)];
+    return [...new Set(symbols)].slice(0, 20);
   } catch {
     return [];
   }
@@ -577,11 +607,11 @@ async function scrapeNews() {
 }
 
 function mergeTrendingSide(primary: TrendingItem[] | undefined, fallback: TrendingItem[], minCount: number) {
-  const start = primary ?? [];
+  const start = pricedTrending(primary);
   if (start.length >= minCount) return rerankTrending(start);
   const seen = new Set(start.map((item) => item.symbol));
   const merged = [...start];
-  for (const item of fallback) {
+  for (const item of pricedTrending(fallback)) {
     if (seen.has(item.symbol)) continue;
     seen.add(item.symbol);
     merged.push(item);
@@ -707,7 +737,66 @@ export async function runPeakProMarketScrape(): Promise<{
   let crypto = await scrapeCrypto();
   let gold = await scrapeGold();
   const fearRaw = await scrapeFearGreed();
-  const bias = deskBiasGauges(equities);
+  const [fx, taiwanHarvest, usLeaders] = await Promise.all([
+    scrapeUsdTwd(),
+    harvestTaiwanMarket(),
+    harvestUsLeaders(),
+  ]);
+
+  const taiwanItems = itemsFromPrints(taiwanHarvest.leaders);
+  const deskTrend = deskTrendingFallback(equities.filter((row) => row.timeframe === 'daily'));
+  const taiwan = mergeTrendingSide(taiwanItems, deskTrend.taiwan ?? [], 10);
+  const us = mergeTrendingSide(usLeaders, deskTrend.us ?? [], 8);
+  const trendPayload: TrendingPayload = { taiwan, us, items: [...taiwan, ...us] };
+
+  const seenEquity = new Set(equities.map((row) => `${row.symbol}:${row.timeframe}`));
+  const leaderDate = taiwanHarvest.leaders[0]?.tradeDate ?? new Date().toISOString().slice(0, 10);
+  for (const print of taiwanHarvest.leaders) {
+    const key = `${print.symbol}:daily`;
+    if (seenEquity.has(key)) continue;
+    seenEquity.add(key);
+    equities.push({
+      asset_class: 'equity',
+      symbol: print.symbol,
+      timeframe: 'daily',
+      payload: seriesFromLeader({
+        name: print.name,
+        last: print.last,
+        changePct: print.changePct,
+        currency: 'TWD',
+        open: print.open,
+        high: print.high,
+        low: print.low,
+        volume: print.volume,
+        date: print.tradeDate ?? leaderDate,
+      }),
+    });
+  }
+  for (const item of usLeaders) {
+    if (item.last == null || item.last <= 0) continue;
+    const key = `${item.symbol}:daily`;
+    if (seenEquity.has(key)) continue;
+    seenEquity.add(key);
+    equities.push({
+      asset_class: 'equity',
+      symbol: item.symbol,
+      timeframe: 'daily',
+      payload: seriesFromLeader({
+        name: item.name,
+        last: item.last,
+        changePct: item.changePct,
+        currency: item.currency === 'TWD' ? 'TWD' : 'USD',
+        date: new Date().toISOString().slice(0, 10),
+      }),
+    });
+  }
+
+  const deskBias = deskBiasGauges(equities);
+  const usBreadth = biasFromChanges(usLeaders.map((item) => item.changePct));
+  const bias = {
+    taiwan: taiwanHarvest.breadth.sampleSize > 0 ? taiwanHarvest.breadth : deskBias.taiwan,
+    us: usBreadth.sampleSize > 0 ? usBreadth : deskBias.us,
+  };
   const fear: WarehouseRow[] = fearRaw.map((row) => ({
     asset_class: row.asset_class,
     symbol: row.symbol,
@@ -726,7 +815,7 @@ export async function runPeakProMarketScrape(): Promise<{
 
   if (liveCount < 8) {
     await seedWarehouse();
-    await upsertMarket(await scrapeUsdTwd());
+    await upsertMarket(fx.length ? fx : await scrapeUsdTwd());
     return {
       equities: equities.length,
       crypto: crypto.length,
@@ -737,12 +826,6 @@ export async function runPeakProMarketScrape(): Promise<{
     };
   }
 
-  const trendingSource = equities.filter((row) => row.timeframe === 'daily');
-  const [fx, marketTrend] = await Promise.all([scrapeUsdTwd(), fetchMarketWideTrending()]);
-  const deskTrend = deskTrendingFallback(trendingSource);
-  const taiwan = mergeTrendingSide(marketTrend.taiwan, deskTrend.taiwan ?? [], 10);
-  const us = mergeTrendingSide(marketTrend.us, deskTrend.us ?? [], 8);
-  const trendPayload: TrendingPayload = { taiwan, us, items: [...taiwan, ...us] };
   const trending = [
     {
       asset_class: 'ranking',
@@ -753,10 +836,19 @@ export async function runPeakProMarketScrape(): Promise<{
   ];
 
   await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending, ...fx]);
+  const twBenchPrint = taiwanHarvest.universe.find((row) => row.symbol === TAPE_TW_BENCH);
   try {
     await persistTapeFromScrape(
-      equityPack.prints,
-      equities.map((row) => row.symbol),
+      [
+        ...equityPack.prints,
+        ...taiwanHarvest.leaders.map(printFromOfficial),
+        ...(twBenchPrint ? [printFromOfficial(twBenchPrint)] : []),
+        ...usLeaders.flatMap((item) => {
+          const print = printFromTrendingItem(item);
+          return print ? [print] : [];
+        }),
+      ],
+      [...new Set([...equities.map((row) => row.symbol), TAPE_TW_BENCH, TAPE_US_BENCH])],
     );
   } catch (error) {
     console.warn('[peakpro/scraper] tape persist skipped', error);

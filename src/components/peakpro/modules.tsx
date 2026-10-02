@@ -1,6 +1,6 @@
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
-import type { PeakProModule } from '@/lib/peakpro/constants';
+import { EQUITY_UNIVERSE, type PeakProModule } from '@/lib/peakpro/constants';
 import { localizedNewsText, newsCategoryLabel, newsSourceLabel, tPeakpro } from '@/lib/peakpro/copy';
 import { displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
@@ -19,6 +19,7 @@ import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPortfolioDesk } from '@/components/peakpro/portfolio-desk';
 import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
+import { pricedTrending } from '@/lib/peakpro/market-trending';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 import Link from 'next/link';
 
@@ -204,7 +205,10 @@ export function PeakProModuleView({
   }
 
   if (moduleId === 'overview') {
-    const freeMonthly = cache.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe));
+    const deskSymbols = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
+    const freeMonthly = cache.equities.filter(
+      (row) => deskSymbols.has(row.symbol) && canAccessEquity(tier, row.symbol, row.timeframe),
+    );
     return (
       <div className="space-y-8">
         <section>
@@ -310,8 +314,10 @@ export function PeakProModuleView({
 
   if (moduleId === 'sentiment') {
     const payload = cache.fearGreed?.payload as unknown as FearGreedPayload | undefined;
-    const bias = deskBiasGauges(cache.equities);
-    const hasAnything = Boolean(payload) || bias.taiwan.sampleSize + bias.us.sampleSize > 0;
+    const deskBias = deskBiasGauges(cache.equities);
+    const taiwanBias = payload?.taiwan?.sampleSize ? payload.taiwan : deskBias.taiwan;
+    const usBias = payload?.us?.sampleSize ? payload.us : deskBias.us;
+    const hasAnything = Boolean(payload) || taiwanBias.sampleSize + usBias.sampleSize > 0;
     return (
       <div className="space-y-6">
         <div>
@@ -325,13 +331,13 @@ export function PeakProModuleView({
             <SentimentCard
               locale={locale}
               titleKey="fearTaiwan"
-              data={bias.taiwan.sampleSize > 0 ? bias.taiwan : null}
+              data={taiwanBias.sampleSize > 0 ? taiwanBias : null}
               kind="desk"
             />
             <SentimentCard
               locale={locale}
               titleKey="fearUs"
-              data={bias.us.sampleSize > 0 ? bias.us : null}
+              data={usBias.sampleSize > 0 ? usBias : null}
               kind="desk"
             />
             <SentimentCard
@@ -348,12 +354,13 @@ export function PeakProModuleView({
 
   if (moduleId === 'trending') {
     const payload = cache.trending?.payload as unknown as TrendingPayload | undefined;
-    const taiwan = (payload?.taiwan?.length ? payload.taiwan : payload?.items?.filter((item) => isTaiwanSymbol(item.symbol)) ?? []).map(
-      (item, index) => ({ ...item, rank: index + 1 }),
-    );
-    const us = (payload?.us?.length
-      ? payload.us
-      : payload?.items?.filter((item) => item.assetClass === 'equity' && !isTaiwanSymbol(item.symbol)) ?? []
+    const taiwan = pricedTrending(
+      payload?.taiwan?.length ? payload.taiwan : payload?.items?.filter((item) => isTaiwanSymbol(item.symbol)),
+    ).map((item, index) => ({ ...item, rank: index + 1 }));
+    const us = pricedTrending(
+      payload?.us?.length
+        ? payload.us
+        : payload?.items?.filter((item) => item.assetClass === 'equity' && !isTaiwanSymbol(item.symbol)),
     ).map((item, index) => ({ ...item, rank: index + 1 }));
     const empty = taiwan.length + us.length === 0;
     return (

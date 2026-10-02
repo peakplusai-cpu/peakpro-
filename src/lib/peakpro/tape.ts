@@ -139,6 +139,11 @@ export function institutionalStreak(history: InstitutionalPrint[]) {
   return { latest, streak };
 }
 
+export function latestSessionDate(prints: SessionPrint[], market: 'taiwan' | 'us', fallback: string) {
+  const dates = prints.filter((row) => row.market === market).map((row) => row.session_date);
+  return dates.sort().at(-1) ?? fallback;
+}
+
 export function latestPrintsForDate(prints: SessionPrint[], sessionDate: string) {
   const bySymbol = new Map<string, SessionPrint[]>();
   for (const print of prints) {
@@ -162,13 +167,14 @@ export function buildTapeDesk(input: {
   extraSymbols?: string[];
 }): TapeDesk {
   const now = input.now ?? new Date();
-  const twDate = marketCalendarDate(now, 'taiwan');
-  const usDate = marketCalendarDate(now, 'us');
+  const twDate = latestSessionDate(input.prints, 'taiwan', marketCalendarDate(now, 'taiwan'));
+  const usDate = latestSessionDate(input.prints, 'us', marketCalendarDate(now, 'us'));
   const book = new Set(input.bookSymbols);
   const wanted = new Set<string>([
-    ...EQUITY_UNIVERSE.map((row) => row.symbol),
+    ...((input.extraSymbols?.length ?? 0) > 0
+      ? input.extraSymbols ?? []
+      : EQUITY_UNIVERSE.map((row) => row.symbol)),
     ...input.bookSymbols,
-    ...(input.extraSymbols ?? []),
   ]);
 
   const twPrints = latestPrintsForDate(input.prints, twDate);

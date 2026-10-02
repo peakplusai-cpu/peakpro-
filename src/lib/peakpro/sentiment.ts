@@ -27,7 +27,7 @@ export function classifyBias(value: number): Pick<SentimentGauge, 'classificatio
   return { classification: 'Extreme offer', classificationZh: '極度利空' };
 }
 
-function biasFromChanges(changes: number[]): SentimentGauge {
+export function biasFromChanges(changes: number[]): SentimentGauge {
   if (changes.length === 0) {
     return {
       value: 50,

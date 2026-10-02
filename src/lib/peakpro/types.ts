@@ -25,6 +25,7 @@ export interface MarketSeriesPayload {
   exchange?: string;
   marketCap?: number;
   pe?: number;
+  source?: 'desk' | 'market-wide';
 }
 
 export interface MarketDataRow {
