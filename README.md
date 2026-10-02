@@ -30,7 +30,8 @@ git push -u origin main
    - service_role → `SUPABASE_SERVICE_ROLE_KEY`
 3. SQL Editor 貼上並 Run：`supabase/migrations/001_peakpro.sql`  
    之後再 Run：`supabase/migrations/002_peakpro_advisor_quota.sql`（桌面顧問每日則數）  
-   以及：`supabase/migrations/003_peakpro_portfolio.sql`（自選組合）
+   以及：`supabase/migrations/003_peakpro_portfolio.sql`（自選組合）  
+   以及：`supabase/migrations/004_peakpro_tape.sql`（盤中快照與盤後法人）
 4. Authentication → URL Configuration
    - Site URL：之後的正式網域（或先 `http://localhost:3000`）
    - Redirect URLs：

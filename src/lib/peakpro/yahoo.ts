@@ -9,6 +9,12 @@ export type YahooQuote = {
   fullExchangeName?: string;
   regularMarketPrice?: number;
   regularMarketChangePercent?: number;
+  regularMarketVolume?: number;
+  regularMarketDayHigh?: number;
+  regularMarketDayLow?: number;
+  regularMarketOpen?: number;
+  regularMarketPreviousClose?: number;
+  regularMarketTime?: number;
   marketCap?: number;
   trailingPE?: number;
   fiftyTwoWeekHigh?: number;

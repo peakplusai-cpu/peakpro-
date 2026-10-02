@@ -28,9 +28,13 @@ export const CRYPTO_UNIVERSE = [
 
 export const GOLD_SYMBOL = 'XAUUSD';
 
+export const TAPE_TW_BENCH = '0050.TW';
+export const TAPE_US_BENCH = 'QQQ';
+
 export const PEAKPRO_MODULES = [
   'overview',
   'portfolio',
+  'tape',
   'taiwan',
   'us',
   'crypto',

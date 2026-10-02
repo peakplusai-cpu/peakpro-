@@ -4,6 +4,8 @@ import { fetchYahooQuotes } from '@/lib/peakpro/yahoo';
 
 const PULSE_SYMBOLS = [
   ...EQUITY_UNIVERSE.map((row) => row.symbol),
+  '0050.TW',
+  'QQQ',
   'BTC-USD',
   'ETH-USD',
   'GC=F',

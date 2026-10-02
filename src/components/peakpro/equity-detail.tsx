@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
 import { SparkCandles } from '@/components/peakpro/charts';
+import { PeakProTapeStrip } from '@/components/peakpro/tape-strip';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
@@ -116,6 +117,8 @@ export function PeakProEquityDetail({
           </div>
         ))}
       </dl>
+
+      {tier === 'premium' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
 
       <div className="flex flex-wrap gap-2">
         {TABS.map((item) => {

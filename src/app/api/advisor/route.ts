@@ -8,6 +8,9 @@ import { consumeAdvisorQuota, readAdvisorQuota } from '@/lib/peakpro/advisor-quo
 import { ADVISOR_MAX_HISTORY, ADVISOR_MAX_INPUT } from '@/lib/peakpro/constants';
 import { readPeakProCache } from '@/lib/peakpro/cache';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
+import { formatAdvisorTape } from '@/lib/peakpro/tape';
+import { loadTapeDesk } from '@/lib/peakpro/tape-store';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60;
@@ -68,11 +71,24 @@ export async function POST(request: Request) {
 
   const [cache, live] = await Promise.all([readPeakProCache(), buildAdvisorLiveContext(last.content)]);
   const desk = buildAdvisorDeskContext(cache);
+  let tapeBlock = 'SESSION_TAPE: unavailable this turn';
+  try {
+    const admin = createAdminClient();
+    const { data: lots } = await admin.from('peakpro_lots').select('symbol,book').eq('user_id', user.id);
+    const bookSymbols = ((lots ?? []) as Array<{ symbol?: string; book?: string }>)
+      .filter((row) => row.book === 'taiwan' || row.book === 'us')
+      .map((row) => String(row.symbol ?? ''))
+      .filter(Boolean);
+    const tape = await loadTapeDesk({ bookSymbols, dailyRows: cache.equities });
+    tapeBlock = formatAdvisorTape(tape.desk);
+  } catch (error) {
+    console.warn('[peakpro/advisor] tape context skipped', error);
+  }
   const upstream = await streamOpenRouterText(
     [
       {
         role: 'system',
-        content: `${ADVISOR_SYSTEM_PROMPT}\n\nLIVE_DESK:\n${live}\n\nCACHED_DESK:\n${desk}`,
+        content: `${ADVISOR_SYSTEM_PROMPT}\n\nLIVE_DESK:\n${live}\n\n${tapeBlock}\n\nCACHED_DESK:\n${desk}`,
       },
       ...history,
     ],

@@ -1,5 +1,6 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { insertSessionPrints, persistTapeFromScrape, printFromQuote } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type { MarketSeriesPayload, OhlcBar } from '@/lib/peakpro/types';
@@ -10,6 +11,7 @@ import {
   yahooToBars,
   type YahooQuote,
 } from '@/lib/peakpro/yahoo';
+import type { SessionPrint } from '@/lib/peakpro/tape';
 
 async function fetchJson<T>(url: string, init?: RequestInit): Promise<T | null> {
   try {
@@ -103,14 +105,18 @@ async function scrapeOneEquity(symbol: string, fallbackName: string) {
     payload: unknown;
   }> = [];
   const quote = await fetchYahooQuote(symbol);
+  let dailyBars: OhlcBar[] = [];
+  let resolvedName = fallbackName;
 
   for (const timeframe of ['daily', 'monthly', 'annual'] as const) {
     const yahoo = await fetchYahooChart(symbol, timeframe);
     const bars = yahoo ? yahooToBars(yahoo) : [];
     const meta = chartMeta(yahoo);
     const name = quote?.shortName ?? quote?.longName ?? meta?.shortName ?? fallbackName;
+    resolvedName = name;
     const currency =
       quote?.currency ?? meta?.currency ?? (symbol.endsWith('.TW') || symbol.endsWith('.TWO') ? 'TWD' : 'USD');
+    if (timeframe === 'daily') dailyBars = bars;
     if (bars.length < 4) continue;
     rows.push({
       asset_class: 'equity',
@@ -127,13 +133,14 @@ async function scrapeOneEquity(symbol: string, fallbackName: string) {
       ),
     });
   }
-  return rows;
+  return { rows, print: printFromQuote(symbol, resolvedName, quote, dailyBars) };
 }
 
 export async function ingestEquitySymbol(symbol: string): Promise<{ name: string; rows: number } | null> {
-  const rows = await scrapeOneEquity(symbol, symbol);
+  const { rows, print } = await scrapeOneEquity(symbol, symbol);
   if (rows.length === 0) return null;
   await upsertMarket(rows);
+  if (print) await insertSessionPrints([print]);
   const payload = rows[0]?.payload as MarketSeriesPayload | undefined;
   return { name: payload?.name ?? symbol, rows: rows.length };
 }
@@ -150,10 +157,13 @@ async function scrapeEquities() {
     timeframe: string;
     payload: unknown;
   }> = [];
+  const prints: SessionPrint[] = [];
   for (const target of targets) {
-    rows.push(...(await scrapeOneEquity(target.symbol, target.name)));
+    const one = await scrapeOneEquity(target.symbol, target.name);
+    rows.push(...one.rows);
+    if (one.print) prints.push(one.print);
   }
-  return rows;
+  return { rows, prints };
 }
 
 function downsampleAnnual(bars: OhlcBar[]): OhlcBar[] {
@@ -649,7 +659,8 @@ export async function runPeakProMarketScrape(): Promise<{
   news: number;
   seeded: boolean;
 }> {
-  let equities = await scrapeEquities();
+  const equityPack = await scrapeEquities();
+  let equities = equityPack.rows;
   let crypto = await scrapeCrypto();
   let gold = await scrapeGold();
   const fearRaw = await scrapeFearGreed();
@@ -697,6 +708,14 @@ export async function runPeakProMarketScrape(): Promise<{
   ];
 
   await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending]);
+  try {
+    await persistTapeFromScrape(
+      equityPack.prints,
+      equities.map((row) => row.symbol),
+    );
+  } catch (error) {
+    console.warn('[peakpro/scraper] tape persist skipped', error);
+  }
   const news = await scrapeNews();
   const context = JSON.stringify({
     equities: equities.slice(0, 8),

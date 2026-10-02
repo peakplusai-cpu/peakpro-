@@ -16,6 +16,7 @@ import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPortfolioDesk } from '@/components/peakpro/portfolio-desk';
+import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 import Link from 'next/link';
@@ -336,6 +337,10 @@ export function PeakProModuleView({
 
   if (moduleId === 'portfolio') {
     return <PeakProPortfolioDesk locale={locale} />;
+  }
+
+  if (moduleId === 'tape') {
+    return <PeakProTapeDesk locale={locale} />;
   }
 
   if (moduleId === 'advisor') {

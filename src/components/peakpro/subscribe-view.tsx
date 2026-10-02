@@ -18,6 +18,7 @@ const FEATURES_EN = [
   'AI weekly market summary',
   'Finance-only Desk Advisor (OpenRouter, cache-grounded, 30 turns/day)',
   'Personal book with cost basis and marked P&L',
+  'Session tape: volume-price turns, relative strength, official after-close institutions',
 ];
 
 const FEATURES_ZH = [
@@ -30,6 +31,7 @@ const FEATURES_ZH = [
   'AI 每週市場總結',
   '金融專用桌面顧問（OpenRouter、對齊快取、每日 30 則）',
   '自選組合與持有成本、估算損益',
+  '動能轉折：盤中量價強弱、相對指數、盤後官方三大法人',
 ];
 
 export function PeakProSubscribeView({

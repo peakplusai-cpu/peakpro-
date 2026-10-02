@@ -22,6 +22,24 @@ export function formatPct(value: number) {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+export function formatVol(value: number | null | undefined, market: 'taiwan' | 'us') {
+  if (value == null || !Number.isFinite(value)) return '—';
+  if (market === 'taiwan') {
+    const lots = value / 1000;
+    if (Math.abs(lots) >= 10_000) return `${(lots / 10_000).toFixed(1)}萬張`;
+    return `${new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(lots)}張`;
+  }
+  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
+  return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
+}
+
+export function formatZhang(shares: number) {
+  const lots = shares / 1000;
+  const sign = lots > 0 ? '+' : '';
+  if (Math.abs(lots) >= 10_000) return `${sign}${(lots / 10_000).toFixed(1)}萬張`;
+  return `${sign}${new Intl.NumberFormat('zh-TW', { maximumFractionDigits: 0 }).format(lots)}張`;
+}
+
 export function publicThesis(text: string | null | undefined) {
   const value = text?.trim() ?? '';
   if (!value || /yahoo/i.test(value)) return '';
