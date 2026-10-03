@@ -287,6 +287,9 @@ export function PeakProModuleView({
     return (
       <div className="space-y-6">
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'newsTitle')}</h2>
+        {tPeakpro(locale, 'newsLead') ? (
+          <p className="max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'newsLead')}</p>
+        ) : null}
         {cache.news.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="space-y-4">
             {cache.news.map((item) => (

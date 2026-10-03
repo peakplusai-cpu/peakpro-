@@ -13,7 +13,7 @@ const en: CopyTree = {
   navUs: 'U.S. Equities',
   navCrypto: 'Crypto Trends',
   navGold: 'Gold Trends',
-  navGeopolitics: 'Geopolitical Risk Feed',
+  navGeopolitics: 'Market News',
   navSentiment: 'Sentiment Desk',
   navTrending: 'Market Movers',
   navBrief: 'AI Weekly Market Summary',
@@ -80,11 +80,11 @@ const en: CopyTree = {
   trendingTaiwan: 'Taiwan market',
   trendingUs: 'U.S. market',
   briefTitle: 'AI Weekly Market Summary',
-  newsTitle: 'Geopolitical & War News',
+  newsTitle: 'Market-moving international news',
+  newsLead: 'Rates, oil, chips, trade, and geopolitics. Refreshed about every 15 minutes — not a live wire.',
   catWar: 'War',
   catGeopolitics: 'Geopolitics',
-  sourceBbc: 'BBC World',
-  sourceNyt: 'NYT World',
+  catMarkets: 'Markets',
   goldTitle: 'Spot Gold',
   cryptoTitle: 'Major cryptocurrency complex',
   taiwanTitle: 'Taiwan market',
@@ -210,7 +210,7 @@ const zh: CopyTree = {
   navUs: '美股',
   navCrypto: '加密趨勢',
   navGold: '黃金趨勢',
-  navGeopolitics: '地緣政治風險情報',
+  navGeopolitics: '國際財經情報',
   navSentiment: '市場情緒',
   navTrending: '全市場熱門',
   navBrief: 'AI 每週市場總結',
@@ -276,11 +276,11 @@ const zh: CopyTree = {
   trendingTaiwan: '台股全市場',
   trendingUs: '美股全市場',
   briefTitle: 'AI 每週市場總結',
-  newsTitle: '地緣政治與戰事新聞',
+  newsTitle: '會動股價的國際新聞',
+  newsLead: '利率、原油、晶片、貿易與地緣。約十五分鐘更新，不是即時電訊。',
   catWar: '戰事',
   catGeopolitics: '地緣政治',
-  sourceBbc: 'BBC 國際',
-  sourceNyt: '紐約時報國際',
+  catMarkets: '市場',
   goldTitle: '現貨黃金',
   cryptoTitle: '主要加密貨幣複合體',
   taiwanTitle: '台股全市場',
@@ -416,12 +416,29 @@ export function localizedNewsText(locale: Locale, en: string, zh: string | null 
 }
 
 export function newsCategoryLabel(locale: Locale, category: string) {
-  return tPeakpro(locale, category === 'war' ? 'catWar' : 'catGeopolitics');
+  if (category === 'war') return tPeakpro(locale, 'catWar');
+  if (category === 'markets') return tPeakpro(locale, 'catMarkets');
+  return tPeakpro(locale, 'catGeopolitics');
 }
 
+const SOURCE_LABELS: Record<string, { en: string; zh: string }> = {
+  'BBC World': { en: 'BBC World', zh: 'BBC 國際' },
+  'BBC Business': { en: 'BBC Business', zh: 'BBC 財經' },
+  'NYT World': { en: 'NYT World', zh: '紐約時報國際' },
+  'NYT Business': { en: 'NYT Business', zh: '紐約時報財經' },
+  'Guardian World': { en: 'Guardian World', zh: '衛報國際' },
+  'Guardian Business': { en: 'Guardian Business', zh: '衛報財經' },
+  'Al Jazeera': { en: 'Al Jazeera', zh: '半島電視' },
+  'CNBC World': { en: 'CNBC World', zh: 'CNBC 國際' },
+  'CNBC Economy': { en: 'CNBC Economy', zh: 'CNBC 經濟' },
+  MarketWatch: { en: 'MarketWatch', zh: 'MarketWatch' },
+  'Federal Reserve': { en: 'Federal Reserve', zh: '聯準會' },
+  OilPrice: { en: 'OilPrice', zh: '油價' },
+};
+
 export function newsSourceLabel(locale: Locale, source: string) {
-  if (source === 'BBC World') return tPeakpro(locale, 'sourceBbc');
-  if (source === 'NYT World') return tPeakpro(locale, 'sourceNyt');
+  const row = SOURCE_LABELS[source];
+  if (row) return locale === 'zh' ? row.zh : row.en;
   return source;
 }
 

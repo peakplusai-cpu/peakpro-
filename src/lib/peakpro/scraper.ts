@@ -1,4 +1,5 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, TAPE_TW_BENCH, TAPE_US_BENCH, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import { collectMarketNews, newsCategory, type RssItem } from '@/lib/peakpro/news-scrape';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { harvestTaiwanMarket, harvestUsLeaders, itemsFromPrints, pricedTrending, rerankTrending } from '@/lib/peakpro/market-trending';
 import { insertSessionPrints, persistTapeFromScrape, printFromOfficial, printFromQuote, printFromTrendingItem } from '@/lib/peakpro/tape-store';
@@ -395,52 +396,6 @@ function classifyZh(value: string): string {
   return '中性';
 }
 
-type RssItem = { title: string; summary: string; url: string; published: string; source: string };
-
-async function fetchRss(url: string, source: string): Promise<RssItem[]> {
-  try {
-    const response = await fetch(url, {
-      cache: 'no-store',
-      headers: { 'User-Agent': 'PeakProPlus-CacheDesk/1.0' },
-    });
-    if (!response.ok) return [];
-    const xml = await response.text();
-    const blocks = xml.split(/<item[\s>]/i).slice(1);
-    return blocks.slice(0, 8).map((block) => {
-      const title = decode(matchTag(block, 'title'));
-      const summary = decode(matchTag(block, 'description')).replace(/<[^>]+>/g, '').slice(0, 1200);
-      const link = matchTag(block, 'link') || matchTag(block, 'guid');
-      const published = matchTag(block, 'pubDate');
-      return {
-        title,
-        summary,
-        url: link,
-        published: published ? new Date(published).toISOString() : new Date().toISOString(),
-        source,
-      };
-    });
-  } catch (error) {
-    console.warn('[peakpro/scraper] rss failed', source, error);
-    return [];
-  }
-}
-
-function matchTag(xml: string, tag: string): string {
-  const match = xml.match(new RegExp(`<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]></${tag}>|<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, 'i'));
-  return (match?.[1] ?? match?.[2] ?? '').trim();
-}
-
-function decode(value: string): string {
-  return value
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'");
-}
-
-const WAR_TERMS = /war|conflict|strike|missile|sanctions|troop|invasion|ceasefire|military|geopolit/i;
-
 function hasCjk(value: string | null | undefined): boolean {
   return Boolean(value && /[\u3400-\u9fff]/.test(value));
 }
@@ -557,15 +512,30 @@ export async function ensureNewsTraditionalChinese<
   });
 }
 
+export const NEWS_STALE_MS = 15 * 60 * 1000;
+
+let newsInFlight: Promise<number> | null = null;
+
+export async function runPeakProNewsScrape(): Promise<number> {
+  if (newsInFlight) return newsInFlight;
+  newsInFlight = scrapeNews()
+    .then(async (news) => {
+      try {
+        const { revalidateTag } = await import('next/cache');
+        revalidateTag('peakpro-warehouse');
+      } catch (error) {
+        console.warn('[peakpro/scraper] news revalidate skipped', error);
+      }
+      return news;
+    })
+    .finally(() => {
+      newsInFlight = null;
+    });
+  return newsInFlight;
+}
+
 async function scrapeNews() {
-  const feeds = await Promise.all([
-    fetchRss('https://feeds.bbci.co.uk/news/world/rss.xml', 'BBC World'),
-    fetchRss('https://rss.nytimes.com/services/xml/rss/nyt/World.xml', 'NYT World'),
-  ]);
-  const items = feeds
-    .flat()
-    .filter((item) => item.title && WAR_TERMS.test(`${item.title} ${item.summary}`))
-    .slice(0, 12);
+  const items = await collectMarketNews(24);
 
   const admin = peakproAdmin();
   const now = new Date().toISOString();
@@ -586,9 +556,7 @@ async function scrapeNews() {
   await admin.from('news_cache').delete().neq('id', '00000000-0000-0000-0000-000000000000');
   const { error } = await admin.from('news_cache').insert(
     localized.map((item) => ({
-      category: /war|missile|troop|invasion|ceasefire|strike/i.test(`${item.title} ${item.summary}`)
-        ? 'war'
-        : 'geopolitics',
+      category: newsCategory(item),
       title: item.title,
       title_zh: item.title_zh,
       summary: item.summary,

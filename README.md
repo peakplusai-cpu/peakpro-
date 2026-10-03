@@ -85,7 +85,14 @@ https://你的網域/api/cron/fetch-market-data?cron_secret=你的CRON_SECRET
 ```
 
 Vercel Hobby 請用 [cron-job.org](https://cron-job.org) 每 3 小時打同一條 URL。  
-Vercel Pro 會吃 `vercel.json` 的 `0 */3 * * *`。
+新聞另開一條，每 15 分鐘打：
+
+```text
+https://你的網域/api/cron/fetch-news?cron_secret=你的CRON_SECRET
+```
+
+有人開桌面且新聞超過 15 分鐘也會在背景補抓。行情大爬蟲維持 3 小時。  
+Vercel Pro 會吃 `vercel.json` 的每日備援。
 
 ---
 

@@ -114,6 +114,16 @@ export function filterCacheForTier(
   };
 }
 
+export function newsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
+  const stamps = snapshot.news
+    .map((row) => row.last_updated)
+    .filter((value): value is string => Boolean(value))
+    .sort();
+  const latest = stamps.at(-1);
+  if (!latest) return null;
+  return Date.now() - new Date(latest).getTime();
+}
+
 export function cacheHasPrints(snapshot: PeakProCacheSnapshot): boolean {
   return (
     snapshot.equities.length +

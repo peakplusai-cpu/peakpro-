@@ -1,10 +1,10 @@
 import { after, NextResponse } from 'next/server';
 
 import { authorizePeakProCron } from '@/lib/peakpro/cron-auth';
-import { runPeakProMarketScrape } from '@/lib/peakpro/scraper';
+import { runPeakProNewsScrape } from '@/lib/peakpro/scraper';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 120;
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   if (!authorizePeakProCron(request)) {
@@ -13,15 +13,15 @@ export async function GET(request: Request) {
 
   const wait = new URL(request.url).searchParams.get('wait') === '1';
   if (wait) {
-    const result = await runPeakProMarketScrape();
-    return NextResponse.json({ ok: true, ...result });
+    const news = await runPeakProNewsScrape();
+    return NextResponse.json({ ok: true, news });
   }
 
   after(async () => {
     try {
-      await runPeakProMarketScrape();
+      await runPeakProNewsScrape();
     } catch (error) {
-      console.warn('[peakpro/cron] scrape failed', error);
+      console.warn('[peakpro/cron] news scrape failed', error);
     }
   });
 

@@ -1,9 +1,11 @@
+import { after } from 'next/server';
 import { redirect } from 'next/navigation';
 
 import { requireAuthUser } from '@/lib/auth';
-import { filterCacheForTier, readPeakProCache, slimCacheForModule } from '@/lib/peakpro/cache';
+import { filterCacheForTier, newsCacheAgeMs, readPeakProCache, slimCacheForModule } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
+import { NEWS_STALE_MS, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
 export async function loadPeakProDesk(options?: {
@@ -19,6 +21,15 @@ export async function loadPeakProDesk(options?: {
   ]);
   if (session.revoked && !options?.allowRevoked) {
     redirect('/subscribe?revoked=1');
+  }
+
+  const newsAge = newsCacheAgeMs(raw);
+  if (session.tier === 'premium' && (newsAge == null || newsAge > NEWS_STALE_MS)) {
+    after(() =>
+      runPeakProNewsScrape().catch((error) => {
+        console.warn('[peakpro/desk] news refresh failed', error);
+      }),
+    );
   }
 
   let cache = filterCacheForTier(raw, session.tier);
