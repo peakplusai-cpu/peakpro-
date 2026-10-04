@@ -11,6 +11,15 @@ const SUPERINVESTORS = [
   { cik: '0001649339', name: 'Scion Asset Management', nameZh: 'Scion／Burry', principal: 'Michael Burry' },
   { cik: '0001350694', name: 'Bridgewater Associates', nameZh: '橋水／達利歐', principal: 'Ray Dalio' },
   { cik: '0000921669', name: 'Icahn Enterprises', nameZh: '伊坎', principal: 'Carl Icahn' },
+  { cik: '0001536411', name: 'Duquesne Family Office', nameZh: '杜肯／德魯肯米勒', principal: 'Stanley Druckenmiller' },
+  { cik: '0001029160', name: 'Soros Fund Management', nameZh: '索羅斯基金', principal: 'George Soros' },
+  { cik: '0001423053', name: 'Citadel Advisors', nameZh: '城堡／格里芬', principal: 'Ken Griffin' },
+  { cik: '0001135730', name: 'Coatue Management', nameZh: 'Coatue／拉豐', principal: 'Philippe Laffont' },
+  { cik: '0001167483', name: 'Tiger Global', nameZh: '老虎全球／科爾曼', principal: 'Chase Coleman' },
+  { cik: '0001061768', name: 'Baupost Group', nameZh: 'Baupost／克拉曼', principal: 'Seth Klarman' },
+  { cik: '0001006438', name: 'Appaloosa', nameZh: 'Appaloosa／泰珀', principal: 'David Tepper' },
+  { cik: '0001040273', name: 'Third Point', nameZh: 'Third Point／勒布', principal: 'Daniel Loeb' },
+  { cik: '0001103804', name: 'Viking Global', nameZh: '維京全球', principal: 'Andreas Halvorsen' },
 ] as const;
 
 const SEC_HEADERS = {
@@ -18,9 +27,12 @@ const SEC_HEADERS = {
   Accept: 'application/json, application/xml, text/xml, */*',
 };
 
-const TRADE_LIMIT = 80;
 const HOLDING_LIMIT = 10;
-const LOOKBACK_DAYS = 180;
+const LOOKBACK_DAYS = 365;
+const PERSON_LIMIT = 160;
+const TRADES_PER_PERSON = 40;
+const FEATURED_PERSON =
+  /trump|pelosi|biden|vance|harris|tuberville|schumer|mcconnell|ocasio|warren|sanders|mcCormick|warsh|boozman/i;
 
 function parseLooseDate(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) return null;
@@ -155,9 +167,21 @@ async function harvestCongress(): Promise<FilingTrade[]> {
     seen.add(key);
     rows.push(trade);
   }
-  return rows
-    .sort((a, b) => (b.disclosed ?? b.traded ?? '').localeCompare(a.disclosed ?? a.traded ?? ''))
-    .slice(0, TRADE_LIMIT);
+  const byPerson = new Map<string, FilingTrade[]>();
+  const sorted = rows.sort((a, b) => (b.disclosed ?? b.traded ?? '').localeCompare(a.disclosed ?? a.traded ?? ''));
+  for (const trade of sorted) {
+    const list = byPerson.get(trade.person) ?? [];
+    if (list.length >= TRADES_PER_PERSON) continue;
+    list.push(trade);
+    byPerson.set(trade.person, list);
+  }
+  const names = [...byPerson.keys()].sort((a, b) => {
+    const af = FEATURED_PERSON.test(a) ? 0 : 1;
+    const bf = FEATURED_PERSON.test(b) ? 0 : 1;
+    if (af !== bf) return af - bf;
+    return (byPerson.get(b)?.length ?? 0) - (byPerson.get(a)?.length ?? 0);
+  });
+  return names.slice(0, PERSON_LIMIT).flatMap((name) => byPerson.get(name) ?? []);
 }
 
 function xmlTag(block: string, name: string) {

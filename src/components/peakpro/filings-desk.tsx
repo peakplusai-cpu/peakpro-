@@ -32,6 +32,17 @@ function money(usd: number) {
   return `$${Math.round(usd / 1000)}k`;
 }
 
+const PERSON_ZH: Record<string, string> = {
+  'Donald J Trump': '川普',
+  'Nancy Pelosi': '裴洛西',
+  'Thomas H Tuberville': '塔伯維爾',
+};
+
+function displayPerson(locale: Locale, person: string) {
+  if (locale === 'zh' && PERSON_ZH[person]) return PERSON_ZH[person];
+  return person;
+}
+
 function politicianKey(person: string, chamber: FilingTrade['chamber']) {
   return `${person}|${chamber}`;
 }
@@ -78,7 +89,7 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
         </button>
         <header>
           <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{chamberLabel(locale, politician.chamber)}</p>
-          <h2 className="mt-2 font-peakpro text-3xl text-gold">{politician.person}</h2>
+          <h2 className="mt-2 font-peakpro text-3xl text-gold">{displayPerson(locale, politician.person)}</h2>
         </header>
         <div className="space-y-3">
           {politician.trades.map((trade, index) => (
@@ -171,7 +182,7 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
               className="rounded-2xl border border-gold/15 bg-black/60 px-5 py-6 text-left transition-colors hover:border-gold/50"
             >
               <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{chamberLabel(locale, row.chamber)}</p>
-              <h3 className="mt-2 font-peakpro text-xl text-gold">{row.person}</h3>
+              <h3 className="mt-2 font-peakpro text-xl text-gold">{displayPerson(locale, row.person)}</h3>
             </button>
           ))}
         </div>
