@@ -327,7 +327,9 @@ export function PeakProModuleView({
       <div className="space-y-6">
         <div>
           <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'fearTitle')}</h2>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
+          {tPeakpro(locale, 'fearLead') ? (
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
+          ) : null}
         </div>
         {!hasAnything ? (
           <EmptyCache locale={locale} />
@@ -372,7 +374,9 @@ export function PeakProModuleView({
       <div className="space-y-8">
         <div>
           <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'trendingTitle')}</h2>
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'trendingLead')}</p>
+          {tPeakpro(locale, 'trendingLead') ? (
+            <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'trendingLead')}</p>
+          ) : null}
         </div>
         {empty ? (
           <EmptyCache locale={locale} />

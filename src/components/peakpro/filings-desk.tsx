@@ -132,7 +132,9 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
     <div className="space-y-6">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'filingsTitle')}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'filingsLead')}</p>
+        {tPeakpro(locale, 'filingsLead') ? (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'filingsLead')}</p>
+        ) : null}
       </div>
       <div className="flex flex-wrap gap-2">
         {(
