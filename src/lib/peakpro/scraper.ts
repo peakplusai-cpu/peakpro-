@@ -6,7 +6,7 @@ import { harvestTaiwanMarket, harvestUsLeaders, itemsFromPrints, pricedTrending,
 import { insertSessionPrints, persistTapeFromScrape, printFromOfficial, printFromQuote, printFromTrendingItem } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import { biasFromChanges, deskBiasGauges } from '@/lib/peakpro/sentiment';
-import type { MarketSeriesPayload, OhlcBar, TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
+import type { FilingsPayload, MarketSeriesPayload, OhlcBar, TrendingItem, TrendingPayload } from '@/lib/peakpro/types';
 import {
   chartMeta,
   fetchYahooChart,
@@ -539,7 +539,15 @@ export async function runPeakProFilingsScrape(): Promise<number> {
 }
 
 async function persistFilings(): Promise<number> {
-  const filings = await harvestPublicFilings();
+  const admin = peakproAdmin();
+  const existing = await admin.from('market_data').select('payload').eq('symbol', 'FILINGS').maybeSingle();
+  const prior = existing.data?.payload as FilingsPayload | undefined;
+  const next = await harvestPublicFilings();
+  const filings = {
+    trades: next.trades.length ? next.trades : prior?.trades ?? [],
+    books: next.books.length ? next.books : prior?.books ?? [],
+    asOf: next.asOf,
+  };
   const count = filings.trades.length + filings.books.length;
   if (count === 0) return 0;
   await upsertMarket([

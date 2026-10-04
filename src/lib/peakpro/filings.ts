@@ -1,7 +1,9 @@
 import type { FilingBook, FilingTrade, FilingsPayload } from '@/lib/peakpro/types';
 
-const CONGRESS_URL =
-  'https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data/trades.json';
+const CONGRESS_URLS = [
+  'https://cdn.jsdelivr.net/gh/kadoa-org/congress-trading-monitor@main/public/data/trades.json',
+  'https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data/trades.json',
+];
 
 const SUPERINVESTORS = [
   { cik: '0001067983', name: 'Berkshire Hathaway', nameZh: '波克夏／巴菲特', principal: 'Warren Buffett' },
@@ -114,8 +116,30 @@ function normalizeKadoa(record: Record<string, unknown>): FilingTrade | null {
   };
 }
 
+async function fetchCongressJson(): Promise<unknown> {
+  for (const url of CONGRESS_URLS) {
+    try {
+      const response = await fetch(url, {
+        cache: 'no-store',
+        headers: {
+          Accept: 'application/json,text/plain,*/*',
+          'User-Agent': 'PeakProPlus/1.0 (https://peakproai.com)',
+        },
+      });
+      if (!response.ok) {
+        console.warn('[peakpro/filings] congress http', response.status, url);
+        continue;
+      }
+      return await response.json();
+    } catch (error) {
+      console.warn('[peakpro/filings] congress fetch failed', url, error);
+    }
+  }
+  return null;
+}
+
 async function harvestCongress(): Promise<FilingTrade[]> {
-  const raw = await fetchJson<unknown>(CONGRESS_URL);
+  const raw = await fetchCongressJson();
   if (!Array.isArray(raw)) return [];
   const cutoff = cutoffDate();
   const seen = new Set<string>();

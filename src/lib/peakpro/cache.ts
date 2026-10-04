@@ -120,7 +120,7 @@ export function filterCacheForTier(
 
 export function filingsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
   const payload = snapshot.filings?.payload as unknown as FilingsPayload | undefined;
-  const empty = !payload || payload.trades.length + payload.books.length === 0;
+  const empty = !payload || payload.trades.length === 0 || payload.books.length === 0;
   if (empty) return null;
   const stamp = snapshot.filings?.last_updated ?? payload.asOf;
   if (!stamp) return null;
