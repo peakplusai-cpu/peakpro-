@@ -15,11 +15,12 @@ function sideLabel(locale: Locale, side: FilingTrade['side']) {
 }
 
 function chamberLabel(locale: Locale, chamber: FilingTrade['chamber']) {
-  return tPeakpro(locale, chamber === 'senate' ? 'filingsSenate' : 'filingsHouse');
+  if (chamber === 'senate') return tPeakpro(locale, 'filingsSenate');
+  if (chamber === 'exec') return tPeakpro(locale, 'filingsExec');
+  return tPeakpro(locale, 'filingsHouse');
 }
 
-function money(valueUsd000: number) {
-  const usd = valueUsd000 * 1000;
+function money(usd: number) {
   if (usd >= 1_000_000_000) return `$${(usd / 1_000_000_000).toFixed(1)}B`;
   if (usd >= 1_000_000) return `$${(usd / 1_000_000).toFixed(1)}M`;
   return `$${Math.round(usd / 1000)}k`;

@@ -2,10 +2,16 @@ import { after } from 'next/server';
 import { redirect } from 'next/navigation';
 
 import { requireAuthUser } from '@/lib/auth';
-import { filterCacheForTier, newsCacheAgeMs, readPeakProCache, slimCacheForModule } from '@/lib/peakpro/cache';
+import {
+  filingsCacheAgeMs,
+  filterCacheForTier,
+  newsCacheAgeMs,
+  readPeakProCache,
+  slimCacheForModule,
+} from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
-import { NEWS_STALE_MS, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
+import { FILINGS_STALE_MS, NEWS_STALE_MS, runPeakProFilingsScrape, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
 export async function loadPeakProDesk(options?: {
@@ -23,13 +29,23 @@ export async function loadPeakProDesk(options?: {
     redirect('/subscribe?revoked=1');
   }
 
-  const newsAge = newsCacheAgeMs(raw);
-  if (session.tier === 'premium' && (newsAge == null || newsAge > NEWS_STALE_MS)) {
-    after(() =>
-      runPeakProNewsScrape().catch((error) => {
-        console.warn('[peakpro/desk] news refresh failed', error);
-      }),
-    );
+  if (session.tier === 'premium') {
+    const newsAge = newsCacheAgeMs(raw);
+    if (newsAge == null || newsAge > NEWS_STALE_MS) {
+      after(() =>
+        runPeakProNewsScrape().catch((error) => {
+          console.warn('[peakpro/desk] news refresh failed', error);
+        }),
+      );
+    }
+    const filingsAge = filingsCacheAgeMs(raw);
+    if (filingsAge == null || filingsAge > FILINGS_STALE_MS) {
+      after(() =>
+        runPeakProFilingsScrape().catch((error) => {
+          console.warn('[peakpro/desk] filings refresh failed', error);
+        }),
+      );
+    }
   }
 
   let cache = filterCacheForTier(raw, session.tier);

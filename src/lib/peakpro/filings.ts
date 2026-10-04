@@ -1,8 +1,7 @@
 import type { FilingBook, FilingTrade, FilingsPayload } from '@/lib/peakpro/types';
 
-const HOUSE_URL = 'https://house-stock-watcher-data.s3-us-west-2.amazonaws.com/data/all_transactions.json';
-const SENATE_URL =
-  'https://senate-stock-watcher-data.s3-us-west-2.amazonaws.com/aggregate/all_transactions.json';
+const CONGRESS_URL =
+  'https://raw.githubusercontent.com/kadoa-org/congress-trading-monitor/main/public/data/trades.json';
 
 const SUPERINVESTORS = [
   { cik: '0001067983', name: 'Berkshire Hathaway', nameZh: '波克夏／巴菲特', principal: 'Warren Buffett' },
@@ -25,9 +24,7 @@ function parseLooseDate(value: unknown): string | null {
   if (typeof value !== 'string' || !value.trim()) return null;
   const raw = value.trim();
   const mdy = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if (mdy) {
-    return `${mdy[3]}-${mdy[1].padStart(2, '0')}-${mdy[2].padStart(2, '0')}`;
-  }
+  if (mdy) return `${mdy[3]}-${mdy[1].padStart(2, '0')}-${mdy[2].padStart(2, '0')}`;
   const stamp = Date.parse(raw);
   if (Number.isNaN(stamp)) return null;
   return new Date(stamp).toISOString().slice(0, 10);
@@ -48,6 +45,13 @@ function sideOf(value: unknown): FilingTrade['side'] {
   if (/(sale|sell)/.test(raw)) return 'sell';
   if (/(purchase|buy)/.test(raw)) return 'buy';
   return 'other';
+}
+
+function chamberOf(value: unknown): FilingTrade['chamber'] {
+  const raw = String(value ?? '').toLowerCase();
+  if (raw === 'senate') return 'senate';
+  if (raw === 'house') return 'house';
+  return 'exec';
 }
 
 function text(record: Record<string, unknown>, ...keys: string[]) {
@@ -84,55 +88,48 @@ async function fetchText(url: string): Promise<string | null> {
   }
 }
 
-function normalizeTrade(record: Record<string, unknown>, chamber: FilingTrade['chamber']): FilingTrade | null {
-  const ticker = cleanTicker(record.ticker);
-  const issuer = text(record, 'asset_description', 'assetDescription', 'name');
-  if (!ticker && !issuer) return null;
-  const disclosed = parseLooseDate(record.disclosure_date ?? record.disclosureDate);
-  const traded = parseLooseDate(record.transaction_date ?? record.transactionDate);
-  const person = text(record, 'representative', 'senator', 'name');
-  if (!person) return null;
-  return {
-    person,
-    chamber,
-    ticker,
-    issuer: issuer || ticker,
-    side: sideOf(record.type),
-    amount: text(record, 'amount') || '—',
-    traded,
-    disclosed,
-    href: text(record, 'ptr_link', 'ptrLink', 'link') || null,
-  };
-}
-
 function cutoffDate() {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() - LOOKBACK_DAYS);
   return date.toISOString().slice(0, 10);
 }
 
+function normalizeKadoa(record: Record<string, unknown>): FilingTrade | null {
+  const ticker = cleanTicker(record.ticker);
+  if (!ticker) return null;
+  const person = text(record, 'filer_name', 'name');
+  if (!person) return null;
+  const disclosed = parseLooseDate(record.filing_date ?? record.disclosure_date);
+  const traded = parseLooseDate(record.transaction_date);
+  return {
+    person,
+    chamber: chamberOf(record.chamber),
+    ticker,
+    issuer: text(record, 'asset_name', 'asset_description') || ticker,
+    side: sideOf(record.transaction_type ?? record.type),
+    amount: text(record, 'amount_range_label', 'amount') || '—',
+    traded,
+    disclosed,
+    href: text(record, 'doc_url', 'ptr_link') || null,
+  };
+}
+
 async function harvestCongress(): Promise<FilingTrade[]> {
-  const [house, senate] = await Promise.all([
-    fetchJson<unknown>(HOUSE_URL),
-    fetchJson<unknown>(SENATE_URL),
-  ]);
+  const raw = await fetchJson<unknown>(CONGRESS_URL);
+  if (!Array.isArray(raw)) return [];
   const cutoff = cutoffDate();
+  const seen = new Set<string>();
   const rows: FilingTrade[] = [];
-  const packs: Array<[unknown, FilingTrade['chamber']]> = [
-    [house, 'house'],
-    [senate, 'senate'],
-  ];
-  for (const [raw, chamber] of packs) {
-    if (!Array.isArray(raw)) continue;
-    for (const item of raw) {
-      if (!item || typeof item !== 'object') continue;
-      const trade = normalizeTrade(item as Record<string, unknown>, chamber);
-      if (!trade) continue;
-      const stamp = trade.disclosed ?? trade.traded;
-      if (stamp && stamp < cutoff) continue;
-      if (trade.side === 'other' && !trade.ticker) continue;
-      rows.push(trade);
-    }
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const trade = normalizeKadoa(item as Record<string, unknown>);
+    if (!trade) continue;
+    const stamp = trade.disclosed ?? trade.traded;
+    if (stamp && stamp < cutoff) continue;
+    const key = `${trade.person}|${trade.ticker}|${trade.traded}|${trade.side}|${trade.amount}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push(trade);
   }
   return rows
     .sort((a, b) => (b.disclosed ?? b.traded ?? '').localeCompare(a.disclosed ?? a.traded ?? ''))
@@ -160,8 +157,21 @@ function parseHoldings(xml: string): FilingBook['holdings'] {
       };
     })
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
-    .sort((a, b) => b.valueUsd000 - a.valueUsd000);
-  return holdings.slice(0, HOLDING_LIMIT);
+    .sort((a, b) => b.valueUsd000 - a.valueUsd000)
+    .slice(0, HOLDING_LIMIT);
+
+  const max = Math.max(0, ...holdings.map((row) => row.valueUsd000));
+  const factor = max > 10_000_000 ? 1 : 1000;
+  return holdings.map((row) => ({ ...row, valueUsd000: row.valueUsd000 * factor }));
+}
+
+function pickInfoTable(files: Array<{ name?: string }>) {
+  const names = files.map((file) => file.name ?? '').filter(Boolean);
+  return (
+    names.find((name) => /info.*table|infotable|form13f/i.test(name)) ??
+    names.find((name) => /\.xml$/i.test(name) && !/primary|index|header/i.test(name)) ??
+    names.find((name) => /\.xml$/i.test(name))
+  );
 }
 
 async function harvestOneBook(input: (typeof SUPERINVESTORS)[number]): Promise<FilingBook | null> {
@@ -186,21 +196,18 @@ async function harvestOneBook(input: (typeof SUPERINVESTORS)[number]): Promise<F
     `https://www.sec.gov/Archives/edgar/data/${cikNum}/${accession}/index.json`,
   );
   const files = directory?.directory?.item ?? [];
-  const table =
-    files.find((file) => /info.*table|infotable|form13f/i.test(file.name ?? ''))?.name ??
-    files.find((file) => /\.xml$/i.test(file.name ?? '') && !/primary/i.test(file.name ?? ''))?.name;
+  const table = pickInfoTable(files);
   if (!table) return null;
   const xml = await fetchText(`https://www.sec.gov/Archives/edgar/data/${cikNum}/${accession}/${table}`);
   if (!xml) return null;
   const holdings = parseHoldings(xml);
   if (holdings.length === 0) return null;
-  const filed = String(recent?.accessionNumber?.[index] ?? '');
   return {
     name: input.name,
     nameZh: input.nameZh,
     principal: input.principal,
     cik: input.cik,
-    filed: recent?.reportDate?.[index] || recent?.filingDate?.[index] || filed,
+    filed: recent?.reportDate?.[index] || recent?.filingDate?.[index] || accession,
     href: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${input.cik}&type=13F-HR`,
     holdings,
   };

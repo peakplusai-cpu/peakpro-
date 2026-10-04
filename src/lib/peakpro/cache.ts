@@ -5,6 +5,7 @@ import { USDTWD_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import type {
   AiSummaryRow,
+  FilingsPayload,
   MarketDataRow,
   NewsCacheRow,
   PeakProCacheSnapshot,
@@ -115,6 +116,15 @@ export function filterCacheForTier(
     filings: null,
     briefs: [],
   };
+}
+
+export function filingsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
+  const payload = snapshot.filings?.payload as unknown as FilingsPayload | undefined;
+  const empty = !payload || payload.trades.length + payload.books.length === 0;
+  if (empty) return null;
+  const stamp = snapshot.filings?.last_updated ?? payload.asOf;
+  if (!stamp) return null;
+  return Date.now() - new Date(stamp).getTime();
 }
 
 export function newsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {

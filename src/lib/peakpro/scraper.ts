@@ -514,6 +514,44 @@ export async function ensureNewsTraditionalChinese<
 }
 
 export const NEWS_STALE_MS = 15 * 60 * 1000;
+export const FILINGS_STALE_MS = 3 * 60 * 60 * 1000;
+
+let filingsInFlight: Promise<number> | null = null;
+
+export async function runPeakProFilingsScrape(): Promise<number> {
+  if (filingsInFlight) return filingsInFlight;
+  filingsInFlight = persistFilings()
+    .then(async (count) => {
+      if (count > 0) {
+        try {
+          const { revalidateTag } = await import('next/cache');
+          revalidateTag('peakpro-warehouse');
+        } catch (error) {
+          console.warn('[peakpro/scraper] filings revalidate skipped', error);
+        }
+      }
+      return count;
+    })
+    .finally(() => {
+      filingsInFlight = null;
+    });
+  return filingsInFlight;
+}
+
+async function persistFilings(): Promise<number> {
+  const filings = await harvestPublicFilings();
+  const count = filings.trades.length + filings.books.length;
+  if (count === 0) return 0;
+  await upsertMarket([
+    {
+      asset_class: 'ranking',
+      symbol: 'FILINGS',
+      timeframe: 'weekly',
+      payload: filings,
+    },
+  ]);
+  return count;
+}
 
 let newsInFlight: Promise<number> | null = null;
 
@@ -822,22 +860,11 @@ export async function runPeakProMarketScrape(): Promise<{
   } catch (error) {
     console.warn('[peakpro/scraper] tape persist skipped', error);
   }
-  const [news, filings] = await Promise.all([
-    scrapeNews(),
-    harvestPublicFilings().catch((error) => {
-      console.warn('[peakpro/scraper] filings harvest skipped', error);
-      return null;
-    }),
-  ]);
-  if (filings && filings.trades.length + filings.books.length > 0) {
-    await upsertMarket([
-      {
-        asset_class: 'ranking',
-        symbol: 'FILINGS',
-        timeframe: 'weekly',
-        payload: filings,
-      },
-    ]);
+  const news = await scrapeNews();
+  try {
+    await persistFilings();
+  } catch (error) {
+    console.warn('[peakpro/scraper] filings harvest skipped', error);
   }
   const context = JSON.stringify({
     equities: equities.slice(0, 8),

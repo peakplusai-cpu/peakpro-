@@ -115,7 +115,7 @@ export interface TrendingPayload {
 
 export interface FilingTrade {
   person: string;
-  chamber: 'house' | 'senate';
+  chamber: 'house' | 'senate' | 'exec';
   ticker: string;
   issuer: string;
   side: 'buy' | 'sell' | 'other';
