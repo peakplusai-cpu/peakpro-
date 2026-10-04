@@ -113,6 +113,39 @@ export interface TrendingPayload {
   us?: TrendingItem[];
 }
 
+export interface FilingTrade {
+  person: string;
+  chamber: 'house' | 'senate';
+  ticker: string;
+  issuer: string;
+  side: 'buy' | 'sell' | 'other';
+  amount: string;
+  traded: string | null;
+  disclosed: string | null;
+  href: string | null;
+}
+
+export interface FilingBook {
+  name: string;
+  nameZh: string;
+  principal: string;
+  cik: string;
+  filed: string;
+  href: string;
+  holdings: Array<{
+    issuer: string;
+    ticker: string;
+    valueUsd000: number;
+    shares: number | null;
+  }>;
+}
+
+export interface FilingsPayload {
+  trades: FilingTrade[];
+  books: FilingBook[];
+  asOf: string;
+}
+
 export interface PeakProCacheSnapshot {
   equities: MarketDataRow[];
   crypto: MarketDataRow[];
@@ -120,6 +153,7 @@ export interface PeakProCacheSnapshot {
   news: NewsCacheRow[];
   fearGreed: MarketDataRow | null;
   trending: MarketDataRow | null;
+  filings: MarketDataRow | null;
   briefs: AiSummaryRow[];
   lastUpdated: string | null;
   usdTwd: number | null;

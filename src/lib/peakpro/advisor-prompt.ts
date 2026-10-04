@@ -1,5 +1,6 @@
 import { formatPct, formatPx } from '@/lib/peakpro/format';
-import type { FearGreedPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
+import { formatAdvisorFilings } from '@/lib/peakpro/filings';
+import type { FearGreedPayload, FilingsPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
 
 function line(symbol: string, name: string, last: number, currency: string, changePct: number) {
   return `${symbol} ${name}: ${formatPx(last, currency)} (${formatPct(changePct)})`;
@@ -51,6 +52,8 @@ export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot): string {
     '',
     'Geopolitics headlines:',
     news.length ? news.join('\n') : '(none)',
+    '',
+    formatAdvisorFilings(cache.filings?.payload as unknown as FilingsPayload | undefined),
   ];
 
   return parts.join('\n').slice(0, 7000);
@@ -66,7 +69,7 @@ Voice:
 - Traditional Chinese (Taiwan) if they wrote Chinese; English if they wrote English.
 - Tight. No emoji. No "as an AI". No "I cannot comment on markets". No "I cannot give investment advice" in the body. No sending them to TWSE, Yahoo, or a news site instead of answering.
 
-In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, how to read the print.
+In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade.
 If SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.
 Out of scope only: recipes, general coding, medical, homework unrelated to markets.
 

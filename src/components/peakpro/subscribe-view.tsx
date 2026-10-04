@@ -19,6 +19,7 @@ const FEATURES_EN = [
   'Desk Advisor, 30 messages per day',
   'Personal book with cost basis and marked P&L',
   'Session tape: volume-price turns, relative strength, official after-close institutions',
+  'Public filings: U.S. politicians and well-known 13F books, delayed',
 ];
 
 const FEATURES_ZH = [
@@ -32,6 +33,7 @@ const FEATURES_ZH = [
   '桌面顧問，每日 30 則',
   '自選組合與持有成本、估算損益',
   '動能轉折：盤中量價強弱、相對指數、盤後官方三大法人',
+  '公開申報：美國政治人物與知名法人 13F，有法定延遲',
 ];
 
 export function PeakProSubscribeView({

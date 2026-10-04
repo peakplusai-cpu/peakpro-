@@ -42,6 +42,7 @@ export const PEAKPRO_MODULES = [
   'crypto',
   'gold',
   'geopolitics',
+  'filings',
   'sentiment',
   'trending',
   'brief',

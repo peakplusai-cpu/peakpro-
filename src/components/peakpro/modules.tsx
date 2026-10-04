@@ -6,6 +6,7 @@ import { displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
 import type {
   FearGreedPayload,
+  FilingsPayload,
   MarketDataRow,
   PeakProCacheSnapshot,
   PeakProTier,
@@ -17,6 +18,7 @@ import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPortfolioDesk } from '@/components/peakpro/portfolio-desk';
+import { PeakProFilingsDesk } from '@/components/peakpro/filings-desk';
 import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { pricedTrending } from '@/lib/peakpro/market-trending';
@@ -381,6 +383,15 @@ export function PeakProModuleView({
           </div>
         )}
       </div>
+    );
+  }
+
+  if (moduleId === 'filings') {
+    return (
+      <PeakProFilingsDesk
+        locale={locale}
+        payload={(cache.filings?.payload as unknown as FilingsPayload | undefined) ?? null}
+      />
     );
   }
 

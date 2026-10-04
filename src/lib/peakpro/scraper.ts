@@ -1,6 +1,7 @@
 import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, TAPE_TW_BENCH, TAPE_US_BENCH, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { collectMarketNews, newsCategory, type RssItem } from '@/lib/peakpro/news-scrape';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { harvestPublicFilings } from '@/lib/peakpro/filings';
 import { harvestTaiwanMarket, harvestUsLeaders, itemsFromPrints, pricedTrending, rerankTrending } from '@/lib/peakpro/market-trending';
 import { insertSessionPrints, persistTapeFromScrape, printFromOfficial, printFromQuote, printFromTrendingItem } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
@@ -821,7 +822,23 @@ export async function runPeakProMarketScrape(): Promise<{
   } catch (error) {
     console.warn('[peakpro/scraper] tape persist skipped', error);
   }
-  const news = await scrapeNews();
+  const [news, filings] = await Promise.all([
+    scrapeNews(),
+    harvestPublicFilings().catch((error) => {
+      console.warn('[peakpro/scraper] filings harvest skipped', error);
+      return null;
+    }),
+  ]);
+  if (filings && filings.trades.length + filings.books.length > 0) {
+    await upsertMarket([
+      {
+        asset_class: 'ranking',
+        symbol: 'FILINGS',
+        timeframe: 'weekly',
+        payload: filings,
+      },
+    ]);
+  }
   const context = JSON.stringify({
     equities: equities.slice(0, 8),
     crypto,

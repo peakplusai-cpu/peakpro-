@@ -27,6 +27,7 @@ function emptySnapshot(): PeakProCacheSnapshot {
     news: [],
     fearGreed: null,
     trending: null,
+    filings: null,
     briefs: [],
     lastUpdated: null,
     usdTwd: null,
@@ -55,6 +56,7 @@ async function queryPeakProWarehouse(): Promise<PeakProCacheSnapshot> {
       news,
       fearGreed: market.find((row) => row.symbol === 'FNG') ?? null,
       trending: market.find((row) => row.symbol === 'WEEKLY') ?? null,
+      filings: market.find((row) => row.symbol === 'FILINGS') ?? null,
       briefs,
       lastUpdated: latestStamp([...market, ...news, ...briefs]),
       usdTwd,
@@ -110,6 +112,7 @@ export function filterCacheForTier(
     news: [],
     fearGreed: null,
     trending: null,
+    filings: null,
     briefs: [],
   };
 }
@@ -131,7 +134,7 @@ export function cacheHasPrints(snapshot: PeakProCacheSnapshot): boolean {
       snapshot.gold.length +
       snapshot.news.length +
       snapshot.briefs.length >
-      0 || Boolean(snapshot.fearGreed || snapshot.trending)
+      0 || Boolean(snapshot.fearGreed || snapshot.trending || snapshot.filings)
   );
 }
 
