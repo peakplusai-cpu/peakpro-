@@ -10,6 +10,7 @@ import {
   type PortfolioLot,
 } from '@/lib/peakpro/portfolio';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
+import { resolveEquityLookup } from '@/lib/peakpro/symbol-search';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -67,7 +68,17 @@ export async function POST(request: Request) {
   if (!isPortfolioBook(body?.book)) {
     return NextResponse.json({ error: 'invalid' }, { status: 400 });
   }
-  const parsed = parseLotSymbol(body.book, typeof body.query === 'string' ? body.query : '');
+  const rawQuery = typeof body.query === 'string' ? body.query : '';
+  let parsed = parseLotSymbol(body.book, rawQuery);
+  if (parsed.error && (body.book === 'taiwan' || body.book === 'us')) {
+    const resolved = await resolveEquityLookup(rawQuery, body.book);
+    if (resolved.symbol) {
+      parsed = {
+        symbol: resolved.symbol,
+        currency: body.book === 'taiwan' ? 'TWD' : 'USD',
+      };
+    }
+  }
   if (parsed.error) return NextResponse.json({ error: parsed.error }, { status: 400 });
 
   const quantity = Number(body?.quantity);

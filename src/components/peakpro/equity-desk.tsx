@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { SparkCandles } from '@/components/peakpro/charts';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { usePeakPro } from '@/components/peakpro/provider';
+import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
@@ -144,8 +145,7 @@ export function PeakProEquityDesk({
   const monthly = visible.filter((row) => row.timeframe === 'monthly');
   const annual = visible.filter((row) => row.timeframe === 'annual');
 
-  async function onLookup(event: FormEvent) {
-    event.preventDefault();
+  async function lookupSymbol(raw: string) {
     if (pending) return;
     setPending(true);
     setMessage(null);
@@ -154,7 +154,7 @@ export function PeakProEquityDesk({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ query, market }),
+        body: JSON.stringify({ query: raw, market }),
       });
       const json = (await response.json().catch(() => null)) as { error?: string; symbol?: string } | null;
       if (response.status === 401) {
@@ -171,15 +171,22 @@ export function PeakProEquityDesk({
               ? 'searchPremiumOnly'
               : json?.error === 'not_found'
                 ? 'searchNotFound'
-                : 'searchInvalid';
+                : json?.error === 'ambiguous'
+                  ? 'searchPick'
+                  : 'searchInvalid';
         setMessage(tPeakpro(locale, key));
         return;
       }
       setMessage(tPeakpro(locale, 'searchOk'));
-      router.push(`/app/${market}/${encodeURIComponent(json?.symbol ?? query)}`);
+      router.push(`/app/${market}/${encodeURIComponent(json?.symbol ?? raw)}`);
     } finally {
       setPending(false);
     }
+  }
+
+  async function onLookup(event: FormEvent) {
+    event.preventDefault();
+    await lookupSymbol(query);
   }
 
   return (
@@ -189,11 +196,17 @@ export function PeakProEquityDesk({
           {tPeakpro(locale, market === 'taiwan' ? 'taiwanTitle' : 'usTitle')}
         </h2>
         <form onSubmit={onLookup} className="mt-6 flex flex-col gap-3 sm:flex-row">
-          <input
+          <SymbolSearchField
+            locale={locale}
+            market={market}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={setQuery}
+            onPick={(hit) => {
+              setQuery(hit.symbol);
+              void lookupSymbol(hit.symbol);
+            }}
             placeholder={tPeakpro(locale, market === 'taiwan' ? 'searchPlaceholderTw' : 'searchPlaceholderUs')}
-            className="h-11 flex-1 rounded-full border border-gold/25 bg-black px-4 text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gold"
+            disabled={pending}
           />
           <button
             type="submit"

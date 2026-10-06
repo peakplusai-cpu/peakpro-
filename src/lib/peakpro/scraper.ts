@@ -3,6 +3,7 @@ import { collectMarketNews, newsCategory, type RssItem } from '@/lib/peakpro/new
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { harvestPublicFilings } from '@/lib/peakpro/filings';
 import { harvestTaiwanMarket, harvestUsLeaders, itemsFromPrints, pricedTrending, rerankTrending } from '@/lib/peakpro/market-trending';
+import { namesDirectoryRow } from '@/lib/peakpro/symbol-search';
 import { insertSessionPrints, persistTapeFromScrape, printFromOfficial, printFromQuote, printFromTrendingItem } from '@/lib/peakpro/tape-store';
 import { buildSeedSnapshot } from '@/lib/peakpro/seed-data';
 import { biasFromChanges, deskBiasGauges } from '@/lib/peakpro/sentiment';
@@ -852,7 +853,18 @@ export async function runPeakProMarketScrape(): Promise<{
     },
   ];
 
-  await upsertMarket([...equities, ...crypto, ...gold, ...fear, ...trending, ...fx]);
+  await upsertMarket([
+    ...equities,
+    ...crypto,
+    ...gold,
+    ...fear,
+    ...trending,
+    ...fx,
+    namesDirectoryRow(
+      taiwanHarvest.universe.map((row) => ({ symbol: row.symbol, name: row.name })),
+      usLeaders.map((item) => ({ symbol: item.symbol, name: item.name })),
+    ),
+  ]);
   const twBenchPrint = taiwanHarvest.universe.find((row) => row.symbol === TAPE_TW_BENCH);
   try {
     await persistTapeFromScrape(

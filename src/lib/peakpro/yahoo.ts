@@ -157,3 +157,21 @@ export async function fetchYahooQuote(symbol: string): Promise<YahooQuote | null
 export function chartMeta(payload: YahooChart | null) {
   return payload?.chart?.result?.[0]?.meta ?? null;
 }
+
+export type YahooSearchQuote = {
+  symbol?: string;
+  shortname?: string;
+  longname?: string;
+  quoteType?: string;
+  exchange?: string;
+  exchDisp?: string;
+};
+
+export async function searchYahooQuotes(query: string): Promise<YahooSearchQuote[]> {
+  const q = query.trim();
+  if (!q) return [];
+  const json = await fetchYahooJson<{ quotes?: YahooSearchQuote[] }>(
+    `https://query1.finance.yahoo.com/v1/finance/search?q=${encodeURIComponent(q)}&quotesCount=12&newsCount=0&listsCount=0`,
+  );
+  return json?.quotes ?? [];
+}

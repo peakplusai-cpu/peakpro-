@@ -7,6 +7,7 @@ import { Loader2, Trash2 } from 'lucide-react';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { usePeakPro } from '@/components/peakpro/provider';
+import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarkedLot, PortfolioBook } from '@/lib/peakpro/portfolio';
 import { cn } from '@/lib/utils';
@@ -163,12 +164,25 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
               </option>
             ))}
           </select>
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={tPeakpro(locale, book === 'gold' ? 'bookGoldHint' : book === 'crypto' ? 'bookCryptoHint' : 'bookSymbol')}
-            className="rounded-2xl border border-gold/20 bg-black px-3 py-2 text-sm"
-          />
+          {book === 'taiwan' || book === 'us' ? (
+            <SymbolSearchField
+              locale={locale}
+              market={book}
+              value={query}
+              onChange={setQuery}
+              onPick={(hit) => setQuery(hit.symbol)}
+              placeholder={tPeakpro(locale, 'bookSymbol')}
+              disabled={pending}
+              variant="box"
+            />
+          ) : (
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={tPeakpro(locale, book === 'gold' ? 'bookGoldHint' : 'bookCryptoHint')}
+              className="rounded-2xl border border-gold/20 bg-black px-3 py-2 text-sm"
+            />
+          )}
           <input
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
