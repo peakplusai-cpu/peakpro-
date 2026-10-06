@@ -1,5 +1,11 @@
 import { EQUITY_UNIVERSE, TAPE_TW_BENCH, TAPE_US_BENCH } from '@/lib/peakpro/constants';
-import { marketCalendarDate, sessionElapsed, tapeMarketFor, type TapeMarket } from '@/lib/peakpro/session-clock';
+import {
+  activeSessionDate,
+  marketCalendarDate,
+  sessionElapsed,
+  tapeMarketFor,
+  type TapeMarket,
+} from '@/lib/peakpro/session-clock';
 import type { OhlcBar } from '@/lib/peakpro/types';
 
 export type TapeTurn = 'thrust' | 'fade' | 'press' | 'idle' | 'first' | 'flat';
@@ -85,15 +91,36 @@ export type TapeDesk = {
 
 const DESK = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
 
-export function classifyTurn(prev: SessionPrint | undefined, last: SessionPrint | undefined): TapeTurn {
+export function classifyTurn(
+  prev: SessionPrint | undefined,
+  last: SessionPrint | undefined,
+  priorSession?: SessionPrint,
+): TapeTurn {
   if (!last) return 'flat';
-  if (!prev || prev.session_date !== last.session_date) return 'first';
-  const dChg = (last.change_pct ?? 0) - (prev.change_pct ?? 0);
-  const volGrow =
-    last.volume != null && prev.volume != null && prev.volume > 0 && last.volume > prev.volume * 1.06;
-  if (Math.abs(dChg) < 0.12) return 'flat';
-  if (dChg >= 0.12) return volGrow ? 'thrust' : 'fade';
-  return volGrow ? 'press' : 'idle';
+  const baseline = prev && prev.session_date === last.session_date ? prev : undefined;
+  if (baseline) {
+    const dChg = (last.change_pct ?? 0) - (baseline.change_pct ?? 0);
+    const volGrow =
+      last.volume != null &&
+      baseline.volume != null &&
+      baseline.volume > 0 &&
+      last.volume > baseline.volume * 1.06;
+    if (Math.abs(dChg) < 0.12) return 'flat';
+    if (dChg >= 0.12) return volGrow ? 'thrust' : 'fade';
+    return volGrow ? 'press' : 'idle';
+  }
+  if (priorSession && last.change_pct != null) {
+    const volGrow =
+      last.volume != null &&
+      priorSession.volume != null &&
+      priorSession.volume > 0 &&
+      last.volume > priorSession.volume * 1.06;
+    if (last.change_pct >= 0.6 && volGrow) return 'thrust';
+    if (last.change_pct <= -0.6 && volGrow) return 'press';
+    if (Math.abs(last.change_pct) < 0.2) return 'flat';
+    return last.change_pct > 0 ? 'fade' : 'idle';
+  }
+  return 'first';
 }
 
 export function classifyRs(changePct: number | null, benchPct: number | null): { rs: TapeRs; rsPct: number | null } {
@@ -144,6 +171,32 @@ export function latestSessionDate(prints: SessionPrint[], market: 'taiwan' | 'us
   return dates.sort().at(-1) ?? fallback;
 }
 
+export function pickTapeSessionDate(
+  prints: SessionPrint[],
+  market: 'taiwan' | 'us',
+  bench: string,
+  now: Date,
+  fallback: string,
+) {
+  const rows = prints.filter((row) => row.market === market);
+  const dates = [...new Set(rows.map((row) => row.session_date))].sort();
+  const count = (date: string) => rows.filter((row) => row.session_date === date).length;
+  const hasBench = (date: string) =>
+    rows.some((row) => row.session_date === date && row.symbol === bench && row.change_pct != null);
+  const active = activeSessionDate(now, market);
+  const today = marketCalendarDate(now, market);
+  if (hasBench(active)) return active;
+  if (hasBench(today)) return today;
+  if (sessionElapsed(now, market) > 0 && count(today) >= 3) return today;
+  for (let i = dates.length - 1; i >= 0; i -= 1) {
+    if (hasBench(dates[i])) return dates[i];
+  }
+  return (
+    [...dates].sort((a, b) => count(b) - count(a) || b.localeCompare(a))[0] ??
+    latestSessionDate(prints, market, fallback)
+  );
+}
+
 export function latestPrintsForDate(prints: SessionPrint[], sessionDate: string) {
   const bySymbol = new Map<string, SessionPrint[]>();
   for (const print of prints) {
@@ -167,8 +220,23 @@ export function buildTapeDesk(input: {
   extraSymbols?: string[];
 }): TapeDesk {
   const now = input.now ?? new Date();
-  const twDate = latestSessionDate(input.prints, 'taiwan', marketCalendarDate(now, 'taiwan'));
-  const usDate = latestSessionDate(input.prints, 'us', marketCalendarDate(now, 'us'));
+  const twDate = pickTapeSessionDate(
+    input.prints,
+    'taiwan',
+    TAPE_TW_BENCH,
+    now,
+    marketCalendarDate(now, 'taiwan'),
+  );
+  const usDate = pickTapeSessionDate(input.prints, 'us', TAPE_US_BENCH, now, marketCalendarDate(now, 'us'));
+  const historyBySymbol = new Map<string, SessionPrint[]>();
+  for (const print of input.prints) {
+    const list = historyBySymbol.get(print.symbol) ?? [];
+    list.push(print);
+    historyBySymbol.set(print.symbol, list);
+  }
+  for (const list of historyBySymbol.values()) {
+    list.sort((a, b) => a.scraped_at.localeCompare(b.scraped_at));
+  }
   const book = new Set(input.bookSymbols);
   const wanted = new Set<string>([
     ...((input.extraSymbols?.length ?? 0) > 0
@@ -197,6 +265,9 @@ export function buildTapeDesk(input: {
     const session = (market === 'taiwan' ? twPrints : usPrints).get(symbol) ?? [];
     const last = session.at(-1);
     const prev = session.length > 1 ? session.at(-2) : undefined;
+    const priorSession = (historyBySymbol.get(symbol) ?? [])
+      .filter((print) => print.session_date < sessionDate)
+      .at(-1);
     const daily = input.dailyBars.get(symbol);
     const elapsed = last ? sessionElapsed(new Date(last.scraped_at), market) : sessionElapsed(now, market);
     const avg20 = daily ? averagePriorVolume(daily.bars, sessionDate) : null;
@@ -227,7 +298,7 @@ export function buildTapeDesk(input: {
       volume: last?.volume ?? null,
       volumeRatio: volumeRatio(last?.volume ?? null, avg20, elapsed),
       rangePos: rangePosition(last?.price ?? null, last?.day_low ?? null, last?.day_high ?? null),
-      turn: classifyTurn(prev, last),
+      turn: classifyTurn(prev, last, priorSession),
       rs: rs.rs,
       rsPct: rs.rsPct,
       benchmark: market === 'taiwan' ? TAPE_TW_BENCH : TAPE_US_BENCH,
@@ -246,9 +317,9 @@ export function buildTapeDesk(input: {
     return (b.changePct ?? -999) - (a.changePct ?? -999);
   });
 
-  const tw = rows.filter((row) => row.market === 'taiwan');
-  const us = rows.filter((row) => row.market === 'us');
-  const bookRows = rows.filter((row) => row.inBook);
+  const tw = rows.filter((row) => row.market === 'taiwan' && row.rsPct != null);
+  const us = rows.filter((row) => row.market === 'us' && row.rsPct != null);
+  const pulseRows = rows.filter((row) => row.prints > 0);
   const stamps = rows.map((row) => row.scrapedAt).filter((value): value is string => Boolean(value));
   const instDates = rows.map((row) => row.inst?.date).filter((value): value is string => Boolean(value));
 
@@ -267,8 +338,8 @@ export function buildTapeDesk(input: {
       twLag: tw.filter((row) => row.rs === 'lag').length,
       usLead: us.filter((row) => row.rs === 'lead').length,
       usLag: us.filter((row) => row.rs === 'lag').length,
-      bookThrust: bookRows.filter((row) => row.turn === 'thrust').length,
-      bookPress: bookRows.filter((row) => row.turn === 'press').length,
+      bookThrust: pulseRows.filter((row) => row.turn === 'thrust').length,
+      bookPress: pulseRows.filter((row) => row.turn === 'press').length,
     },
   };
 }

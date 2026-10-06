@@ -1,7 +1,7 @@
 import { TAPE_TW_BENCH, TAPE_US_BENCH } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import type { OfficialPrint } from '@/lib/peakpro/market-trending';
-import { marketCalendarDate, taipeiCalendarDate, tapeMarketFor } from '@/lib/peakpro/session-clock';
+import { activeSessionDate, marketCalendarDate, taipeiCalendarDate, tapeMarketFor } from '@/lib/peakpro/session-clock';
 import {
   buildTapeDesk,
   type InstitutionalPrint,
@@ -10,7 +10,7 @@ import {
 } from '@/lib/peakpro/tape';
 import { fetchOfficialInstitutional, type InstitutionalRow } from '@/lib/peakpro/twse';
 import type { MarketDataRow, OhlcBar, TrendingItem } from '@/lib/peakpro/types';
-import { fetchYahooQuotes, isTaiwanSymbol, type YahooQuote } from '@/lib/peakpro/yahoo';
+import { fetchYahooChart, fetchYahooQuotes, isTaiwanSymbol, yahooToBars, type YahooQuote } from '@/lib/peakpro/yahoo';
 
 const SETUP_RE = /peakpro_session_prints|peakpro_institutional|does not exist|schema cache/i;
 
@@ -26,11 +26,15 @@ export function printFromQuote(
 ): SessionPrint | null {
   if (!quote && !dailyBars?.length) return null;
   const market = tapeMarketFor(symbol);
-  const stamp = quote?.regularMarketTime ? new Date(quote.regularMarketTime * 1000) : new Date();
   const lastBar = dailyBars?.at(-1);
+  const prevBar = dailyBars && dailyBars.length >= 2 ? dailyBars[dailyBars.length - 2] : undefined;
   const price = quote?.regularMarketPrice ?? lastBar?.c ?? null;
   if (price == null) return null;
-  const sessionDate = marketCalendarDate(stamp, market);
+  const sessionDate = quote?.regularMarketTime
+    ? marketCalendarDate(new Date(quote.regularMarketTime * 1000), market)
+    : lastBar?.t ?? activeSessionDate(new Date(), market);
+  const barChg =
+    lastBar && prevBar && prevBar.c > 0 ? ((lastBar.c - prevBar.c) / prevBar.c) * 100 : null;
 
   return {
     symbol,
@@ -39,7 +43,7 @@ export function printFromQuote(
     session_date: sessionDate,
     scraped_at: new Date().toISOString(),
     price,
-    change_pct: quote?.regularMarketChangePercent ?? null,
+    change_pct: quote?.regularMarketChangePercent ?? barChg,
     volume: quote?.regularMarketVolume ?? lastBar?.v ?? null,
     day_open: quote?.regularMarketOpen ?? lastBar?.o ?? null,
     day_high: quote?.regularMarketDayHigh ?? lastBar?.h ?? null,
@@ -75,7 +79,7 @@ export function printFromTrendingItem(item: TrendingItem): SessionPrint | null {
     symbol: item.symbol,
     name: item.name,
     market,
-    session_date: marketCalendarDate(new Date(), market),
+    session_date: activeSessionDate(new Date(), market),
     scraped_at: new Date().toISOString(),
     price: item.last,
     change_pct: item.changePct,
@@ -156,13 +160,21 @@ export async function upsertInstitutional(rows: InstitutionalRow[]) {
 }
 
 export async function persistTapeFromScrape(prints: SessionPrint[], warehouseSymbols: string[]) {
-  const missingBenches = [TAPE_TW_BENCH, TAPE_US_BENCH].filter(
-    (symbol) => !prints.some((print) => print.symbol === symbol),
-  );
-  if (missingBenches.length > 0) {
-    const quotes = await fetchYahooQuotes(missingBenches);
-    for (const quote of quotes) {
-      const print = printFromQuote(quote.symbol, quote.symbol, quote);
+  const now = new Date();
+  const needed = [TAPE_TW_BENCH, TAPE_US_BENCH].filter((symbol) => {
+    const session = activeSessionDate(now, tapeMarketFor(symbol));
+    return !prints.some((print) => print.symbol === symbol && print.session_date === session && print.change_pct != null);
+  });
+  if (needed.length > 0) {
+    const quotes = await fetchYahooQuotes(needed);
+    for (const symbol of needed) {
+      const quote = quotes.find((row) => row.symbol === symbol) ?? null;
+      let bars: OhlcBar[] | undefined;
+      if (!quote?.regularMarketChangePercent) {
+        const chart = await fetchYahooChart(symbol, 'daily');
+        bars = chart ? yahooToBars(chart) : undefined;
+      }
+      const print = printFromQuote(symbol, symbol, quote, bars);
       if (print) prints.push(print);
     }
   }
@@ -237,13 +249,19 @@ export async function loadTapeDesk(options: {
   ].filter(Boolean);
 
   const twSymbols = symbols.filter((symbol) => /\.(TW|TWO)$/i.test(symbol));
-  const [printRes, instRes] = await Promise.all([
+  const [printRes, benchRes, instRes] = await Promise.all([
     admin
       .from('peakpro_session_prints')
       .select('*')
       .in('symbol', symbols.length > 0 ? symbols : ['__none__'])
       .order('scraped_at', { ascending: false })
-      .limit(800),
+      .limit(2400),
+    admin
+      .from('peakpro_session_prints')
+      .select('*')
+      .in('symbol', [TAPE_TW_BENCH, TAPE_US_BENCH])
+      .order('scraped_at', { ascending: false })
+      .limit(80),
     admin
       .from('peakpro_institutional')
       .select('*')
@@ -265,6 +283,9 @@ export async function loadTapeDesk(options: {
     };
   }
   if (printRes.error) console.warn('[peakpro/tape] load prints failed', printRes.error.message);
+  if (benchRes.error && !isTapeSetupError(benchRes.error.message)) {
+    console.warn('[peakpro/tape] load benches failed', benchRes.error.message);
+  }
   if (instRes.error && !isTapeSetupError(instRes.error.message)) {
     console.warn('[peakpro/tape] load institutional failed', instRes.error.message);
   }
@@ -275,9 +296,15 @@ export async function loadTapeDesk(options: {
     dailyBars.set(row.symbol, { name: row.payload.name, bars: row.payload.bars ?? [] });
   }
 
+  const mergedPrints = new Map<string, SessionPrint>();
+  for (const row of [...(printRes.data ?? []), ...(benchRes.data ?? [])] as Record<string, unknown>[]) {
+    const print = asPrint(row);
+    mergedPrints.set(`${print.symbol}|${print.session_date}|${print.scraped_at}`, print);
+  }
+
   return {
     desk: buildTapeDesk({
-      prints: ((printRes.data ?? []) as Record<string, unknown>[]).map(asPrint),
+      prints: [...mergedPrints.values()],
       institutional: ((instRes.data ?? []) as Record<string, unknown>[]).map(asInst),
       dailyBars,
       bookSymbols: options.bookSymbols,

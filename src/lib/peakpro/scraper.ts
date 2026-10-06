@@ -124,7 +124,7 @@ async function extraEquitySymbols(): Promise<string[]> {
     const symbols = rows
       .filter((row) => row.payload?.source !== 'market-wide')
       .map((row) => (typeof row.symbol === 'string' ? row.symbol : ''))
-      .filter((symbol) => symbol.length > 0 && !desk.has(symbol));
+      .filter((symbol) => symbol.length > 0 && !desk.has(symbol) && symbol !== TAPE_TW_BENCH && symbol !== TAPE_US_BENCH);
     return [...new Set(symbols)].slice(0, 20);
   } catch {
     return [];
@@ -183,6 +183,8 @@ async function scrapeEquities() {
   const extras = await extraEquitySymbols();
   const targets = [
     ...EQUITY_UNIVERSE.map((equity) => ({ symbol: equity.symbol, name: equity.name })),
+    { symbol: TAPE_TW_BENCH, name: 'Yuanta Taiwan 50' },
+    { symbol: TAPE_US_BENCH, name: 'Invesco QQQ' },
     ...extras.map((symbol) => ({ symbol, name: symbol })),
   ];
   const rows: Array<{

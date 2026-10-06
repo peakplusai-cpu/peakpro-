@@ -213,7 +213,7 @@ const en: CopyTree = {
   tape_inline: 'In line',
   tapeLeadCount: 'leading',
   tapeLagCount: 'lagging',
-  tapeBookPulse: 'Book turns',
+  tapeBookPulse: 'Tape turns',
   tapePrints: 'snapshots',
   footerProduct: 'PeakPro+ Market Intelligence',
 };
@@ -427,7 +427,7 @@ const zh: CopyTree = {
   tape_inline: '同步',
   tapeLeadCount: '檔領先',
   tapeLagCount: '檔落後',
-  tapeBookPulse: '持倉轉折',
+  tapeBookPulse: '量價轉折',
   tapePrints: '筆快照',
   footerProduct: 'PeakPro+ 市場情報',
 };

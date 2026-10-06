@@ -65,6 +65,22 @@ export function taipeiCalendarDate(at = new Date()) {
   return marketCalendarDate(at, 'taiwan');
 }
 
+/** Last weekday session that has actually started (or last Friday on a weekend). */
+export function activeSessionDate(at: Date, market: TapeMarket) {
+  const { minutes, weekday } = zonedParts(at, marketTimeZone(market));
+  const { open } = sessionWindow(market);
+  if (weekday !== 'Sat' && weekday !== 'Sun' && minutes >= open) {
+    return marketCalendarDate(at, market);
+  }
+  let cursor = new Date(at.getTime());
+  for (let i = 0; i < 8; i += 1) {
+    cursor = new Date(cursor.getTime() - 86_400_000);
+    const part = zonedParts(cursor, marketTimeZone(market));
+    if (part.weekday !== 'Sat' && part.weekday !== 'Sun') return part.date;
+  }
+  return marketCalendarDate(at, market);
+}
+
 export function previousCalendarDates(from: string, count: number) {
   const dates: string[] = [];
   const cursor = new Date(`${from}T12:00:00+08:00`);
