@@ -63,6 +63,10 @@ export const ADVISOR_DAILY_LIMIT = 30;
 export const ADVISOR_MAX_INPUT = 2000;
 export const ADVISOR_MAX_HISTORY = 12;
 
+export const LEARN_QUIZ_LIMIT = 5;
+export const LEARN_QUIZ_SIZE = 10;
+export const LEARN_QUIZ_POINTS = 10;
+
 export type PeakProModule = (typeof PEAKPRO_MODULES)[number];
 
 export function isPeakProModule(value: string): value is PeakProModule {

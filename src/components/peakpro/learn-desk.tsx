@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
+import { PeakProLearnQuiz } from '@/components/peakpro/learn-quiz';
 import { learnLessons, type LearnLesson, type LearnTab } from '@/lib/peakpro/learn';
 import { cn } from '@/lib/utils';
 
@@ -73,6 +74,8 @@ export function PeakProLearnDesk({ locale }: { locale: Locale }) {
           ))}
         </div>
       </div>
+
+      <PeakProLearnQuiz locale={locale} />
 
       <p className="text-[11px] leading-relaxed text-zinc-600">
         {locale === 'zh' ? PEAKPRO_DISCLAIMER_ZH : PEAKPRO_DISCLAIMER_EN}
