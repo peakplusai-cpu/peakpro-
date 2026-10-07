@@ -87,7 +87,10 @@ export function PeakProNav({
                 moduleId === 'overview'
                   ? pathname === '/app'
                   : pathname === href || pathname.startsWith(`${href}/`);
-              const locked = !canAccessModule(tier, moduleId as PeakProModule) && moduleId !== 'overview';
+              const locked =
+                !canAccessModule(tier, moduleId as PeakProModule) &&
+                moduleId !== 'overview' &&
+                moduleId !== 'learn';
               return (
                 <Link
                   key={moduleId}

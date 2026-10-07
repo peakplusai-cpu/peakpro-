@@ -7,6 +7,7 @@ const en: CopyTree = {
   brand: 'PeakPro+',
   tagline: 'Institutional market intelligence, refined for the private desk.',
   navOverview: 'Command Desk',
+  navLearn: 'Primer',
   navPortfolio: 'Book',
   navTape: 'Session Tape',
   navTaiwan: 'Taiwan Equities',
@@ -217,12 +218,20 @@ const en: CopyTree = {
   tapeBookPulse: 'Tape turns',
   tapePrints: 'snapshots',
   footerProduct: 'PeakPro+ Market Intelligence',
+  learnTitle: 'Beginner primer',
+  learnLead:
+    'How markets work, then how to read the prints on this desk. Educational only — not an order ticket.',
+  learnPrinciples: 'Market principles',
+  learnIndicators: 'Reading indicators',
+  learnDesk: 'On this desk',
+  learnToc: 'Lessons',
 };
 
 const zh: CopyTree = {
   brand: 'PeakPro+',
   tagline: '機構級市場情報，為私人投資桌重新淬鍊。',
   navOverview: '指揮台',
+  navLearn: '新手課',
   navPortfolio: '組合',
   navTape: '動能轉折',
   navTaiwan: '台股',
@@ -432,6 +441,13 @@ const zh: CopyTree = {
   tapeBookPulse: '量價轉折',
   tapePrints: '筆快照',
   footerProduct: 'PeakPro+ 市場情報',
+  learnTitle: '新手課',
+  learnLead: '先懂市場怎麼運作，再學怎麼讀指標。這頁是教育說明，不是下單建議。',
+  learnPrinciples: '股市原理',
+  learnIndicators: '看指標',
+  learnDesk: '在本桌怎麼看',
+  learnToc: '課程',
+
 };
 
 const dictionaries: Record<Locale, CopyTree> = { en, zh };
@@ -482,6 +498,7 @@ export function newsSourceLabel(locale: Locale, source: string) {
 
 export const MODULE_HREF: Record<PeakProModule, string> = {
   overview: '/app',
+  learn: '/app/learn',
   portfolio: '/app/portfolio',
   tape: '/app/tape',
   taiwan: '/app/taiwan',
@@ -499,6 +516,7 @@ export const MODULE_HREF: Record<PeakProModule, string> = {
 export function moduleLabel(locale: Locale, moduleId: PeakProModule): string {
   const keys: Record<PeakProModule, string> = {
     overview: 'navOverview',
+    learn: 'navLearn',
     portfolio: 'navPortfolio',
     tape: 'navTape',
     taiwan: 'navTaiwan',

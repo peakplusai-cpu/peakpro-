@@ -44,6 +44,7 @@ export const USDTWD_YAHOO = 'TWD=X';
 
 export const PEAKPRO_MODULES = [
   'overview',
+  'learn',
   'portfolio',
   'tape',
   'taiwan',

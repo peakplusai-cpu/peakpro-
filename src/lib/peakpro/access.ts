@@ -16,7 +16,7 @@ export function effectiveTier(profile: Pick<PeakProProfile, 'tier' | 'expires_at
 
 export function canAccessModule(tier: PeakProTier, moduleId: PeakProModule): boolean {
   if (tier === 'premium') return true;
-  return moduleId === 'overview' || moduleId === 'us';
+  return moduleId === 'overview' || moduleId === 'us' || moduleId === 'learn';
 }
 
 export function canAccessEquity(tier: PeakProTier, symbol: string, timeframe: string): boolean {
