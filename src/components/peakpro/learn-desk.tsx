@@ -11,7 +11,6 @@ import { cn } from '@/lib/utils';
 function LessonCard({ locale, lesson }: { locale: Locale; lesson: LearnLesson }) {
   const title = locale === 'zh' ? lesson.title.zh : lesson.title.en;
   const body = locale === 'zh' ? lesson.body.zh : lesson.body.en;
-  const desk = lesson.desk ? (locale === 'zh' ? lesson.desk.zh : lesson.desk.en) : null;
   return (
     <article id={lesson.id} className="scroll-mt-28 rounded-3xl border border-gold/15 bg-black/60 px-6 py-6">
       <h3 className="font-peakpro text-xl text-gold">{title}</h3>
@@ -20,12 +19,6 @@ function LessonCard({ locale, lesson }: { locale: Locale; lesson: LearnLesson })
           <p key={paragraph}>{paragraph}</p>
         ))}
       </div>
-      {desk ? (
-        <p className="mt-5 rounded-2xl border border-gold/10 bg-gold/[0.04] px-4 py-3 text-sm leading-relaxed text-zinc-400">
-          <span className="mr-2 text-[10px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'learnDesk')}</span>
-          {desk}
-        </p>
-      ) : null}
     </article>
   );
 }

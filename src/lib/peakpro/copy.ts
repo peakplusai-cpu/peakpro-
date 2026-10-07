@@ -223,7 +223,6 @@ const en: CopyTree = {
     'How markets work, then how to read the prints on this desk. Educational only — not an order ticket.',
   learnPrinciples: 'Market principles',
   learnIndicators: 'Reading indicators',
-  learnDesk: 'On this desk',
   learnToc: 'Lessons',
 };
 
@@ -445,7 +444,6 @@ const zh: CopyTree = {
   learnLead: '先懂市場怎麼運作，再學怎麼讀指標。這頁是教育說明，不是下單建議。',
   learnPrinciples: '股市原理',
   learnIndicators: '看指標',
-  learnDesk: '在本桌怎麼看',
   learnToc: '課程',
 
 };
