@@ -14,8 +14,7 @@ import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disc
 import { usePeakPro } from '@/components/peakpro/provider';
 import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
-import { toTradingViewSymbol, tradingviewTimezone } from '@/lib/peakpro/tradingview';
-import type { EquityMarket } from '@/lib/peakpro/yahoo';
+import { toTradingViewSymbol, tradingviewTimezone, type ChartMarket } from '@/lib/peakpro/tradingview';
 import { cn } from '@/lib/utils';
 
 function LiveTape({
@@ -27,7 +26,7 @@ function LiveTape({
 }: {
   locale: Locale;
   tier: PeakProTier;
-  market: EquityMarket;
+  market: ChartMarket;
   symbol: string;
   exchange?: string;
 }) {
@@ -71,7 +70,7 @@ export function PeakProEquityDetail({
 }: {
   locale: Locale;
   tier: PeakProTier;
-  market: EquityMarket;
+  market: ChartMarket;
   symbol: string;
   rows: MarketDataRow[];
 }) {
@@ -138,7 +137,8 @@ export function PeakProEquityDetail({
           <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{symbol}</p>
           <h1 className="mt-2 font-peakpro text-4xl text-gold">{payload.name}</h1>
           <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
-            {payload.exchange ?? (market === 'taiwan' ? 'TWSE' : 'U.S.')}
+            {payload.exchange ??
+              (market === 'taiwan' ? 'TWSE' : market === 'crypto' ? tPeakpro(locale, 'navCrypto') : 'U.S.')}
           </p>
         </div>
         <div className="text-left md:text-right">
@@ -156,7 +156,7 @@ export function PeakProEquityDetail({
         ))}
       </dl>
 
-      {tier === 'premium' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
+      {tier === 'premium' && market !== 'crypto' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
 
       <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} exchange={payload.exchange} />
 

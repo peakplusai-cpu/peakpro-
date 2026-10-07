@@ -39,7 +39,9 @@ function SeriesCard({
   const href =
     row.asset_class === 'equity'
       ? `/app/${isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us'}/${encodeURIComponent(row.symbol)}`
-      : null;
+      : row.asset_class === 'crypto'
+        ? `/app/crypto/${encodeURIComponent(row.symbol)}`
+        : null;
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">

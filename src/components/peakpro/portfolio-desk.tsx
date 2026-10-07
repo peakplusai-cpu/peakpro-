@@ -22,7 +22,10 @@ type Totals = {
 function lotHref(lot: MarkedLot) {
   if (lot.book === 'taiwan') return `/app/taiwan/${encodeURIComponent(lot.symbol)}`;
   if (lot.book === 'us') return `/app/us/${encodeURIComponent(lot.symbol)}`;
-  if (lot.book === 'crypto') return '/app/crypto';
+  if (lot.book === 'crypto') {
+    const key = lot.symbol.toUpperCase().startsWith('ETH') ? 'ETH' : 'BTC';
+    return `/app/crypto/${key}`;
+  }
   return '/app/gold';
 }
 

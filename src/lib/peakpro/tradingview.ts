@@ -1,4 +1,7 @@
+import { normalizeCryptoSymbol } from '@/lib/peakpro/constants';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
+
+export type ChartMarket = EquityMarket | 'crypto';
 
 const NASDAQ = new Set([
   'AAPL',
@@ -34,8 +37,12 @@ function isTaiwanOtc(symbol: string, exchange?: string) {
   );
 }
 
-export function toTradingViewSymbol(market: EquityMarket, symbol: string, exchange?: string): string {
+export function toTradingViewSymbol(market: ChartMarket, symbol: string, exchange?: string): string {
   const raw = symbol.trim().toUpperCase();
+  if (market === 'crypto') {
+    const parsed = normalizeCryptoSymbol(raw);
+    return parsed.symbol === 'ETH' ? 'BINANCE:ETHUSDT' : 'BINANCE:BTCUSDT';
+  }
   if (market === 'taiwan') {
     const code = raw.replace(/\.(TW|TWO)$/i, '');
     return isTaiwanOtc(raw, exchange) ? `ROCO:${code}` : `TWSE:${code}`;
@@ -51,8 +58,10 @@ export function toTradingViewSymbol(market: EquityMarket, symbol: string, exchan
   return `NASDAQ:${ticker}`;
 }
 
-export function tradingviewTimezone(market: EquityMarket) {
-  return market === 'taiwan' ? 'Asia/Taipei' : 'America/New_York';
+export function tradingviewTimezone(market: ChartMarket) {
+  if (market === 'taiwan') return 'Asia/Taipei';
+  if (market === 'crypto') return 'Etc/UTC';
+  return 'America/New_York';
 }
 
 export function canEmbedTradingViewSymbol(tvSymbol: string) {

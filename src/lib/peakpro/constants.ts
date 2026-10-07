@@ -26,6 +26,15 @@ export const CRYPTO_UNIVERSE = [
   { symbol: 'ETH', name: 'Ethereum', id: 'ethereum' },
 ] as const;
 
+export type CryptoSymbol = (typeof CRYPTO_UNIVERSE)[number]['symbol'];
+
+export function normalizeCryptoSymbol(query: string): { symbol: CryptoSymbol; error?: 'invalid' } {
+  const key = query.trim().toUpperCase().replace(/\s+/g, '').replace(/-USD$/, '');
+  if (key === 'BTC' || key === 'BITCOIN' || key === 'XBT') return { symbol: 'BTC' };
+  if (key === 'ETH' || key === 'ETHEREUM') return { symbol: 'ETH' };
+  return { symbol: 'BTC', error: 'invalid' };
+}
+
 export const GOLD_SYMBOL = 'XAUUSD';
 
 export const TAPE_TW_BENCH = '0050.TW';
