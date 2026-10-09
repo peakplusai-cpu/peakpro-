@@ -3,7 +3,7 @@ export function getAppOrigin(): string {
     process.env.SITE_URL?.trim() ??
     process.env.NEXT_PUBLIC_APP_URL?.trim() ??
     (process.env.VERCEL_ENV === 'production'
-      ? process.env.NEXT_PUBLIC_APP_URL?.trim() || 'http://localhost:3000'
+      ? process.env.NEXT_PUBLIC_APP_URL?.trim() || 'https://peakproai.com'
       : 'http://localhost:3000')
   ).replace(/\/$/, '');
 }

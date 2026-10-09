@@ -75,7 +75,15 @@ export function normalizeEquityQuery(
   return { symbol: raw };
 }
 
-async function fetchYahooJson<T>(url: string): Promise<T | null> {
+function withTimeout(signal: AbortSignal | undefined, timeoutMs: number): AbortSignal {
+  const timeout = AbortSignal.timeout(timeoutMs);
+  if (!signal) return timeout;
+  if (signal.aborted) return signal;
+  if (typeof AbortSignal.any === 'function') return AbortSignal.any([signal, timeout]);
+  return timeout;
+}
+
+async function fetchYahooJson<T>(url: string, signal?: AbortSignal): Promise<T | null> {
   const urls = url.includes('query1.finance.yahoo.com')
     ? [url, url.replace('query1.finance.yahoo.com', 'query2.finance.yahoo.com')]
     : [url];
@@ -83,6 +91,7 @@ async function fetchYahooJson<T>(url: string): Promise<T | null> {
     try {
       const response = await fetch(candidate, {
         cache: 'no-store',
+        signal: withTimeout(signal, 6_000),
         headers: {
           Accept: 'application/json',
           'User-Agent': 'PeakProPlus-CacheDesk/1.0',
@@ -91,6 +100,7 @@ async function fetchYahooJson<T>(url: string): Promise<T | null> {
       if (!response.ok) continue;
       return (await response.json()) as T;
     } catch (error) {
+      if (signal?.aborted) return null;
       console.warn('[peakpro/yahoo] fetch failed', candidate, error);
     }
   }
@@ -127,7 +137,11 @@ export async function fetchYahooChart(symbol: string, timeframe: 'daily' | 'mont
   return fetchYahooJson<YahooChart>(url);
 }
 
-export async function fetchYahooQuotes(symbols: string[], limit = 24): Promise<Array<YahooQuote & { symbol: string }>> {
+export async function fetchYahooQuotes(
+  symbols: string[],
+  limit = 24,
+  signal?: AbortSignal,
+): Promise<Array<YahooQuote & { symbol: string }>> {
   const unique = [...new Set(symbols.map((symbol) => symbol.trim()).filter(Boolean))].slice(0, limit);
   if (unique.length === 0) return [];
   const chunks: string[][] = [];
@@ -137,7 +151,7 @@ export async function fetchYahooQuotes(symbols: string[], limit = 24): Promise<A
       const url = `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${chunk.map(encodeURIComponent).join(',')}`;
       const json = await fetchYahooJson<{
         quoteResponse?: { result?: Array<YahooQuote & { symbol?: string }> };
-      }>(url);
+      }>(url, signal);
       return (json?.quoteResponse?.result ?? [])
         .map((row, index) => ({
           ...row,

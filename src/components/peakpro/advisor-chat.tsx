@@ -96,7 +96,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
     let assistant = '';
 
     const abort = new AbortController();
-    const timer = window.setTimeout(() => abort.abort(), 45_000);
+    const timer = window.setTimeout(() => abort.abort(), 55_000);
 
     try {
       const response = await fetch('/api/advisor', {
@@ -147,7 +147,13 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
         setTurns([...nextTurns, { role: 'assistant', content: snapshot }]);
       }
       assistant += decoder.decode();
-      if (assistant) setTurns([...nextTurns, { role: 'assistant', content: assistant }]);
+      if (!assistant.trim()) {
+        setTurns(nextTurns.slice(0, -1));
+        setDraft(text);
+        setError(tPeakpro(locale, 'advisorFailed'));
+        return;
+      }
+      setTurns([...nextTurns, { role: 'assistant', content: assistant }]);
     } catch {
       if (!assistant) {
         setTurns(nextTurns.slice(0, -1));

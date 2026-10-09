@@ -2,14 +2,21 @@ import { EQUITY_UNIVERSE, USDTWD_YAHOO } from '@/lib/peakpro/constants';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import { fetchYahooQuotes } from '@/lib/peakpro/yahoo';
 
-const PULSE_SYMBOLS = [
-  ...EQUITY_UNIVERSE.map((row) => row.symbol),
-  '0050.TW',
-  'QQQ',
-  'BTC-USD',
-  'ETH-USD',
-  'GC=F',
-] as const;
+const CORE_PULSE = ['TSM', 'NVDA', '2330.TW', 'QQQ', '0050.TW', 'BTC-USD'] as const;
+
+export async function settleWithTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      work.catch(() => fallback),
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), ms);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 const NAME_ALIASES: Array<{ needle: RegExp; symbols: string[] }> = [
   { needle: /台積電|台積/i, symbols: ['2330.TW', 'TSM'] },
@@ -27,7 +34,7 @@ const NAME_ALIASES: Array<{ needle: RegExp; symbols: string[] }> = [
 ];
 
 export function collectAdvisorSymbols(text: string): string[] {
-  const found = new Set<string>(PULSE_SYMBOLS);
+  const found = new Set<string>();
   const upper = text.toUpperCase();
 
   for (const alias of NAME_ALIASES) {
@@ -35,6 +42,8 @@ export function collectAdvisorSymbols(text: string): string[] {
   }
 
   for (const match of text.match(/\b\d{4}\b/g) ?? []) {
+    const year = Number(match);
+    if (year >= 1990 && year <= 2100) continue;
     found.add(`${match}.TW`);
   }
   for (const match of upper.match(/\b\d{4}\.(?:TW|TWO)\b/g) ?? []) {
@@ -50,12 +59,18 @@ export function collectAdvisorSymbols(text: string): string[] {
     found.add(match.slice(1));
   }
 
-  return [...found].slice(0, 24);
+  found.add('QQQ');
+  found.add('0050.TW');
+  if (found.size <= 2) CORE_PULSE.forEach((symbol) => found.add(symbol));
+  return [...found].slice(0, 12);
 }
 
-async function fetchFearGreed(): Promise<string | null> {
+async function fetchFearGreed(signal?: AbortSignal): Promise<string | null> {
   try {
-    const response = await fetch('https://api.alternative.me/fng/?limit=1&format=json', { cache: 'no-store' });
+    const response = await fetch('https://api.alternative.me/fng/?limit=1&format=json', {
+      cache: 'no-store',
+      signal: signal ?? AbortSignal.timeout(2_500),
+    });
     if (!response.ok) return null;
     const json = (await response.json()) as {
       data?: Array<{ value?: string; value_classification?: string }>;
@@ -68,13 +83,13 @@ async function fetchFearGreed(): Promise<string | null> {
   }
 }
 
-export async function buildAdvisorLiveContext(userText: string): Promise<string> {
+export async function buildAdvisorLiveContext(userText: string, signal?: AbortSignal): Promise<string> {
   const fetchedAt = new Date().toISOString();
   const zh = /[\u3400-\u9fff]/.test(userText);
   const symbols = collectAdvisorSymbols(userText);
   const [quotes, fear] = await Promise.all([
-    fetchYahooQuotes(zh ? [...symbols, USDTWD_YAHOO] : symbols),
-    fetchFearGreed(),
+    fetchYahooQuotes(zh ? [...symbols, USDTWD_YAHOO] : symbols, 12, signal),
+    fetchFearGreed(signal),
   ]);
   const fx = quotes.find((row) => row.symbol === USDTWD_YAHOO || row.symbol === 'TWD=X')?.regularMarketPrice;
   const usdTwd = typeof fx === 'number' && fx > 20 && fx < 50 ? fx : null;
@@ -95,4 +110,14 @@ export async function buildAdvisorLiveContext(userText: string): Promise<string>
     lines.length ? lines.join('\n') : '(live quote fetch returned nothing; use CACHED_DESK)',
     fear ?? 'Crypto Fear & Greed: live fetch unavailable',
   ].join('\n');
+}
+
+export function liveContextOrFallback(userText: string, ms = 2_500): Promise<string> {
+  const abort = new AbortController();
+  const timer = setTimeout(() => abort.abort(), ms);
+  return settleWithTimeout(
+    buildAdvisorLiveContext(userText, abort.signal).finally(() => clearTimeout(timer)),
+    ms,
+    'LIVE_DESK: snapshot timed out this turn; use CACHED_DESK',
+  );
 }

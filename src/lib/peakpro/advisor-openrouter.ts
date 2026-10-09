@@ -10,6 +10,19 @@ export function getOpenRouterApiKey(): string | null {
 
 type ChatTurn = { role: 'system' | 'user' | 'assistant'; content: string };
 
+function advisorModels(): string[] {
+  const primary = getAdvisorModel();
+  return [...new Set([primary, 'openai/gpt-4o-mini', 'google/gemini-2.0-flash-001'])];
+}
+
+function connectSignal(userSignal?: AbortSignal, deadline?: AbortSignal): AbortSignal {
+  const signals = [userSignal, deadline].filter((row): row is AbortSignal => Boolean(row));
+  if (signals.length === 0) return AbortSignal.timeout(18_000);
+  if (signals.length === 1) return signals[0];
+  if (typeof AbortSignal.any === 'function') return AbortSignal.any(signals);
+  return signals[0];
+}
+
 function closeStream(
   controller: ReadableStreamDefaultController<Uint8Array>,
   reader: ReadableStreamDefaultReader<Uint8Array>,
@@ -29,29 +42,45 @@ export async function streamOpenRouterText(
   const key = getOpenRouterApiKey();
   if (!key) return { error: 'ai_offline', status: 503 };
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    signal,
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': getAppOrigin(),
-      'X-Title': 'PeakPro+',
-    },
-    body: JSON.stringify({
-      model: getAdvisorModel(),
-      stream: true,
-      temperature: 0.7,
-      max_tokens: 1200,
-      messages,
-    }),
-    cache: 'no-store',
-  });
-
-  if (!response.ok || !response.body) {
+  const models = advisorModels();
+  const deadline = AbortSignal.timeout(18_000);
+  let response: Response | null = null;
+  let lastStatus = 502;
+  for (const model of models) {
+    if (deadline.aborted || signal?.aborted) break;
+    try {
+      response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        signal: connectSignal(signal, deadline),
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': getAppOrigin(),
+          'X-Title': 'PeakPro+',
+        },
+        body: JSON.stringify({
+          model,
+          stream: true,
+          temperature: 0.7,
+          max_tokens: 700,
+          messages,
+        }),
+        cache: 'no-store',
+      });
+    } catch (error) {
+      console.warn('[peakpro/advisor] OpenRouter connect failed', model, error);
+      response = null;
+      continue;
+    }
+    if (response.ok && response.body) break;
+    lastStatus = response.status;
     const body = await response.text().catch(() => '');
-    console.warn('[peakpro/advisor] OpenRouter HTTP', response.status, body.slice(0, 400));
-    return { error: 'ai_failed', status: 502 };
+    console.warn('[peakpro/advisor] OpenRouter HTTP', model, response.status, body.slice(0, 400));
+    response = null;
+  }
+
+  if (!response?.ok || !response.body) {
+    return { error: 'ai_failed', status: lastStatus || 502 };
   }
 
   const reader = response.body.getReader();
@@ -74,11 +103,18 @@ export async function streamOpenRouterText(
         if (data === '[DONE]') return true;
         try {
           const json = JSON.parse(data) as {
+            error?: { message?: string };
             choices?: Array<{ delta?: { content?: string }; finish_reason?: string | null }>;
           };
+          if (json.error) {
+            console.warn('[peakpro/advisor] OpenRouter stream error', json.error.message);
+            return true;
+          }
           const token = json.choices?.[0]?.delta?.content;
           if (token) controller.enqueue(new TextEncoder().encode(token));
-          if (json.choices?.[0]?.finish_reason) return true;
+          const reason = json.choices?.[0]?.finish_reason;
+          if (reason && reason !== 'error') return true;
+          if (reason === 'error') return true;
         } catch {
           // ignore partial JSON
         }
