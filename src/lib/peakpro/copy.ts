@@ -12,6 +12,7 @@ const en: CopyTree = {
   navTape: 'Session Tape',
   navTaiwan: 'Taiwan Equities',
   navUs: 'U.S. Equities',
+  navConcepts: 'Concept names',
   navCrypto: 'Crypto Trends',
   navGold: 'Gold Trends',
   navGeopolitics: 'Market News',
@@ -247,6 +248,17 @@ const en: CopyTree = {
   quizCatIndicator: 'Indicator',
   quizCatMarket: 'Market',
   quizCatGeneral: 'Mixed',
+  conceptsTitle: 'Concept names',
+  conceptsLead:
+    'Twenty of the largest Taiwan names and twenty of the largest U.S. names. Open one to see related listed companies and what they supply — wafers, packaging, GPUs, channels. Curated map, not a live order book.',
+  conceptsTaiwan: 'Taiwan mega-caps',
+  conceptsUs: 'U.S. mega-caps',
+  conceptsChain: 'Related names',
+  conceptsCount: '{n} related names',
+  conceptsBack: 'Back',
+  conceptsOpenTape: 'Open this name on the tape',
+  conceptsFoot:
+    'Supply labels are an educational map of commonly discussed relationships. They are not invoices, revenue shares, or a buy list.',
 };
 
 const zh: CopyTree = {
@@ -258,6 +270,7 @@ const zh: CopyTree = {
   navTape: '動能轉折',
   navTaiwan: '台股',
   navUs: '美股',
+  navConcepts: '概念股',
   navCrypto: '加密趨勢',
   navGold: '黃金趨勢',
   navGeopolitics: '國際財經情報',
@@ -491,6 +504,17 @@ const zh: CopyTree = {
   quizCatIndicator: '指標',
   quizCatMarket: '股市',
   quizCatGeneral: '綜合',
+  conceptsTitle: '概念股',
+  conceptsLead:
+    '台股、美股各列二十家大型公司。點開可見相關上市公司，並標示供應物——例如台積電旁邊的環球晶，標示提供矽晶圓。這是教育用地圖，不是即時訂單。',
+  conceptsTaiwan: '台股龍頭',
+  conceptsUs: '美股龍頭',
+  conceptsChain: '相關公司',
+  conceptsCount: '{n} 家相關公司',
+  conceptsBack: '返回',
+  conceptsOpenTape: '到該檔走勢頁',
+  conceptsFoot:
+    '供應物標示是常見產業關係的教育地圖，不是出貨單、營收占比，也不是買進清單。',
 };
 
 const dictionaries: Record<Locale, CopyTree> = { en, zh };
@@ -546,6 +570,7 @@ export const MODULE_HREF: Record<PeakProModule, string> = {
   tape: '/app/tape',
   taiwan: '/app/taiwan',
   us: '/app/us',
+  concepts: '/app/concepts',
   crypto: '/app/crypto',
   gold: '/app/gold',
   geopolitics: '/app/geopolitics',
@@ -564,6 +589,7 @@ export function moduleLabel(locale: Locale, moduleId: PeakProModule): string {
     tape: 'navTape',
     taiwan: 'navTaiwan',
     us: 'navUs',
+    concepts: 'navConcepts',
     crypto: 'navCrypto',
     gold: 'navGold',
     geopolitics: 'navGeopolitics',

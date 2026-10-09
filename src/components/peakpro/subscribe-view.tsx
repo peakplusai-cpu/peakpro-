@@ -21,6 +21,7 @@ const FEATURES_EN = [
   'Personal book with cost basis and marked P&L',
   'Session tape: volume-price turns, relative strength, official after-close institutions',
   'Public filings: U.S. politicians and well-known 13F books, delayed',
+  'Concept names: twenty Taiwan and twenty U.S. mega-caps with labeled suppliers',
 ];
 
 const FEATURES_ZH = [
@@ -36,6 +37,7 @@ const FEATURES_ZH = [
   '自選組合與持有成本、估算損益',
   '動能轉折：盤中量價強弱、相對指數、盤後官方三大法人',
   '公開申報：美國政治人物與知名法人 13F，有法定延遲',
+  '概念股：台股、美股各二十家龍頭，點開可見供應鏈與供應物',
 ];
 
 export function PeakProSubscribeView({

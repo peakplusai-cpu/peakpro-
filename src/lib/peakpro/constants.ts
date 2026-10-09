@@ -49,6 +49,7 @@ export const PEAKPRO_MODULES = [
   'tape',
   'taiwan',
   'us',
+  'concepts',
   'crypto',
   'gold',
   'geopolitics',

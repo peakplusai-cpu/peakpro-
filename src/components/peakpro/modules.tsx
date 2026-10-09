@@ -20,6 +20,7 @@ import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPortfolioDesk } from '@/components/peakpro/portfolio-desk';
 import { PeakProFilingsDesk } from '@/components/peakpro/filings-desk';
 import { PeakProLearnDesk } from '@/components/peakpro/learn-desk';
+import { PeakProConceptsDesk } from '@/components/peakpro/concepts-desk';
 import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { pricedTrending } from '@/lib/peakpro/market-trending';
@@ -413,6 +414,10 @@ export function PeakProModuleView({
 
   if (moduleId === 'learn') {
     return <PeakProLearnDesk locale={locale} />;
+  }
+
+  if (moduleId === 'concepts') {
+    return <PeakProConceptsDesk locale={locale} />;
   }
 
   if (moduleId === 'advisor') {
