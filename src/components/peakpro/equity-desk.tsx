@@ -10,6 +10,7 @@ import { usePeakPro } from '@/components/peakpro/provider';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
+import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, PeakProTier } from '@/lib/peakpro/types';
@@ -60,9 +61,11 @@ function SeriesCard({
           {payload.pe ? `${tPeakpro(locale, 'peLabel')} ${payload.pe.toFixed(1)}` : null}
         </p>
       )}
-      <div className="mt-4">
-        <SparkCandles bars={payload.bars} />
-      </div>
+      {payload.bars.length >= 2 ? (
+        <div className="mt-4">
+          <SparkCandles bars={payload.bars} />
+        </div>
+      ) : null}
       {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
         <p className="mt-4 text-sm leading-relaxed text-zinc-400">
           {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
@@ -129,19 +132,26 @@ export function PeakProEquityDesk({
 
   const visible = useMemo(() => {
     const needle = query.trim().toUpperCase();
+    const desk = rows.filter((row) => row.payload.source !== 'market-wide');
     const scoped = needle
-      ? rows.filter(
+      ? desk.filter(
           (row) =>
             row.symbol.toUpperCase().includes(needle) ||
             row.payload.name.toUpperCase().includes(needle),
         )
-      : rows;
+      : desk;
     return scoped.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe));
   }, [query, rows, tier]);
 
+  const core = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
   const daily = visible
     .filter((row) => row.timeframe === 'daily')
-    .sort((a, b) => Math.abs(b.payload.changePct) - Math.abs(a.payload.changePct));
+    .sort((a, b) => {
+      const aCore = core.has(a.symbol) ? 0 : 1;
+      const bCore = core.has(b.symbol) ? 0 : 1;
+      if (aCore !== bCore) return aCore - bCore;
+      return Math.abs(b.payload.changePct) - Math.abs(a.payload.changePct);
+    });
   const monthly = visible.filter((row) => row.timeframe === 'monthly');
   const annual = visible.filter((row) => row.timeframe === 'annual');
 

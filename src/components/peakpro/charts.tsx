@@ -13,7 +13,7 @@ export function SparkCandles({
   width?: number;
   height?: number;
 }) {
-  if (bars.length === 0) return null;
+  if (bars.length < 2) return null;
   const visible = height > 200 ? bars : bars.length > 48 ? bars.slice(-48) : bars;
   const min = Math.min(...visible.map((b) => b.l));
   const max = Math.max(...visible.map((b) => b.h));
