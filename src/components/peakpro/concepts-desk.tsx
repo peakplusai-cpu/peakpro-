@@ -125,7 +125,9 @@ export function PeakProConceptsDesk({ locale }: { locale: Locale }) {
     <div className="space-y-8">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'conceptsTitle')}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'conceptsLead')}</p>
+        {tPeakpro(locale, 'conceptsLead') ? (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'conceptsLead')}</p>
+        ) : null}
       </div>
 
       <div className="flex flex-wrap gap-2">

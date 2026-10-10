@@ -249,8 +249,7 @@ const en: CopyTree = {
   quizCatMarket: 'Market',
   quizCatGeneral: 'Mixed',
   conceptsTitle: 'Concept names',
-  conceptsLead:
-    'Twenty of the largest Taiwan names and twenty of the largest U.S. names. Open one to see related listed companies and what they supply — wafers, packaging, GPUs, channels. Curated map, not a live order book.',
+  conceptsLead: '',
   conceptsTaiwan: 'Taiwan mega-caps',
   conceptsUs: 'U.S. mega-caps',
   conceptsChain: 'Related names',
@@ -505,8 +504,7 @@ const zh: CopyTree = {
   quizCatMarket: '股市',
   quizCatGeneral: '綜合',
   conceptsTitle: '概念股',
-  conceptsLead:
-    '台股、美股各列二十家大型公司。點開可見相關上市公司，並標示供應物——例如台積電旁邊的環球晶，標示提供矽晶圓。這是教育用地圖，不是即時訂單。',
+  conceptsLead: '',
   conceptsTaiwan: '台股龍頭',
   conceptsUs: '美股龍頭',
   conceptsChain: '相關公司',
