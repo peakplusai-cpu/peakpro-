@@ -137,6 +137,17 @@ export function newsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
   return Date.now() - new Date(latest).getTime();
 }
 
+export async function readEquityRows(symbol: string): Promise<MarketDataRow[]> {
+  try {
+    const admin = peakproAdmin();
+    const { data } = await admin.from('market_data').select('*').eq('asset_class', 'equity').eq('symbol', symbol);
+    return (data ?? []) as MarketDataRow[];
+  } catch (error) {
+    console.warn('[peakpro/cache] equity rows unavailable', error);
+    return [];
+  }
+}
+
 export function cacheHasPrints(snapshot: PeakProCacheSnapshot): boolean {
   return (
     snapshot.equities.length +

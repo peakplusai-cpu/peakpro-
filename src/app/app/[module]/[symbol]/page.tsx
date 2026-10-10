@@ -5,8 +5,10 @@ import { PeakProEquityDetail } from '@/components/peakpro/equity-detail';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { getLocale } from '@/i18n/server';
 import { canAccessModule, canOpenEquity } from '@/lib/peakpro/access';
+import { readEquityRows } from '@/lib/peakpro/cache';
 import { normalizeCryptoSymbol } from '@/lib/peakpro/constants';
 import { loadPeakProDesk } from '@/lib/peakpro/load-desk';
+import { ingestEquitySymbol } from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol, normalizeEquityQuery, type EquityMarket } from '@/lib/peakpro/yahoo';
 
 function isEquityMarket(value: string): value is EquityMarket {
@@ -52,7 +54,11 @@ export default async function EquityDetailPage({
   if (moduleId === 'taiwan' ? !isTaiwanSymbol(symbol) : isTaiwanSymbol(symbol)) notFound();
 
   const { session, cache } = await loadPeakProDesk({ moduleId });
-  const rows = cache.equities.filter((row) => row.symbol === symbol);
+  let rows = cache.equities.filter((row) => row.symbol === symbol);
+  if (rows.length === 0 && session.tier === 'premium') {
+    await ingestEquitySymbol(symbol);
+    rows = await readEquityRows(symbol);
+  }
 
   return (
     <PeakProAppShell locale={locale} session={session} moduleId={moduleId} cache={cache}>

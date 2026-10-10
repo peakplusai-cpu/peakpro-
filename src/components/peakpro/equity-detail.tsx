@@ -14,6 +14,7 @@ import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disc
 import { usePeakPro } from '@/components/peakpro/provider';
 import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
+import { conceptNameForSymbol } from '@/lib/peakpro/concepts';
 import { toTradingViewSymbol, tradingviewTimezone, type ChartMarket } from '@/lib/peakpro/tradingview';
 import { cn } from '@/lib/utils';
 
@@ -92,15 +93,19 @@ export function PeakProEquityDetail({
   const cap = displayCap(payload?.marketCap, payload?.currency ?? 'USD', locale, usdTwd);
 
   if (!payload) {
+    const fallbackName = conceptNameForSymbol(symbol);
+    const title = fallbackName ? (locale === 'zh' ? fallbackName.zh : fallbackName.en) : symbol;
     return (
       <div className="space-y-6">
         <Link href={`/app/${market}`} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'backToDesk')}
         </Link>
-        <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
-          {tPeakpro(locale, 'missingSymbol')}
-        </div>
+        <header>
+          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{symbol}</p>
+          <h2 className="mt-2 font-peakpro text-3xl text-gold">{title}</h2>
+          <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'missingSymbol')}</p>
+        </header>
         <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} />
       </div>
     );

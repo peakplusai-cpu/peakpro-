@@ -169,7 +169,15 @@ export async function resolveEquityLookup(
   if (looksLikeEquityTicker(raw, market)) {
     const parsed = normalizeEquityQuery(raw, market);
     if (parsed.error === 'wrong_market') return { error: 'wrong_market' };
-    if (!parsed.error) return { symbol: parsed.symbol, fromTicker: true };
+    if (!parsed.error) {
+      const code = raw.trim().toUpperCase().replace(/\s+/g, '');
+      if (market === 'taiwan' && /^\d{4}$/.test(code)) {
+        const matches = await searchEquitySymbols(code, market);
+        const exact = matches.find((hit) => hit.symbol.replace(/\.(TW|TWO)$/i, '') === code);
+        if (exact) return { symbol: exact.symbol, fromTicker: true };
+      }
+      return { symbol: parsed.symbol, fromTicker: true };
+    }
   }
 
   const matches = await searchEquitySymbols(raw, market);

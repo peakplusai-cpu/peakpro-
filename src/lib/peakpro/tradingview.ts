@@ -45,7 +45,7 @@ export function toTradingViewSymbol(market: ChartMarket, symbol: string, exchang
   }
   if (market === 'taiwan') {
     const code = raw.replace(/\.(TW|TWO)$/i, '');
-    return isTaiwanOtc(raw, exchange) ? `ROCO:${code}` : `TWSE:${code}`;
+    return isTaiwanOtc(raw, exchange) ? `TPEX:${code}` : `TWSE:${code}`;
   }
 
   const ticker = raw.replace(/^(NASDAQ|NYSE|AMEX):/, '');

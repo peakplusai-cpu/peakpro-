@@ -657,3 +657,14 @@ export function conceptDeskHref(row: { symbol: string; market: ConceptMarket }) 
   if (row.market === 'us') return `/app/us/${encodeURIComponent(row.symbol)}`;
   return null;
 }
+
+export function conceptNameForSymbol(symbol: string): LocalePair | null {
+  const key = symbol.trim().toUpperCase();
+  const anchor = CONCEPT_ANCHORS.find((row) => row.id.toUpperCase() === key || row.symbol.toUpperCase() === key);
+  if (anchor) return anchor.name;
+  for (const row of CONCEPT_ANCHORS) {
+    const hit = row.suppliers.find((item) => item.symbol.toUpperCase() === key);
+    if (hit) return hit.name;
+  }
+  return null;
+}
