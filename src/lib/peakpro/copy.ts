@@ -30,6 +30,28 @@ const en: CopyTree = {
   langAria: 'Language switcher',
   clocksTitle: 'World Top 10 Economies Live Clock',
   clocksSub: 'Local session times across the largest economic blocs — 12-hour with AM/PM.',
+  whyKicker: 'The problem',
+  whyTitle: 'What PeakPro+ solves',
+  why1Title: 'The tape is scattered',
+  why1Body:
+    'Taiwan prints, U.S. names, crypto, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
+  why2Title: 'Feeds bury the session',
+  why2Body:
+    'Hot lists and social charts mix limit-up noise with the book you actually watch. A private desk should not look like a casino ticker.',
+  why3Title: 'No place to learn the read',
+  why3Body:
+    'Indicators, official after-close prints, and delayed public filings arrive without a primer. Beginners are left to guess which number matters.',
+  pickKicker: 'The mandate',
+  pickTitle: 'Why this desk',
+  pick1Title: 'One screen for the complex',
+  pick1Body:
+    'Taiwan and U.S. equities, concept names, BTC and ETH, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
+  pick2Title: 'Warehouse first',
+  pick2Body:
+    'The client reads a curated cache. You are not sent hunting across vendors, and the desk does not dump the entire market onto the page.',
+  pick3Title: 'A quiet 7-day open',
+  pick3Body:
+    'New accounts receive seven days of the full desk. Then $20 every 30 days. No ads. No social book. Just the tape.',
   heroCta: 'Open the Terminal',
   heroSecondary: 'View Premium Mandate',
   heroTrial: 'New accounts receive 7 days of the full desk.',
@@ -294,6 +316,28 @@ const zh: CopyTree = {
   langAria: '語言切換',
   clocksTitle: '全球十大經濟體即時時鐘',
   clocksSub: '十大經濟體當地時間，12 小時制並標示上午／下午。',
+  whyKicker: '要解的問題',
+  whyTitle: 'PeakPro+ 解決什麼',
+  why1Title: '情報散在各處',
+  why1Body:
+    '台股成交、美股、加密、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
+  why2Title: '熱門把盤面蓋掉',
+  why2Body:
+    '漲停榜與社群圖把噪音和你真正在看的股票混在一起。私人投資桌不該長得像賭場跑馬燈。',
+  why3Title: '沒有人教怎麼讀',
+  why3Body:
+    '指標、盤後官方法人、有法定延遲的公開申報丟上來，卻沒有入門。新手只能猜哪個數字才算數。',
+  pickKicker: '為什麼是這張桌',
+  pickTitle: '為什麼選 PeakPro+',
+  pick1Title: '一個終端看完複合體',
+  pick1Body:
+    '台股、美股、概念股、比特幣與以太坊、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
+  pick2Title: '先讀倉庫，不追供應商',
+  pick2Body:
+    '客戶端只讀整理過的快取。你不必自己串一堆來源，桌上也不會把全市場倒進來。',
+  pick3Title: '先開 7 日，再決定留下',
+  pick3Body:
+    '新帳戶享完整終端 7 日，其後每 30 日 $20。沒有廣告，沒有社群跟單，只留盤面。',
   heroCta: '開啟終端',
   heroSecondary: '查看 Premium 授權',
   heroTrial: '開立帳戶即可免費使用完整終端 7 日。',

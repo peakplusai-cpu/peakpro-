@@ -6,6 +6,47 @@ import type { Locale } from '@/i18n/locale';
 import { WORLD_CLOCKS } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 
+const WHY_ITEMS = [
+  { title: 'why1Title', body: 'why1Body' },
+  { title: 'why2Title', body: 'why2Body' },
+  { title: 'why3Title', body: 'why3Body' },
+] as const;
+
+const PICK_ITEMS = [
+  { title: 'pick1Title', body: 'pick1Body' },
+  { title: 'pick2Title', body: 'pick2Body' },
+  { title: 'pick3Title', body: 'pick3Body' },
+] as const;
+
+function Manifesto({
+  locale,
+  kicker,
+  title,
+  items,
+}: {
+  locale: Locale;
+  kicker: string;
+  title: string;
+  items: ReadonlyArray<{ title: string; body: string }>;
+}) {
+  return (
+    <article className="rounded-3xl border border-gold/20 bg-[#0d0d0d] p-6 peakpro-hairline sm:p-8">
+      <p className="text-[10px] uppercase tracking-[0.36em] text-gold-antique">{tPeakpro(locale, kicker)}</p>
+      <h3 className="mt-3 font-peakpro text-2xl text-gold">{tPeakpro(locale, title)}</h3>
+      <ol className="mt-6 space-y-5">
+        {items.map((item, index) => (
+          <li key={item.title}>
+            <p className="text-[11px] uppercase tracking-[0.22em] text-gold">
+              {String(index + 1).padStart(2, '0')} · {tPeakpro(locale, item.title)}
+            </p>
+            <p className="mt-2 text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, item.body)}</p>
+          </li>
+        ))}
+      </ol>
+    </article>
+  );
+}
+
 function formatClock(now: Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat('en-US', {
     timeZone,
@@ -67,6 +108,10 @@ export function WorldClocks({ locale }: { locale: Locale }) {
             </article>
           );
         })}
+      </div>
+      <div className="mt-12 grid gap-6 lg:grid-cols-2">
+        <Manifesto locale={locale} kicker="whyKicker" title="whyTitle" items={WHY_ITEMS} />
+        <Manifesto locale={locale} kicker="pickKicker" title="pickTitle" items={PICK_ITEMS} />
       </div>
     </section>
   );
