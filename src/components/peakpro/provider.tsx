@@ -50,6 +50,7 @@ export function usePeakPro(): PeakProContextValue {
       tier: 'free' satisfies PeakProTier,
       expiresAt: null,
       revoked: false,
+      trial: false,
       activeModule: 'overview',
       setActiveModule: () => undefined,
       isPremium: false,

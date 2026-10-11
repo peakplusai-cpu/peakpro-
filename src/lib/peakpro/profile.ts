@@ -1,5 +1,6 @@
-import { effectiveTier } from '@/lib/peakpro/access';
+import { effectiveTier, isTrialGrant } from '@/lib/peakpro/access';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { claimTrialGrant, sealTrialGrant } from '@/lib/peakpro/trial';
 import type { PeakProProfile, PeakProSession } from '@/lib/peakpro/types';
 
 const EMPTY: PeakProSession = {
@@ -8,7 +9,14 @@ const EMPTY: PeakProSession = {
   tier: 'free',
   expiresAt: null,
   revoked: false,
+  trial: false,
 };
+
+function daysFromNow(days: number): string {
+  const expires = new Date();
+  expires.setUTCDate(expires.getUTCDate() + days);
+  return expires.toISOString();
+}
 
 export async function ensurePeakProProfile(
   userId: string,
@@ -24,6 +32,9 @@ export async function ensurePeakProProfile(
 
     if (existing.data) {
       const profile = existing.data as PeakProProfile;
+      if (isTrialGrant(profile)) {
+        await sealTrialGrant(userId, profile.email ?? email, profile.expires_at);
+      }
       if (profile.tier === 'premium' && !effectiveTier(profile)) {
         const downgraded = await admin
           .from('peakpro_profiles')
@@ -41,17 +52,23 @@ export async function ensurePeakProProfile(
       return profile;
     }
 
+    const claim = await claimTrialGrant(userId, email);
+    const trial = claim.status === 'new' || claim.status === 'own-active';
     const inserted = await admin
       .from('peakpro_profiles')
       .insert({
         id: userId,
         email,
-        tier: 'free',
+        tier: trial ? 'premium' : 'free',
+        expires_at: trial ? claim.expiresAt : null,
       })
       .select('*')
       .maybeSingle();
 
-    return (inserted.data as PeakProProfile | null) ?? null;
+    if (inserted.data) return inserted.data as PeakProProfile;
+
+    const raced = await admin.from('peakpro_profiles').select('*').eq('id', userId).maybeSingle();
+    return (raced.data as PeakProProfile | null) ?? null;
   } catch (error) {
     console.warn('[peakpro/profile] warehouse unavailable', error);
     return null;
@@ -65,7 +82,7 @@ export async function loadPeakProSession(
   if (!userId) return EMPTY;
   const profile = await ensurePeakProProfile(userId, email);
   if (!profile) {
-    return { userId, email, tier: 'free', expiresAt: null, revoked: false };
+    return { userId, email, tier: 'free', expiresAt: null, revoked: false, trial: false };
   }
   return {
     userId,
@@ -73,6 +90,7 @@ export async function loadPeakProSession(
     tier: effectiveTier(profile),
     expiresAt: profile.expires_at,
     revoked: Boolean(profile.revoked_at) && effectiveTier(profile) === 'free',
+    trial: isTrialGrant(profile),
   };
 }
 
@@ -83,8 +101,7 @@ export async function activatePeakProPremium(input: {
   subscriptionId?: string | null;
   transactionId?: string | null;
 }): Promise<PeakProProfile | null> {
-  const expires = new Date();
-  expires.setUTCDate(expires.getUTCDate() + 30);
+  const expires = daysFromNow(30);
   const admin = peakproAdmin();
   const { data } = await admin
     .from('peakpro_profiles')
@@ -93,7 +110,7 @@ export async function activatePeakProPremium(input: {
         id: input.userId,
         email: input.email ?? null,
         tier: 'premium',
-        expires_at: expires.toISOString(),
+        expires_at: expires,
         creem_customer_id: input.customerId ?? null,
         creem_subscription_id: input.subscriptionId ?? null,
         creem_last_transaction_id: input.transactionId ?? null,

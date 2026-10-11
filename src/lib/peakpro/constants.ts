@@ -67,6 +67,7 @@ export const ADVISOR_MAX_HISTORY = 12;
 export const LEARN_QUIZ_LIMIT = 5;
 export const LEARN_QUIZ_SIZE = 10;
 export const LEARN_QUIZ_POINTS = 10;
+export const TRIAL_DAYS = 7;
 
 export type PeakProModule = (typeof PEAKPRO_MODULES)[number];
 

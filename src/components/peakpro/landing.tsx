@@ -50,6 +50,7 @@ export function PeakProLanding({ locale, signedIn }: { locale: Locale; signedIn:
               {tPeakpro(locale, 'heroSecondary')}
             </Link>
           </div>
+          <p className="mt-5 text-xs tracking-wide text-gold-antique">{tPeakpro(locale, 'heroTrial')}</p>
         </section>
         <WorldClocks locale={locale} />
       </main>

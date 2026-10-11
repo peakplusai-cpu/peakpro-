@@ -55,7 +55,14 @@ export function PeakProSubscribeView({
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
-      <PeakProNav locale={locale} tier={session.tier} signedIn={Boolean(session.userId)} compact />
+      <PeakProNav
+        locale={locale}
+        tier={session.tier}
+        signedIn={Boolean(session.userId)}
+        trial={session.trial}
+        expiresAt={session.expiresAt}
+        compact
+      />
       <main className="mx-auto max-w-3xl px-6 py-16">
         {revoked ? (
           <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">

@@ -6,8 +6,18 @@ import type { PeakProProfile, PeakProTier } from '@/lib/peakpro/types';
 
 export function isPremiumActive(profile: Pick<PeakProProfile, 'tier' | 'expires_at'> | null): boolean {
   if (!profile || profile.tier !== 'premium') return false;
-  if (!profile.expires_at) return true;
+  if (!profile.expires_at) return false;
   return new Date(profile.expires_at).getTime() > Date.now();
+}
+
+export function isTrialGrant(
+  profile: Pick<
+    PeakProProfile,
+    'tier' | 'expires_at' | 'creem_subscription_id' | 'creem_last_transaction_id'
+  > | null,
+): boolean {
+  if (!isPremiumActive(profile) || !profile) return false;
+  return !profile.creem_subscription_id && !profile.creem_last_transaction_id;
 }
 
 export function effectiveTier(profile: Pick<PeakProProfile, 'tier' | 'expires_at'> | null): PeakProTier {

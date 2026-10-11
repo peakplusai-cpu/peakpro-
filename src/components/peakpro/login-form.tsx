@@ -59,6 +59,7 @@ export function PeakProLoginForm({
         >
           {tPeakpro(locale, 'signUp')}
         </button>
+        <p className="text-center text-xs text-zinc-500">{tPeakpro(locale, 'signUpHint')}</p>
       </form>
     </div>
   );

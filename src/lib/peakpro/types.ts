@@ -165,4 +165,5 @@ export interface PeakProSession {
   tier: PeakProTier;
   expiresAt: string | null;
   revoked: boolean;
+  trial: boolean;
 }

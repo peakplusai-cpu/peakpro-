@@ -8,7 +8,7 @@ import { peakproSignOut } from '@/app/login/actions';
 import { PeakProLanguageSwitcher } from '@/components/peakpro/language-switcher';
 import { PeakProLogo } from '@/components/peakpro/logo';
 import type { Locale } from '@/i18n/locale';
-import { canAccessModule } from '@/lib/peakpro/access';
+import { canAccessModule, premiumExpiresInDays } from '@/lib/peakpro/access';
 import { PEAKPRO_MODULES, type PeakProModule } from '@/lib/peakpro/constants';
 import { MODULE_HREF, moduleLabel, tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProTier } from '@/lib/peakpro/types';
@@ -18,11 +18,15 @@ export function PeakProNav({
   locale,
   tier,
   signedIn,
+  trial = false,
+  expiresAt = null,
   compact = false,
 }: {
   locale: Locale;
   tier: PeakProTier;
   signedIn: boolean;
+  trial?: boolean;
+  expiresAt?: string | null;
   compact?: boolean;
 }) {
   const pathname = usePathname();
@@ -45,7 +49,12 @@ export function PeakProNav({
                     : 'border-zinc-700 text-zinc-400',
                 )}
               >
-                {tPeakpro(locale, tier === 'premium' ? 'premiumBadge' : 'freeBadge')}
+                {tier === 'premium' && trial
+                  ? tPeakpro(locale, 'trialDaysLeft').replace(
+                      '{n}',
+                      String(premiumExpiresInDays(expiresAt) ?? 0),
+                    )
+                  : tPeakpro(locale, tier === 'premium' ? 'premiumBadge' : 'freeBadge')}
               </span>
               <Link
                 href="/subscribe"

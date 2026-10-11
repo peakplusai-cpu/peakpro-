@@ -6,6 +6,7 @@ import { PeakProNav } from '@/components/peakpro/nav';
 import { PeakProProvider } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
+import { premiumExpiresInDays } from '@/lib/peakpro/access';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProCacheSnapshot, PeakProSession } from '@/lib/peakpro/types';
 
@@ -29,8 +30,22 @@ export function PeakProAppShell({
   return (
     <PeakProProvider session={session} activeModule={moduleId} usdTwd={cache.usdTwd}>
       <div className="min-h-screen bg-black text-zinc-100">
-        <PeakProNav locale={locale} tier={session.tier} signedIn={Boolean(session.userId)} />
+        <PeakProNav
+          locale={locale}
+          tier={session.tier}
+          signedIn={Boolean(session.userId)}
+          trial={session.trial}
+          expiresAt={session.expiresAt}
+        />
         <main className="mx-auto max-w-6xl px-4 py-10">
+          {session.trial ? (
+            <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+              {tPeakpro(locale, 'trialNotice').replace(
+                '{n}',
+                String(premiumExpiresInDays(session.expiresAt) ?? 0),
+              )}
+            </p>
+          ) : null}
           {notice === 'revoked' ? (
             <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {tPeakpro(locale, 'revokedNotice')}
