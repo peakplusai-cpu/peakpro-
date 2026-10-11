@@ -76,7 +76,11 @@ export function WorldClocks({ locale }: { locale: Locale }) {
 
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl px-6">
-      <div className="mb-8 text-center">
+      <div className="grid gap-6 lg:grid-cols-2">
+        <Manifesto locale={locale} kicker="whyKicker" title="whyTitle" items={WHY_ITEMS} />
+        <Manifesto locale={locale} kicker="pickKicker" title="pickTitle" items={PICK_ITEMS} />
+      </div>
+      <div className="mb-8 mt-16 text-center">
         <h2 className="text-sm uppercase tracking-[0.42em] text-gold">{tPeakpro(locale, 'clocksTitle')}</h2>
         <p className="mt-3 text-sm text-zinc-400">{tPeakpro(locale, 'clocksSub')}</p>
       </div>
@@ -108,10 +112,6 @@ export function WorldClocks({ locale }: { locale: Locale }) {
             </article>
           );
         })}
-      </div>
-      <div className="mt-12 grid gap-6 lg:grid-cols-2">
-        <Manifesto locale={locale} kicker="whyKicker" title="whyTitle" items={WHY_ITEMS} />
-        <Manifesto locale={locale} kicker="pickKicker" title="pickTitle" items={PICK_ITEMS} />
       </div>
     </section>
   );
