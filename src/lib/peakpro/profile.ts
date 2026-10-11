@@ -10,6 +10,8 @@ const EMPTY: PeakProSession = {
   expiresAt: null,
   revoked: false,
   trial: false,
+  customerId: null,
+  subscriptionId: null,
 };
 
 function daysFromNow(days: number): string {
@@ -52,15 +54,12 @@ export async function ensurePeakProProfile(
       return profile;
     }
 
-    const claim = await claimTrialGrant(userId, email);
-    const trial = claim.status === 'new' || claim.status === 'own-active';
     const inserted = await admin
       .from('peakpro_profiles')
       .insert({
         id: userId,
         email,
-        tier: trial ? 'premium' : 'free',
-        expires_at: trial ? claim.expiresAt : null,
+        tier: 'free',
       })
       .select('*')
       .maybeSingle();
@@ -82,7 +81,16 @@ export async function loadPeakProSession(
   if (!userId) return EMPTY;
   const profile = await ensurePeakProProfile(userId, email);
   if (!profile) {
-    return { userId, email, tier: 'free', expiresAt: null, revoked: false, trial: false };
+    return {
+      userId,
+      email,
+      tier: 'free',
+      expiresAt: null,
+      revoked: false,
+      trial: false,
+      customerId: null,
+      subscriptionId: null,
+    };
   }
   return {
     userId,
@@ -91,6 +99,8 @@ export async function loadPeakProSession(
     expiresAt: profile.expires_at,
     revoked: Boolean(profile.revoked_at) && effectiveTier(profile) === 'free',
     trial: isTrialGrant(profile),
+    customerId: profile.creem_customer_id,
+    subscriptionId: profile.creem_subscription_id,
   };
 }
 
@@ -100,20 +110,22 @@ export async function activatePeakProPremium(input: {
   customerId?: string | null;
   subscriptionId?: string | null;
   transactionId?: string | null;
+  days?: number;
 }): Promise<PeakProProfile | null> {
-  const expires = daysFromNow(30);
+  const existing = await findPeakProProfile({ userId: input.userId });
+  const expires = daysFromNow(input.days ?? 30);
   const admin = peakproAdmin();
   const { data } = await admin
     .from('peakpro_profiles')
     .upsert(
       {
         id: input.userId,
-        email: input.email ?? null,
+        email: input.email ?? existing?.email ?? null,
         tier: 'premium',
         expires_at: expires,
-        creem_customer_id: input.customerId ?? null,
-        creem_subscription_id: input.subscriptionId ?? null,
-        creem_last_transaction_id: input.transactionId ?? null,
+        creem_customer_id: input.customerId ?? existing?.creem_customer_id ?? null,
+        creem_subscription_id: input.subscriptionId ?? existing?.creem_subscription_id ?? null,
+        creem_last_transaction_id: input.transactionId ?? existing?.creem_last_transaction_id ?? null,
         revoked_at: null,
         revoke_reason: null,
         updated_at: new Date().toISOString(),

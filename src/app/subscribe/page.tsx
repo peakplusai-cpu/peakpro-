@@ -6,10 +6,10 @@ import { createClient } from '@/lib/supabase/server';
 export default async function SubscribePage({
   searchParams,
 }: {
-  searchParams: Promise<{ revoked?: string; billing_error?: string }>;
+  searchParams: Promise<{ revoked?: string; billing_error?: string; canceled?: string }>;
 }) {
   const locale = await getLocale();
-  const { revoked, billing_error: billingError } = await searchParams;
+  const { revoked, billing_error: billingError, canceled } = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -21,6 +21,7 @@ export default async function SubscribePage({
       locale={locale}
       session={session}
       revoked={revoked === '1'}
+      canceled={canceled === '1'}
       billingError={billingError}
     />
   );

@@ -44,11 +44,13 @@ export function PeakProSubscribeView({
   locale,
   session,
   revoked,
+  canceled,
   billingError,
 }: {
   locale: Locale;
   session: PeakProSession;
   revoked?: boolean;
+  canceled?: boolean;
   billingError?: string;
 }) {
   const features = locale === 'zh' ? FEATURES_ZH : FEATURES_EN;
@@ -64,6 +66,11 @@ export function PeakProSubscribeView({
         compact
       />
       <main className="mx-auto max-w-3xl px-6 py-16">
+        {canceled ? (
+          <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+            {tPeakpro(locale, 'trialCanceled')}
+          </p>
+        ) : null}
         {revoked ? (
           <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
             {tPeakpro(locale, 'revokedNotice')}
@@ -94,12 +101,23 @@ export function PeakProSubscribeView({
             ))}
           </ul>
           {session.userId ? (
-            <Link
-              href="/api/checkout"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-gold py-3 text-sm font-semibold text-black"
-            >
-              {tPeakpro(locale, 'subscribeCta')}
-            </Link>
+            session.trial && session.subscriptionId ? (
+              <form action="/api/billing/cancel" method="post" className="mt-8">
+                <button
+                  type="submit"
+                  className="inline-flex w-full items-center justify-center rounded-full border border-gold/30 py-3 text-sm text-gold"
+                >
+                  {tPeakpro(locale, 'trialCancelCta')}
+                </button>
+              </form>
+            ) : (
+              <Link
+                href="/api/checkout"
+                className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-gold py-3 text-sm font-semibold text-black"
+              >
+                {tPeakpro(locale, 'subscribeCta')}
+              </Link>
+            )
           ) : (
             <Link
               href="/login?redirect=/subscribe"

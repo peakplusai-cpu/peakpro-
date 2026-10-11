@@ -12,15 +12,19 @@ import {
   type CreemWebhookEntity,
 } from '@/lib/creem';
 import { getAppOrigin } from '@/lib/env';
+import { TRIAL_DAYS } from '@/lib/peakpro/constants';
 import {
   activatePeakProPremium,
   findPeakProProfile,
   revokePeakProPremium,
 } from '@/lib/peakpro/profile';
+import { claimTrialGrant, sealTrialGrant } from '@/lib/peakpro/trial';
 
 const ACTIVATE_EVENTS = new Set([
   'checkout.completed',
   'subscription.paid',
+  'subscription.trialing',
+  'subscription.active',
   'payment_intent.succeeded',
   'invoice.paid',
 ]);
@@ -69,6 +73,42 @@ export function getPeakProSuccessUrl(origin?: string): string {
   return `${(origin || getAppOrigin()).replace(/\/$/, '')}/app?payment=success`;
 }
 
+let productTrialReady = false;
+
+async function ensureCreemProductTrial(host: string, apiKey: string, productId: string) {
+  if (productTrialReady) return;
+  try {
+    const current = await fetch(`${host}/v1/products/${productId}`, {
+      headers: { 'x-api-key': apiKey },
+      cache: 'no-store',
+    });
+    const json = (await current.json().catch(() => null)) as {
+      trial_period_days?: number | null;
+      trial_price?: number | null;
+    } | null;
+    const freeSeven =
+      json?.trial_period_days === TRIAL_DAYS && (json.trial_price == null || json.trial_price === 0);
+    if (current.ok && freeSeven) {
+      productTrialReady = true;
+      return;
+    }
+
+    const patched = await fetch(`${host}/v1/products/${productId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({ trial_period_days: TRIAL_DAYS, trial_price: 0 }),
+      cache: 'no-store',
+    });
+    if (patched.ok) productTrialReady = true;
+    else console.warn('[peakpro/creem] could not enable 7-day product trial', patched.status);
+  } catch (error) {
+    console.warn('[peakpro/creem] product trial probe failed', error);
+  }
+}
+
 export async function createPeakProCheckoutUrl(input: {
   userId: string;
   email?: string;
@@ -87,6 +127,7 @@ export async function createPeakProCheckoutUrl(input: {
   let lastError = 'Creem checkout could not be created.';
 
   for (const host of hosts) {
+    await ensureCreemProductTrial(host, apiKey, productId);
     const response = await fetch(`${host}/v1/checkouts`, {
       method: 'POST',
       headers: {
@@ -114,6 +155,67 @@ export async function createPeakProCheckoutUrl(input: {
   }
 
   return { url: null, missing: [], error: lastError };
+}
+
+export async function createPeakProPortalUrl(customerId: string): Promise<{
+  url: string | null;
+  missing: string[];
+  error?: string;
+}> {
+  const apiKey = getCreemApiKey();
+  if (!apiKey) return { url: null, missing: ['CREEM_API_KEY'] };
+
+  const preferred = getCreemApiBase();
+  const hosts = [preferred, ...CREEM_API_HOSTS.filter((host) => host !== preferred)];
+  let lastError = 'Creem billing portal could not be opened.';
+
+  for (const host of hosts) {
+    const response = await fetch(`${host}/v1/customers/billing`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({ customer_id: customerId }),
+      cache: 'no-store',
+    });
+    const json = (await response.json().catch(() => null)) as { customer_portal_link?: string } | null;
+    if (response.ok && json?.customer_portal_link) {
+      return { url: json.customer_portal_link, missing: [] };
+    }
+    lastError = `${creemErrorMessage(json, response.status)} (${host})`;
+  }
+
+  return { url: null, missing: [], error: lastError };
+}
+
+export async function cancelPeakProSubscription(subscriptionId: string): Promise<{
+  ok: boolean;
+  error?: string;
+}> {
+  const apiKey = getCreemApiKey();
+  if (!apiKey) return { ok: false, error: 'Missing CREEM_API_KEY' };
+
+  const preferred = getCreemApiBase();
+  const hosts = [preferred, ...CREEM_API_HOSTS.filter((host) => host !== preferred)];
+  let lastError = 'Creem could not cancel this mandate.';
+
+  for (const host of hosts) {
+    const response = await fetch(`${host}/v1/subscriptions/${subscriptionId}/cancel`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+      },
+      body: JSON.stringify({ mode: 'immediate', onExecute: 'cancel' }),
+      cache: 'no-store',
+    });
+    if (response.ok) return { ok: true };
+    const json = await response.json().catch(() => null);
+    lastError = `${creemErrorMessage(json, response.status)} (${host})`;
+  }
+
+  return { ok: false, error: lastError };
 }
 
 function isPeakProPayload(object: CreemWebhookEntity): boolean {
@@ -167,17 +269,39 @@ export async function handlePeakProCreemWebhook(
         { status: 404 },
       );
     }
+
+    const email = customer.email ?? profile?.email ?? null;
+    const trialing =
+      payload.eventType === 'subscription.trialing' ||
+      payload.object.status === 'trialing' ||
+      (payload.eventType === 'checkout.completed' && !transactionId);
+
+    if (trialing) {
+      const claim = await claimTrialGrant(targetId, email);
+      if (claim.status === 'denied') {
+        return NextResponse.json({
+          received: true,
+          product: 'peakpro',
+          action: 'trial_denied',
+          user_id: targetId,
+        });
+      }
+    } else {
+      await sealTrialGrant(targetId, email, null);
+    }
+
     const updated = await activatePeakProPremium({
       userId: targetId,
-      email: customer.email ?? profile?.email,
+      email,
       customerId: customer.id,
       subscriptionId,
       transactionId,
+      days: trialing ? TRIAL_DAYS : 30,
     });
     return NextResponse.json({
       received: true,
       product: 'peakpro',
-      action: 'activate',
+      action: trialing ? 'trial' : 'activate',
       user_id: updated?.id ?? targetId,
       tier: 'premium',
       expires_at: updated?.expires_at ?? null,

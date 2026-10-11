@@ -23,11 +23,11 @@ function formatAuthError(message: string): string {
   return message;
 }
 
-function resolveRedirect(value: FormDataEntryValue | null): string {
+function resolveRedirect(value: FormDataEntryValue | null, fallback = '/app'): string {
   if (typeof value === 'string' && (value.startsWith('/app') || value.startsWith('/subscribe') || value.startsWith('/api/'))) {
     return value;
   }
-  return '/app';
+  return fallback;
 }
 
 export async function peakproSignIn(formData: FormData) {
@@ -55,7 +55,7 @@ export async function peakproSignUp(formData: FormData) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) redirect(loginPath(formatAuthError(error.message)));
   if (data.user) await ensurePeakProProfile(data.user.id, data.user.email ?? email);
-  redirect(resolveRedirect(formData.get('redirect')));
+  redirect(resolveRedirect(formData.get('redirect'), '/subscribe'));
 }
 
 export async function peakproSignOut() {

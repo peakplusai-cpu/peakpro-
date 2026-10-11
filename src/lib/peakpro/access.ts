@@ -17,7 +17,7 @@ export function isTrialGrant(
   > | null,
 ): boolean {
   if (!isPremiumActive(profile) || !profile) return false;
-  return !profile.creem_subscription_id && !profile.creem_last_transaction_id;
+  return !profile.creem_last_transaction_id;
 }
 
 export function effectiveTier(profile: Pick<PeakProProfile, 'tier' | 'expires_at'> | null): PeakProTier {

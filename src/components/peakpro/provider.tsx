@@ -51,6 +51,8 @@ export function usePeakPro(): PeakProContextValue {
       expiresAt: null,
       revoked: false,
       trial: false,
+      customerId: null,
+      subscriptionId: null,
       activeModule: 'overview',
       setActiveModule: () => undefined,
       isPremium: false,

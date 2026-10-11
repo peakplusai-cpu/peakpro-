@@ -166,4 +166,6 @@ export interface PeakProSession {
   expiresAt: string | null;
   revoked: boolean;
   trial: boolean;
+  customerId: string | null;
+  subscriptionId: string | null;
 }
