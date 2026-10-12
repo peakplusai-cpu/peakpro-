@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEven
 import { Loader2, Send, Trash2 } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
-import { tPeakpro } from '@/lib/peakpro/copy';
+import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
+import { usePeakPro } from '@/components/peakpro/provider';
 import { ADVISOR_MAX_INPUT } from '@/lib/peakpro/constants';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ type QuotaState = {
 };
 
 export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
+  const { desk } = usePeakPro();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [draft, setDraft] = useState('');
   const [pending, setPending] = useState(false);
@@ -67,7 +69,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
   }, [turns, pending]);
 
   function errorFromCode(code: string | undefined) {
-    if (code === 'limit') return tPeakpro(locale, 'advisorLimit');
+    if (code === 'limit') return tPeakproDesk(locale, desk, 'advisorLimit');
     if (code === 'too_long') return tPeakpro(locale, 'advisorTooLong');
     if (code === 'ai_offline') return tPeakpro(locale, 'advisorOffline');
     if (code === 'premium') return tPeakpro(locale, 'advisorNeedPremium');
@@ -84,7 +86,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
       return;
     }
     if (quota?.ready && quota.remaining === 0) {
-      setError(tPeakpro(locale, 'advisorLimit'));
+      setError(tPeakproDesk(locale, desk, 'advisorLimit'));
       return;
     }
 
@@ -178,8 +180,10 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
     <div className="space-y-6">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'advisorTitle')}</h2>
-        {tPeakpro(locale, 'advisorLead') ? (
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'advisorLead')}</p>
+        {tPeakproDesk(locale, desk, 'advisorLead') ? (
+          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
+            {tPeakproDesk(locale, desk, 'advisorLead')}
+          </p>
         ) : null}
         {quotaLabel ? (
           <p className="mt-2 text-[11px] uppercase tracking-[0.22em] text-zinc-500">{quotaLabel}</p>
@@ -224,7 +228,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
               onKeyDown={onKeyDown}
               rows={3}
               disabled={false}
-              placeholder={tPeakpro(locale, 'advisorPlaceholder')}
+              placeholder={tPeakproDesk(locale, desk, 'advisorPlaceholder')}
               className="min-h-[4.5rem] flex-1 resize-none rounded-2xl border border-gold/20 bg-black px-4 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-gold/50"
             />
             <div className="flex flex-col gap-2">

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 import { markLots } from '@/lib/peakpro/portfolio-mark';
 import {
   isPortfolioBook,
@@ -47,7 +48,10 @@ export async function GET() {
     return NextResponse.json({ error: 'failed' }, { status: 500 });
   }
 
-  const lots = ((data ?? []) as Record<string, unknown>[]).map(asLot);
+  const desk = await getDeskRegion();
+  const lots = ((data ?? []) as Record<string, unknown>[])
+    .map(asLot)
+    .filter((lot) => desk !== 'us' || lot.book !== 'taiwan');
   const marked = await markLots(lots);
   return NextResponse.json({ ok: true, lots: marked, totals: totalsByCurrency(marked) });
 }
@@ -67,6 +71,10 @@ export async function POST(request: Request) {
   } | null;
   if (!isPortfolioBook(body?.book)) {
     return NextResponse.json({ error: 'invalid' }, { status: 400 });
+  }
+  const desk = await getDeskRegion();
+  if (desk === 'us' && body.book === 'taiwan') {
+    return NextResponse.json({ error: 'wrong_market' }, { status: 400 });
   }
   const rawQuery = typeof body.query === 'string' ? body.query : '';
   let parsed = parseLotSymbol(body.book, rawQuery);

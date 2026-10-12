@@ -266,6 +266,46 @@ export const LEARN_INDICATORS: LearnLesson[] = [
   },
 ];
 
-export function learnLessons(tab: LearnTab) {
-  return tab === 'principles' ? LEARN_PRINCIPLES : LEARN_INDICATORS;
+const US_LESSON_BODY: Record<string, LearnLesson['body']> = {
+  index: {
+    zh: [
+      '指數（例如 QQQ）代表一籃子股票的平均感覺。個股可以走得比指數好，也可以走得比較差。',
+      '指數大漲時，很多股票會一起被帶動；指數大跌時，好公司也可能先被賣掉。這叫系統性風險，不是你看盤不認真。',
+    ],
+    en: [
+      'An index (QQQ on this desk) is the weather for a basket. A single name can lead or lag that weather.',
+      'When the index rips, many names are pulled with it. When it breaks, even a good company can be sold first. That is market risk, not a personal failing.',
+    ],
+  },
+  fear: {
+    zh: [
+      '寬度在問：上漲的股票多，還是下跌的多。指數漲但多數股票沒漲，是少數權值股在撐；多數股票都漲，才比較像全面轉強。',
+      '加密的恐懼貪婪是加密資金情緒的分數，不是美股的分數。不要把兩個市場的情緒混成同一個數字。',
+    ],
+    en: [
+      'Breadth asks how many names are up versus down. An index lift with few leaders is a narrow tape. A lift with many names is broader.',
+      'Crypto Fear & Greed is a crypto-positioning score, not a U.S. equity score. Do not mash the two markets into one number.',
+    ],
+  },
+  together: {
+    zh: [
+      '一個指標亮綠，不構成理由。比較穩的讀法是：價格方向、量、相對指數是否大致同一個故事。',
+      '故事互相打架時，先觀望比硬解讀更有用。本桌任何標籤都不是「明天一定漲」的證明。',
+    ],
+    en: [
+      'One green badge is not a thesis. A sturdier read is whether price, volume, and relative strength tell roughly the same story.',
+      'When the story fights itself, waiting is more useful than forcing a read. No badge on this desk is proof of tomorrow.',
+    ],
+  },
+};
+
+export function learnLessons(tab: LearnTab, desk: 'tw' | 'us' = 'tw') {
+  const all = tab === 'principles' ? LEARN_PRINCIPLES : LEARN_INDICATORS;
+  if (desk !== 'us') return all;
+  return all
+    .filter((lesson) => lesson.id !== 'institutions' && lesson.id !== 'sessions')
+    .map((lesson) => {
+      const body = US_LESSON_BODY[lesson.id];
+      return body ? { ...lesson, body } : lesson;
+    });
 }

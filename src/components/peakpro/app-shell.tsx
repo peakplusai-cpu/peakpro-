@@ -7,10 +7,11 @@ import { PeakProProvider } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { premiumExpiresInDays } from '@/lib/peakpro/access';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProCacheSnapshot, PeakProSession } from '@/lib/peakpro/types';
 
-export function PeakProAppShell({
+export async function PeakProAppShell({
   locale,
   session,
   moduleId,
@@ -27,8 +28,14 @@ export function PeakProAppShell({
   highlight?: string;
   children?: ReactNode;
 }) {
+  const desk = await getDeskRegion();
   return (
-    <PeakProProvider session={session} activeModule={moduleId} usdTwd={cache.usdTwd}>
+    <PeakProProvider
+      session={session}
+      activeModule={moduleId}
+      usdTwd={desk === 'us' ? null : cache.usdTwd}
+      desk={desk}
+    >
       <div className="min-h-screen bg-black text-zinc-100">
         <PeakProNav
           locale={locale}
@@ -36,6 +43,7 @@ export function PeakProAppShell({
           signedIn={Boolean(session.userId)}
           trial={session.trial}
           expiresAt={session.expiresAt}
+          desk={desk}
         />
         <main className="mx-auto max-w-6xl px-4 py-10">
           {session.trial ? (
@@ -94,6 +102,7 @@ export function PeakProAppShell({
               moduleId={moduleId}
               cache={cache}
               highlight={highlight}
+              desk={desk}
             />
           )}
         </main>

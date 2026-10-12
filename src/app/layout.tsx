@@ -5,6 +5,7 @@ import type { ReactNode } from 'react';
 import { LocaleProvider } from '@/components/locale-provider';
 import { localeHtmlLang } from '@/i18n/locale';
 import { getLocale, getMessages } from '@/i18n/server';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 
 import './globals.css';
 
@@ -16,10 +17,15 @@ const cinzel = Cinzel({
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
+  const desk = await getDeskRegion();
+  const us = desk === 'us';
   return {
     title: locale === 'zh' ? 'PeakPro+ 市場情報' : 'PeakPro+ Market Intelligence',
-    description:
-      locale === 'zh'
+    description: us
+      ? locale === 'zh'
+        ? '機構級市場情報終端：美股、加密、黃金、地緣風險與 AI 每週總結。'
+        : 'Institutional market intelligence: U.S. equities, crypto, gold, geopolitical risk, and an AI weekly summary.'
+      : locale === 'zh'
         ? '機構級市場情報終端：台美股、加密、黃金、地緣風險與 AI 每週總結。'
         : 'Institutional market intelligence: equities, crypto, gold, geopolitical risk, and an AI weekly summary.',
   };

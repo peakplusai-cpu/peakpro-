@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
-import { tPeakpro } from '@/lib/peakpro/copy';
+import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { usePeakPro } from '@/components/peakpro/provider';
 import { displayPx, formatPct, formatVol, formatZhang } from '@/lib/peakpro/format';
 import type { TapeDesk, TapeRow, TapeRs, TapeTurn } from '@/lib/peakpro/tape';
@@ -39,10 +39,12 @@ function TapeTable({
   locale,
   rows,
   usdTwd,
+  hideInst = false,
 }: {
   locale: Locale;
   rows: TapeRow[];
   usdTwd?: number | null;
+  hideInst?: boolean;
 }) {
   return (
     <div className="overflow-x-auto rounded-3xl border border-gold/15">
@@ -55,7 +57,7 @@ function TapeTable({
             <th className="px-4 py-3">{tPeakpro(locale, 'tapeRs')}</th>
             <th className="px-4 py-3">{tPeakpro(locale, 'tapeVol')}</th>
             <th className="px-4 py-3">{tPeakpro(locale, 'tapeRange')}</th>
-            <th className="px-4 py-3">{tPeakpro(locale, 'tapeInst')}</th>
+            {hideInst ? null : <th className="px-4 py-3">{tPeakpro(locale, 'tapeInst')}</th>}
           </tr>
         </thead>
         <tbody>
@@ -98,23 +100,25 @@ function TapeTable({
               <td className="px-4 py-3 text-zinc-300">
                 {row.rangePos != null ? `${Math.round(row.rangePos * 100)}%` : '—'}
               </td>
-              <td className="px-4 py-3">
-                {row.market === 'us' ? (
-                  <p className="text-[11px] text-zinc-600">{tPeakpro(locale, 'tapeNoInst')}</p>
-                ) : row.inst ? (
-                  <>
-                    <p className={row.inst.totalNet >= 0 ? 'text-emerald-300' : 'text-red-300'}>
-                      {formatZhang(row.inst.totalNet)}
-                    </p>
-                    <p className="text-[11px] text-zinc-500">
-                      {tPeakpro(locale, 'tapeForeign')} {formatZhang(row.inst.foreignNet)} ·{' '}
-                      {streakText(locale, row.inst.streak)}
-                    </p>
-                  </>
-                ) : (
-                  <p className="text-[11px] text-zinc-600">{tPeakpro(locale, 'tapePendingInst')}</p>
-                )}
-              </td>
+              {hideInst ? null : (
+                <td className="px-4 py-3">
+                  {row.market === 'us' ? (
+                    <p className="text-[11px] text-zinc-600">{tPeakpro(locale, 'tapeNoInst')}</p>
+                  ) : row.inst ? (
+                    <>
+                      <p className={row.inst.totalNet >= 0 ? 'text-emerald-300' : 'text-red-300'}>
+                        {formatZhang(row.inst.totalNet)}
+                      </p>
+                      <p className="text-[11px] text-zinc-500">
+                        {tPeakpro(locale, 'tapeForeign')} {formatZhang(row.inst.foreignNet)} ·{' '}
+                        {streakText(locale, row.inst.streak)}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-[11px] text-zinc-600">{tPeakpro(locale, 'tapePendingInst')}</p>
+                  )}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -124,7 +128,7 @@ function TapeTable({
 }
 
 export function PeakProTapeDesk({ locale }: { locale: Locale }) {
-  const { usdTwd } = usePeakPro();
+  const { usdTwd, desk: region } = usePeakPro();
   const [desk, setDesk] = useState<TapeDesk | null>(null);
   const [setup, setSetup] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -154,14 +158,18 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
     };
   }, [locale]);
 
-  const book = desk?.rows.filter((row) => row.inBook) ?? [];
-  const rest = desk?.rows.filter((row) => !row.inBook) ?? [];
+  const rows = (desk?.rows ?? []).filter((row) => region !== 'us' || row.market === 'us');
+  const book = rows.filter((row) => row.inBook);
+  const rest = rows.filter((row) => !row.inBook);
+  const hideInst = region === 'us';
 
   return (
     <div className="space-y-8">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'tapeTitle')}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'tapeLead')}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
+          {tPeakproDesk(locale, region, 'tapeLead')}
+        </p>
       </div>
 
       {setup ? (
@@ -180,19 +188,21 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
         </p>
       ) : (
         <>
-          <div className="grid gap-4 md:grid-cols-3">
-            <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeTaiwan')}</p>
-              <p className="mt-3 font-peakpro text-2xl text-white">
-                {desk.summary.twLead} {tPeakpro(locale, 'tapeLeadCount')}
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                {desk.summary.twLag} {tPeakpro(locale, 'tapeLagCount')}
-                {desk.benches.taiwan.changePct != null
-                  ? ` · 0050 ${formatPct(desk.benches.taiwan.changePct)}`
-                  : ''}
-              </p>
-            </article>
+          <div className={hideInst ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4 md:grid-cols-3'}>
+            {hideInst ? null : (
+              <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
+                <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeTaiwan')}</p>
+                <p className="mt-3 font-peakpro text-2xl text-white">
+                  {desk.summary.twLead} {tPeakpro(locale, 'tapeLeadCount')}
+                </p>
+                <p className="mt-1 text-sm text-zinc-500">
+                  {desk.summary.twLag} {tPeakpro(locale, 'tapeLagCount')}
+                  {desk.benches.taiwan.changePct != null
+                    ? ` · 0050 ${formatPct(desk.benches.taiwan.changePct)}`
+                    : ''}
+                </p>
+              </article>
+            )}
             <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
               <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeUs')}</p>
               <p className="mt-3 font-peakpro text-2xl text-white">
@@ -211,7 +221,7 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
               <p className="mt-1 text-sm text-red-300">
                 {desk.summary.bookPress} {tPeakpro(locale, 'tape_press')}
               </p>
-              {desk.instDate ? (
+              {!hideInst && desk.instDate ? (
                 <p className="mt-2 text-[11px] text-zinc-600">
                   {tPeakpro(locale, 'tapeInstDate')} {desk.instDate}
                 </p>
@@ -222,7 +232,7 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
           {book.length > 0 ? (
             <section className="space-y-3">
               <h3 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeBook')}</h3>
-              <TapeTable locale={locale} rows={book} usdTwd={usdTwd} />
+              <TapeTable locale={locale} rows={book} usdTwd={usdTwd} hideInst={hideInst} />
             </section>
           ) : null}
 
@@ -233,7 +243,7 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
                 {tPeakpro(locale, 'tapeEmpty')}
               </p>
             ) : (
-              <TapeTable locale={locale} rows={rest} usdTwd={usdTwd} />
+              <TapeTable locale={locale} rows={rest} usdTwd={usdTwd} hideInst={hideInst} />
             )}
           </section>
         </>

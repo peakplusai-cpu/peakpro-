@@ -126,6 +126,7 @@ export function PeakProEquityDesk({
   highlight?: string;
 }) {
   const router = useRouter();
+  const { desk: region } = usePeakPro();
   const [query, setQuery] = useState(highlight ?? '');
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -174,9 +175,11 @@ export function PeakProEquityDesk({
       if (!response.ok) {
         const key =
           json?.error === 'wrong_market'
-            ? market === 'taiwan'
-              ? 'searchWrongMarketTw'
-              : 'searchWrongMarketUs'
+            ? region === 'us'
+              ? 'searchNotFound'
+              : market === 'taiwan'
+                ? 'searchWrongMarketTw'
+                : 'searchWrongMarketUs'
             : json?.error === 'premium'
               ? 'searchPremiumOnly'
               : json?.error === 'not_found'

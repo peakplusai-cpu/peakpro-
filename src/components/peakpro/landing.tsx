@@ -4,19 +4,30 @@ import Link from 'next/link';
 
 import { IntroCandles } from '@/components/peakpro/intro-candles';
 import { PeakProFooter } from '@/components/peakpro/footer';
+import { PeakProDeskSwitcher } from '@/components/peakpro/desk-switcher';
 import { PeakProLanguageSwitcher } from '@/components/peakpro/language-switcher';
 import { PeakProLogo } from '@/components/peakpro/logo';
 import { WorldClocks } from '@/components/peakpro/world-clocks';
 import type { Locale } from '@/i18n/locale';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { tPeakpro } from '@/lib/peakpro/copy';
 
-export function PeakProLanding({ locale, signedIn }: { locale: Locale; signedIn: boolean }) {
+export function PeakProLanding({
+  locale,
+  signedIn,
+  desk = 'tw',
+}: {
+  locale: Locale;
+  signedIn: boolean;
+  desk?: DeskRegion;
+}) {
   return (
     <div className="min-h-screen bg-black text-zinc-100">
       <IntroCandles locale={locale} onComplete={() => undefined} />
       <header className="sticky top-0 z-30 flex items-center justify-between border-b border-gold/10 bg-black/70 px-6 py-4 backdrop-blur-xl">
         <PeakProLogo size="sm" />
         <div className="flex items-center gap-3">
+          <PeakProDeskSwitcher locale={locale} desk={desk} />
           <PeakProLanguageSwitcher />
           <Link href={signedIn ? '/app' : '/login'} className="text-xs text-zinc-300 hover:text-gold">
             {tPeakpro(locale, signedIn ? 'navApp' : 'navLogin')}
@@ -52,7 +63,7 @@ export function PeakProLanding({ locale, signedIn }: { locale: Locale; signedIn:
           </div>
           <p className="mt-5 text-xs tracking-wide text-gold-antique">{tPeakpro(locale, 'heroTrial')}</p>
         </section>
-        <WorldClocks locale={locale} />
+        <WorldClocks locale={locale} desk={desk} />
       </main>
       <PeakProFooter locale={locale} />
     </div>

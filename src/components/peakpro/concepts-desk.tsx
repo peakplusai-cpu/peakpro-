@@ -5,6 +5,7 @@ import { ArrowLeft, ArrowUpRight } from 'lucide-react';
 import { useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import {
@@ -20,8 +21,16 @@ function text(locale: Locale, value: { zh: string; en: string }) {
   return locale === 'zh' ? value.zh : value.en;
 }
 
-function SupplierRow({ locale, row }: { locale: Locale; row: ConceptSupplier }) {
-  const href = conceptDeskHref(row);
+function SupplierRow({
+  locale,
+  row,
+  desk = 'tw',
+}: {
+  locale: Locale;
+  row: ConceptSupplier;
+  desk?: DeskRegion;
+}) {
+  const href = desk === 'us' && row.market === 'taiwan' ? null : conceptDeskHref(row);
   const body = (
     <>
       <div className="min-w-0">
@@ -75,10 +84,14 @@ function AnchorCard({
   );
 }
 
-export function PeakProConceptsDesk({ locale }: { locale: Locale }) {
-  const [tab, setTab] = useState<'taiwan' | 'us'>('taiwan');
+export function PeakProConceptsDesk({ locale, desk = 'tw' }: { locale: Locale; desk?: DeskRegion }) {
+  const [tab, setTab] = useState<'taiwan' | 'us'>(desk === 'us' ? 'us' : 'taiwan');
   const [openId, setOpenId] = useState<string | null>(null);
-  const rows = conceptAnchors(tab);
+  const rows = conceptAnchors(tab).map((row) =>
+    desk === 'us'
+      ? { ...row, suppliers: row.suppliers.filter((item) => item.market !== 'taiwan') }
+      : row,
+  );
   const open = openId ? findConceptAnchor(openId) : null;
 
   if (open) {
@@ -102,7 +115,7 @@ export function PeakProConceptsDesk({ locale }: { locale: Locale }) {
             <h2 className="mt-2 font-peakpro text-3xl text-gold">{text(locale, open.name)}</h2>
             <p className="mt-2 text-sm text-zinc-500">{text(locale, open.sector)}</p>
           </div>
-          {deskHref ? (
+          {deskHref && !(desk === 'us' && open.market === 'taiwan') ? (
             <Link href={deskHref} className="text-sm text-gold hover:underline">
               {tPeakpro(locale, 'conceptsOpenTape')}
             </Link>
@@ -110,8 +123,15 @@ export function PeakProConceptsDesk({ locale }: { locale: Locale }) {
         </header>
         <p className="text-[10px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'conceptsChain')}</p>
         <div className="space-y-3">
-          {open.suppliers.map((row) => (
-            <SupplierRow key={`${open.id}-${row.symbol}-${row.supply.en}`} locale={locale} row={row} />
+          {open.suppliers
+            .filter((row) => desk !== 'us' || row.market !== 'taiwan')
+            .map((row) => (
+            <SupplierRow
+              key={`${open.id}-${row.symbol}-${row.supply.en}`}
+              locale={locale}
+              row={row}
+              desk={desk}
+            />
           ))}
         </div>
         <p className="text-[11px] leading-relaxed text-zinc-600">
@@ -130,21 +150,23 @@ export function PeakProConceptsDesk({ locale }: { locale: Locale }) {
         ) : null}
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {(['taiwan', 'us'] as const).map((id) => (
-          <button
-            key={id}
-            type="button"
-            onClick={() => setTab(id)}
-            className={cn(
-              'rounded-full px-4 py-1.5 text-xs tracking-wide',
-              tab === id ? 'bg-gold text-black' : 'border border-gold/25 text-zinc-400 hover:text-gold',
-            )}
-          >
-            {tPeakpro(locale, id === 'taiwan' ? 'conceptsTaiwan' : 'conceptsUs')}
-          </button>
-        ))}
-      </div>
+      {desk === 'us' ? null : (
+        <div className="flex flex-wrap gap-2">
+          {(['taiwan', 'us'] as const).map((id) => (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setTab(id)}
+              className={cn(
+                'rounded-full px-4 py-1.5 text-xs tracking-wide',
+                tab === id ? 'bg-gold text-black' : 'border border-gold/25 text-zinc-400 hover:text-gold',
+              )}
+            >
+              {tPeakpro(locale, id === 'taiwan' ? 'conceptsTaiwan' : 'conceptsUs')}
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {rows.map((row) => (

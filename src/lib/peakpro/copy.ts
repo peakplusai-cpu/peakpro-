@@ -1,5 +1,6 @@
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 
 type CopyTree = Record<string, string>;
 
@@ -28,6 +29,9 @@ const en: CopyTree = {
   langEn: 'English',
   langZh: '繁體中文',
   langAria: 'Language switcher',
+  deskAria: 'Desk',
+  deskTw: 'Taiwan desk',
+  deskUs: 'U.S. desk',
   clocksTitle: 'World Top 10 Economies Live Clock',
   clocksSub: 'Local session times across the largest economic blocs — 12-hour with AM/PM.',
   whyKicker: 'The problem',
@@ -35,6 +39,8 @@ const en: CopyTree = {
   why1Title: 'The tape is scattered',
   why1Body:
     'Taiwan prints, U.S. names, crypto, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
+  why1BodyUs:
+    'U.S. names, crypto, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
   why2Title: 'Feeds bury the session',
   why2Body:
     'Hot lists and social charts mix limit-up noise with the book you actually watch. A private desk should not look like a casino ticker.',
@@ -46,6 +52,8 @@ const en: CopyTree = {
   pick1Title: 'One screen for the complex',
   pick1Body:
     'Taiwan and U.S. equities, concept names, BTC and ETH, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
+  pick1BodyUs:
+    'U.S. equities, concept names, BTC and ETH, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
   pick2Title: 'Warehouse first',
   pick2Body:
     'The client reads a curated cache. You are not sent hunting across vendors, and the desk does not dump the entire market onto the page.',
@@ -174,8 +182,10 @@ const en: CopyTree = {
   volume: 'Volume',
   advisorTitle: 'Desk Advisor',
   advisorLead: 'Ask for a desk call — add, trim, or wait — on Taiwan or U.S. names, crypto, gold, or macro.',
+  advisorLeadUs: 'Ask for a desk call — add, trim, or wait — on U.S. names, crypto, gold, or macro.',
   advisorEmpty: '',
   advisorPlaceholder: 'Ask in any language — e.g. is NVDA still a buy, or 2330 適合買進嗎',
+  advisorPlaceholderUs: 'Ask in any language — e.g. is NVDA still a buy?',
   advisorSend: 'Send',
   advisorClear: 'Clear thread',
   advisorFoot: '',
@@ -184,12 +194,14 @@ const en: CopyTree = {
   advisorQuotaPending: '',
   advisorOffline: 'Desk Advisor is temporarily unavailable.',
   advisorLimit: 'Daily advisor limit reached. Try again after midnight Taipei time.',
+  advisorLimitUs: 'Daily advisor limit reached. Try again after midnight Eastern time.',
   advisorTooLong: 'That question is too long.',
   advisorFailed: 'The advisor could not complete that turn.',
   advisorNeedPremium: 'Desk Advisor is a Premium mandate feature.',
   advisorNeedLogin: 'Sign in to use Desk Advisor.',
   bookTitle: 'Personal book',
   bookLead: 'Lots you enter. Switch to 中文 to read U.S. marks in TWD.',
+  bookLeadUs: 'Lots you enter. Marks stay in the currency you paid.',
   bookAdd: 'Add a lot',
   book_taiwan: 'Taiwan',
   book_us: 'U.S.',
@@ -213,10 +225,12 @@ const en: CopyTree = {
   bookLimit: 'The book holds 40 lots. Remove one first.',
   bookNotFound: 'No quote for that symbol.',
   bookInvalid: 'Taiwan: four-digit code or name. U.S.: ticker or name. Gold: XAU or GOLD.',
+  bookInvalidUs: 'U.S.: ticker or name. Gold: XAU or GOLD. Crypto: BTC or ETH.',
   bookWrongMarket: 'That ticker does not match the selected book.',
   bookFoot: '',
   tapeTitle: 'Session Tape',
   tapeLead: 'Volume-price turns from the whole Taiwan and U.S. tape. Official TWSE/TPEX institutions after the close.',
+  tapeLeadUs: 'Volume-price turns from the U.S. tape versus QQQ.',
   tapeBook: 'Lots in your book',
   tapeDesk: 'Market-wide tape',
   tapeTaiwan: 'Taiwan vs 0050',
@@ -261,6 +275,8 @@ const en: CopyTree = {
   quizKicker: 'Daily drill',
   quizTitle: 'Ten-question quiz',
   quizLead: 'Each attempt draws 10 new multiple-choice items — indicators, market principles, and mixed tape questions. Ten points each. Five attempts per Taipei day.',
+  quizLeadUs:
+    'Each attempt draws 10 new multiple-choice items — indicators, market principles, and mixed tape questions. Ten points each. Five attempts per Eastern day.',
   quizStart: 'Start',
   quizSubmit: 'Hand in',
   quizAgain: 'Try another set',
@@ -274,6 +290,7 @@ const en: CopyTree = {
   quizBlank: '(blank)',
   quizRemain: 'Today: {used} / {limit} · {n} left',
   quizLimit: 'Five attempts used. Try again after midnight Taipei time.',
+  quizLimitUs: 'Five attempts used. Try again after midnight Eastern time.',
   quizNeedAll: 'Answer all ten before handing in.',
   quizLogin: 'Sign in first.',
   quizFailed: 'Could not load the quiz.',
@@ -318,6 +335,9 @@ const zh: CopyTree = {
   langEn: 'English',
   langZh: '繁體中文',
   langAria: '語言切換',
+  deskAria: '桌面',
+  deskTw: '台股桌',
+  deskUs: '美股桌',
   clocksTitle: '全球十大經濟體即時時鐘',
   clocksSub: '十大經濟體當地時間，12 小時制並標示上午／下午。',
   whyKicker: '要解的問題',
@@ -325,6 +345,8 @@ const zh: CopyTree = {
   why1Title: '情報散在各處',
   why1Body:
     '台股成交、美股、加密、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
+  why1BodyUs:
+    '美股、加密、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
   why2Title: '熱門把盤面蓋掉',
   why2Body:
     '漲停榜與社群圖把噪音和你真正在看的股票混在一起。私人投資桌不該長得像賭場跑馬燈。',
@@ -336,6 +358,8 @@ const zh: CopyTree = {
   pick1Title: '一個終端看完複合體',
   pick1Body:
     '台股、美股、概念股、比特幣與以太坊、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
+  pick1BodyUs:
+    '美股、概念股、比特幣與以太坊、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
   pick2Title: '先讀倉庫，不追供應商',
   pick2Body:
     '客戶端只讀整理過的快取。你不必自己串一堆來源，桌上也不會把全市場倒進來。',
@@ -461,8 +485,10 @@ const zh: CopyTree = {
   volume: '量',
   advisorTitle: '桌面顧問',
   advisorLead: '可直接問適不適合買進、減碼或觀望。台股、美股、加密、黃金、總體都可以。',
+  advisorLeadUs: '可直接問適不適合買進、減碼或觀望。美股、加密、黃金、總體都可以。',
   advisorEmpty: '',
   advisorPlaceholder: '用任何語言提問 — 例如 NVDA 還能買嗎、或 2330 適合買進嗎',
+  advisorPlaceholderUs: '用任何語言提問 — 例如 NVDA 還能買嗎',
   advisorSend: '送出',
   advisorClear: '清除對話',
   advisorFoot: '',
@@ -471,12 +497,14 @@ const zh: CopyTree = {
   advisorQuotaPending: '',
   advisorOffline: '桌面顧問暫時無法使用。',
   advisorLimit: '今日顧問則數已用完。台北時間午夜後再試。',
+  advisorLimitUs: '今日顧問則數已用完。美東時間午夜後再試。',
   advisorTooLong: '這則問題太長。',
   advisorFailed: '這一則沒有完成。',
   advisorNeedPremium: '桌面顧問僅供 Premium 使用。',
   advisorNeedLogin: '請先登入再使用桌面顧問。',
   bookTitle: '自選組合',
   bookLead: '你自己輸入的部位。中文介面美股以台幣計價。',
+  bookLeadUs: '你自己輸入的部位。標價維持你買入時的幣別。',
   bookAdd: '新增部位',
   book_taiwan: '台股',
   book_us: '美股',
@@ -500,10 +528,12 @@ const zh: CopyTree = {
   bookLimit: '組合最多 40 筆，請先刪一筆。',
   bookNotFound: '找不到這檔報價。',
   bookInvalid: '台股可填四碼或名稱，美股可填代碼或名稱。黃金填 XAU 或 GOLD。',
+  bookInvalidUs: '美股可填代碼或名稱。黃金填 XAU 或 GOLD。加密填 BTC 或 ETH。',
   bookWrongMarket: '代碼與所選市場不符。',
   bookFoot: '',
   tapeTitle: '動能轉折',
   tapeLead: '從全台股、全美股抓量價轉折；台股三大法人是盤後官方數字。',
+  tapeLeadUs: '從全美股抓量價轉折，相對基準是 QQQ。',
   tapeBook: '你的持倉',
   tapeDesk: '全市場熱門',
   tapeTaiwan: '台股相對 0050',
@@ -547,6 +577,7 @@ const zh: CopyTree = {
   quizKicker: '每日練習',
   quizTitle: '十題選擇題',
   quizLead: '每次進去都會新抽 10 題：指標使用、股市原理、綜合題。一題 10 分。台北時間每天五次。',
+  quizLeadUs: '每次進去都會新抽 10 題：指標使用、股市原理、綜合題。一題 10 分。美東時間每天五次。',
   quizStart: '開始作答',
   quizSubmit: '交卷',
   quizAgain: '再練一次',
@@ -560,6 +591,7 @@ const zh: CopyTree = {
   quizBlank: '（未作答）',
   quizRemain: '今日 {used} / {limit} 次，還剩 {n} 次',
   quizLimit: '今日五次已用完，台北時間午夜後再試。',
+  quizLimitUs: '今日五次已用完，美東時間午夜後再試。',
   quizNeedAll: '請先答完十題再交卷。',
   quizLogin: '請先登入。',
   quizFailed: '題目載入失敗。',
@@ -587,6 +619,14 @@ export function peakproCopy(locale: Locale): CopyTree {
 
 export function tPeakpro(locale: Locale, key: string): string {
   return dictionaries[locale][key] ?? dictionaries.en[key] ?? key;
+}
+
+export function tPeakproDesk(locale: Locale, desk: DeskRegion, key: string): string {
+  if (desk === 'us') {
+    const us = tPeakpro(locale, `${key}Us`);
+    if (us !== `${key}Us`) return us;
+  }
+  return tPeakpro(locale, key);
 }
 
 function hasCjk(value: string | null | undefined): boolean {

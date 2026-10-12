@@ -129,7 +129,7 @@ const BANK: QuizQuestion[] = [
     choices: [
       { zh: '系統性風險（市場天氣）', en: 'Market / systematic risk' },
       { zh: '一定是財報造假', en: 'Proof the accounts are false' },
-      { zh: '只有台股才有', en: 'A Taiwan-only rule' },
+      { zh: '只對單一股票成立', en: 'A rule that only hits one ticker' },
       { zh: '均線失效', en: 'Moving averages stopping' },
     ],
     correct: 0,
@@ -395,7 +395,7 @@ const BANK: QuizQuestion[] = [
     choices: [
       { zh: '因為依法是事後公布，本來就有延遲', en: 'They are delayed by design' },
       { zh: '因為他們從不交易股票', en: 'Because they never trade stocks' },
-      { zh: '因為只申報台股', en: 'Because they only file Taiwan names' },
+      { zh: '因為他們只申報私人公司', en: 'Because they only file private companies' },
       { zh: '因為數字是即時的，怕你搶先', en: 'Because the file is live and they fear front-running' },
     ],
     correct: 0,
@@ -580,11 +580,14 @@ export function readQuizToken(token: string): TokenPayload | null {
   }
 }
 
-export function startQuiz(userId: string): { token: string; questions: PublicQuizItem[] } {
+const US_SKIP = new Set(['m-session', 'i-rs', 'g-inst', 'g-bench', 'g-us-inst', 'g-fear']);
+
+export function startQuiz(userId: string, desk: 'tw' | 'us' = 'tw'): { token: string; questions: PublicQuizItem[] } {
+  const bank = desk === 'us' ? BANK.filter((row) => !US_SKIP.has(row.id)) : BANK;
   const pools: Record<QuizCategory, QuizQuestion[]> = {
-    indicator: shuffle(BANK.filter((row) => row.category === 'indicator')),
-    market: shuffle(BANK.filter((row) => row.category === 'market')),
-    general: shuffle(BANK.filter((row) => row.category === 'general')),
+    indicator: shuffle(bank.filter((row) => row.category === 'indicator')),
+    market: shuffle(bank.filter((row) => row.category === 'market')),
+    general: shuffle(bank.filter((row) => row.category === 'general')),
   };
   const picked = shuffle([
     ...pools.indicator.slice(0, 4),

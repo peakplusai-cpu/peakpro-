@@ -3,6 +3,7 @@
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
 import type { PeakProModule } from '@/lib/peakpro/constants';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import type { PeakProSession, PeakProTier } from '@/lib/peakpro/types';
 
 type PeakProContextValue = PeakProSession & {
@@ -10,6 +11,7 @@ type PeakProContextValue = PeakProSession & {
   setActiveModule: (moduleId: PeakProModule) => void;
   isPremium: boolean;
   usdTwd: number | null;
+  desk: DeskRegion;
 };
 
 const PeakProContext = createContext<PeakProContextValue | null>(null);
@@ -18,11 +20,13 @@ export function PeakProProvider({
   session,
   activeModule: initialModule,
   usdTwd = null,
+  desk = 'tw',
   children,
 }: {
   session: PeakProSession;
   activeModule: PeakProModule;
   usdTwd?: number | null;
+  desk?: DeskRegion;
   children: ReactNode;
 }) {
   const [activeModule, setActiveModule] = useState<PeakProModule>(initialModule);
@@ -34,8 +38,9 @@ export function PeakProProvider({
       setActiveModule,
       isPremium: session.tier === 'premium',
       usdTwd,
+      desk,
     }),
-    [session, activeModule, usdTwd],
+    [session, activeModule, usdTwd, desk],
   );
 
   return <PeakProContext.Provider value={value}>{children}</PeakProContext.Provider>;
@@ -57,6 +62,7 @@ export function usePeakPro(): PeakProContextValue {
       setActiveModule: () => undefined,
       isPremium: false,
       usdTwd: null,
+      desk: 'tw',
     };
   }
   return ctx;

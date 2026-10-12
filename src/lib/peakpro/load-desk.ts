@@ -10,6 +10,7 @@ import {
   slimCacheForModule,
 } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
+import { getDeskRegion, stripTaiwanCache } from '@/lib/peakpro/desk-region';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { FILINGS_STALE_MS, NEWS_STALE_MS, runPeakProFilingsScrape, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -21,10 +22,14 @@ export async function loadPeakProDesk(options?: {
   const { user } = await requireAuthUser();
   if (!user) redirect('/login?redirect=/app');
 
-  const [session, raw] = await Promise.all([
+  const [session, raw, desk] = await Promise.all([
     loadPeakProSession(user.id, user.email ?? null),
     readPeakProCache(),
+    getDeskRegion(),
   ]);
+  if (desk === 'us' && options?.moduleId === 'taiwan') {
+    redirect('/app/us');
+  }
   if (session.revoked && !options?.allowRevoked) {
     redirect('/subscribe?revoked=1');
   }
@@ -48,7 +53,7 @@ export async function loadPeakProDesk(options?: {
     }
   }
 
-  let cache = filterCacheForTier(raw, session.tier);
+  let cache = stripTaiwanCache(filterCacheForTier(raw, session.tier), desk);
   const moduleId = options?.moduleId;
   if (moduleId === 'taiwan' || moduleId === 'us') {
     cache = {
@@ -60,5 +65,5 @@ export async function loadPeakProDesk(options?: {
   }
   if (moduleId) cache = slimCacheForModule(cache, moduleId);
 
-  return { session, cache };
+  return { session, cache, desk };
 }

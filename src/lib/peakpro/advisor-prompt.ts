@@ -1,3 +1,4 @@
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { formatPct, formatPx } from '@/lib/peakpro/format';
 import { formatAdvisorFilings } from '@/lib/peakpro/filings';
 import type { FearGreedPayload, FilingsPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
@@ -79,3 +80,11 @@ Do not:
 - Repeat the disclaimer in the body. One line at the end is enough.
 
 End every reply with a blank line, then one line starting with "Disclaimer:" or "免責聲明：": desk commentary from a cache snapshot, not a broker ticket and not a promise.`;
+
+export function advisorSystemPrompt(desk: DeskRegion = 'tw') {
+  if (desk !== 'us') return ADVISOR_SYSTEM_PROMPT;
+  return ADVISOR_SYSTEM_PROMPT.replace(
+    'In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade.\nIf SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.',
+    'In scope: U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade. Do not discuss Taiwan cash equities, TWSE, TPEX, 0050, or official three-institution nets.\nIf SESSION_TAPE is present, use those U.S. turns. Never call them main-force, live chips, or a day-trade order.',
+  );
+}

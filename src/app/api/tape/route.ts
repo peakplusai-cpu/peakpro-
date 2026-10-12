@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { readPeakProCache } from '@/lib/peakpro/cache';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { loadTapeDesk } from '@/lib/peakpro/tape-store';
 import { isTaiwanSymbol, normalizeEquityQuery } from '@/lib/peakpro/yahoo';
@@ -15,19 +16,22 @@ export async function GET(request: Request) {
   const session = await loadPeakProSession(user.id, user.email ?? null);
   if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
 
+  const desk = await getDeskRegion();
   const url = new URL(request.url);
   const raw = url.searchParams.get('symbol')?.trim() ?? '';
   const extra: string[] = [];
   if (raw) {
     const market = isTaiwanSymbol(raw) || /^\d{4}$/.test(raw) ? 'taiwan' : 'us';
-    const parsed = normalizeEquityQuery(raw, market);
-    if (!parsed.error) extra.push(parsed.symbol);
+    if (!(desk === 'us' && market === 'taiwan')) {
+      const parsed = normalizeEquityQuery(raw, market);
+      if (!parsed.error) extra.push(parsed.symbol);
+    }
   }
 
   const admin = createAdminClient();
   const { data: lots } = await admin.from('peakpro_lots').select('symbol,book').eq('user_id', user.id);
   const bookSymbols = ((lots ?? []) as Array<{ symbol?: string; book?: string }>)
-    .filter((row) => row.book === 'taiwan' || row.book === 'us')
+    .filter((row) => (desk === 'us' ? row.book === 'us' : row.book === 'taiwan' || row.book === 'us'))
     .map((row) => String(row.symbol ?? ''))
     .filter(Boolean);
 
@@ -36,7 +40,7 @@ export async function GET(request: Request) {
     taiwan?: Array<{ symbol?: string; last?: number }>;
     us?: Array<{ symbol?: string; last?: number }>;
   } | undefined;
-  const marketSymbols = [...(trend?.taiwan ?? []), ...(trend?.us ?? [])]
+  const marketSymbols = [...(desk === 'us' ? [] : trend?.taiwan ?? []), ...(trend?.us ?? [])]
     .filter((item) => typeof item.last === 'number' && item.last > 0)
     .map((item) => String(item.symbol ?? ''))
     .filter(Boolean);

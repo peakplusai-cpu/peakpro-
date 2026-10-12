@@ -4,10 +4,17 @@ import { useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
 import { WORLD_CLOCKS } from '@/lib/peakpro/constants';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { tPeakpro } from '@/lib/peakpro/copy';
 
 const WHY_ITEMS = [
   { title: 'why1Title', body: 'why1Body' },
+  { title: 'why2Title', body: 'why2Body' },
+  { title: 'why3Title', body: 'why3Body' },
+] as const;
+
+const WHY_ITEMS_US = [
+  { title: 'why1Title', body: 'why1BodyUs' },
   { title: 'why2Title', body: 'why2Body' },
   { title: 'why3Title', body: 'why3Body' },
 ] as const;
@@ -63,7 +70,13 @@ function formatClock(now: Date, timeZone: string) {
   return { hour, minute, second, dayPeriod };
 }
 
-export function WorldClocks({ locale }: { locale: Locale }) {
+const PICK_ITEMS_US = [
+  { title: 'pick1Title', body: 'pick1BodyUs' },
+  { title: 'pick2Title', body: 'pick2Body' },
+  { title: 'pick3Title', body: 'pick3Body' },
+] as const;
+
+export function WorldClocks({ locale, desk = 'tw' }: { locale: Locale; desk?: DeskRegion }) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -77,8 +90,13 @@ export function WorldClocks({ locale }: { locale: Locale }) {
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl px-6">
       <div className="grid gap-6 lg:grid-cols-2">
-        <Manifesto locale={locale} kicker="whyKicker" title="whyTitle" items={WHY_ITEMS} />
-        <Manifesto locale={locale} kicker="pickKicker" title="pickTitle" items={PICK_ITEMS} />
+        <Manifesto locale={locale} kicker="whyKicker" title="whyTitle" items={desk === 'us' ? WHY_ITEMS_US : WHY_ITEMS} />
+        <Manifesto
+          locale={locale}
+          kicker="pickKicker"
+          title="pickTitle"
+          items={desk === 'us' ? PICK_ITEMS_US : PICK_ITEMS}
+        />
       </div>
       <div className="mb-8 mt-16 text-center">
         <h2 className="text-sm uppercase tracking-[0.42em] text-gold">{tPeakpro(locale, 'clocksTitle')}</h2>

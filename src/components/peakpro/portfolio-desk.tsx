@@ -5,14 +5,15 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
-import { tPeakpro } from '@/lib/peakpro/copy';
+import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { usePeakPro } from '@/components/peakpro/provider';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarkedLot, PortfolioBook } from '@/lib/peakpro/portfolio';
 import { cn } from '@/lib/utils';
 
-const BOOKS: PortfolioBook[] = ['taiwan', 'us', 'crypto', 'gold'];
+const BOOKS_TW: PortfolioBook[] = ['taiwan', 'us', 'crypto', 'gold'];
+const BOOKS_US: PortfolioBook[] = ['us', 'crypto', 'gold'];
 
 type Totals = {
   TWD: { cost: number; market: number; pnl: number };
@@ -30,7 +31,8 @@ function lotHref(lot: MarkedLot) {
 }
 
 export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
-  const { usdTwd } = usePeakPro();
+  const { usdTwd, desk } = usePeakPro();
+  const books = desk === 'us' ? BOOKS_US : BOOKS_TW;
   const [lots, setLots] = useState<MarkedLot[]>([]);
   const [totals, setTotals] = useState<Totals>({
     TWD: { cost: 0, market: 0, pnl: 0 },
@@ -39,7 +41,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [book, setBook] = useState<PortfolioBook>('taiwan');
+  const [book, setBook] = useState<PortfolioBook>(desk === 'us' ? 'us' : 'taiwan');
   const [query, setQuery] = useState('');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
@@ -49,7 +51,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
     if (code === 'setup') return tPeakpro(locale, 'bookSetup');
     if (code === 'limit') return tPeakpro(locale, 'bookLimit');
     if (code === 'not_found') return tPeakpro(locale, 'bookNotFound');
-    if (code === 'invalid' || code === 'empty') return tPeakpro(locale, 'bookInvalid');
+    if (code === 'invalid' || code === 'empty') return tPeakproDesk(locale, desk, 'bookInvalid');
     if (code === 'wrong_market') return tPeakpro(locale, 'bookWrongMarket');
     if (code === 'premium') return tPeakpro(locale, 'lockedTitle');
     return tPeakpro(locale, 'bookFailed');
@@ -131,11 +133,13 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
     <div className="space-y-8">
       <div>
         <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'bookTitle')}</h2>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'bookLead')}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
+          {tPeakproDesk(locale, desk, 'bookLead')}
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(['TWD', 'USD'] as const).map((ccy) => {
+        {(desk === 'us' ? (['USD'] as const) : (['TWD', 'USD'] as const)).map((ccy) => {
           const row = totals[ccy];
           const pct = row.cost > 0 ? (row.pnl / row.cost) * 100 : 0;
           return (
@@ -161,7 +165,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
             onChange={(event) => setBook(event.target.value as PortfolioBook)}
             className="rounded-2xl border border-gold/20 bg-black px-3 py-2 text-sm"
           >
-            {BOOKS.map((item) => (
+            {books.map((item) => (
               <option key={item} value={item}>
                 {tPeakpro(locale, `book_${item}`)}
               </option>

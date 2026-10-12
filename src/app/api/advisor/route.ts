@@ -3,7 +3,8 @@ import { NextResponse } from 'next/server';
 import { requireAuthUser } from '@/lib/auth';
 import { getOpenRouterApiKey, streamOpenRouterText } from '@/lib/peakpro/advisor-openrouter';
 import { liveContextOrFallback, settleWithTimeout } from '@/lib/peakpro/advisor-live';
-import { ADVISOR_SYSTEM_PROMPT, buildAdvisorDeskContext } from '@/lib/peakpro/advisor-prompt';
+import { advisorSystemPrompt, buildAdvisorDeskContext } from '@/lib/peakpro/advisor-prompt';
+import { getDeskRegion, stripTaiwanCache } from '@/lib/peakpro/desk-region';
 import { consumeAdvisorQuota, readAdvisorQuota } from '@/lib/peakpro/advisor-quota';
 import { ADVISOR_MAX_HISTORY, ADVISOR_MAX_INPUT } from '@/lib/peakpro/constants';
 import { readPeakProCache } from '@/lib/peakpro/cache';
@@ -29,16 +30,20 @@ function sanitizeHistory(input: unknown): Array<{ role: 'user' | 'assistant'; co
   return turns.slice(-ADVISOR_MAX_HISTORY);
 }
 
-async function tapeContextOrFallback(userId: string, cacheEquities: Awaited<ReturnType<typeof readPeakProCache>>['equities']) {
+async function tapeContextOrFallback(
+  userId: string,
+  cacheEquities: Awaited<ReturnType<typeof readPeakProCache>>['equities'],
+  region: 'tw' | 'us',
+) {
   try {
     const admin = createAdminClient();
     const { data: lots } = await admin.from('peakpro_lots').select('symbol,book').eq('user_id', userId);
     const bookSymbols = ((lots ?? []) as Array<{ symbol?: string; book?: string }>)
-      .filter((row) => row.book === 'taiwan' || row.book === 'us')
+      .filter((row) => (region === 'us' ? row.book === 'us' : row.book === 'taiwan' || row.book === 'us'))
       .map((row) => String(row.symbol ?? ''))
       .filter(Boolean);
     const tape = await loadTapeDesk({ bookSymbols, dailyRows: cacheEquities });
-    return formatAdvisorTape(tape.desk);
+    return formatAdvisorTape(tape.desk, region);
   } catch (error) {
     console.warn('[peakpro/advisor] tape context skipped', error);
     return 'SESSION_TAPE: unavailable this turn';
@@ -86,12 +91,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'limit', ...quotaNow }, { status: 429 });
     }
 
-    const cache = await readPeakProCache();
+    const region = await getDeskRegion();
+    const cache = stripTaiwanCache(await readPeakProCache(), region);
     const desk = buildAdvisorDeskContext(cache);
     const [live, tapeBlock] = await Promise.all([
-      liveContextOrFallback(last.content, 2_500),
+      liveContextOrFallback(last.content, 2_500, region),
       settleWithTimeout(
-        tapeContextOrFallback(user.id, cache.equities),
+        tapeContextOrFallback(user.id, cache.equities, region),
         2_000,
         'SESSION_TAPE: skipped this turn',
       ),
@@ -101,7 +107,7 @@ export async function POST(request: Request) {
       [
         {
           role: 'system',
-          content: `${ADVISOR_SYSTEM_PROMPT}\n\nLIVE_DESK:\n${live}\n\n${tapeBlock}\n\nCACHED_DESK:\n${desk}`,
+          content: `${advisorSystemPrompt(region)}\n\nLIVE_DESK:\n${live}\n\n${tapeBlock}\n\nCACHED_DESK:\n${desk}`,
         },
         ...history,
       ],

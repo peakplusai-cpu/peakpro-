@@ -1,6 +1,7 @@
 import type { Locale } from '@/i18n/locale';
 import { canAccessEquity, canAccessModule } from '@/lib/peakpro/access';
 import { EQUITY_UNIVERSE, type PeakProModule } from '@/lib/peakpro/constants';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { localizedNewsText, newsCategoryLabel, newsSourceLabel, tPeakpro } from '@/lib/peakpro/copy';
 import { displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import { deskBiasGauges } from '@/lib/peakpro/sentiment';
@@ -189,12 +190,14 @@ export function PeakProModuleView({
   moduleId,
   cache,
   highlight,
+  desk = 'tw',
 }: {
   locale: Locale;
   tier: PeakProTier;
   moduleId: PeakProModule;
   cache: PeakProCacheSnapshot;
   highlight?: string;
+  desk?: DeskRegion;
 }) {
   const locked =
     !canAccessModule(tier, moduleId) && moduleId !== 'overview' && moduleId !== 'us' && moduleId !== 'learn';
@@ -212,7 +215,9 @@ export function PeakProModuleView({
   }
 
   if (moduleId === 'overview') {
-    const deskSymbols = new Set<string>(EQUITY_UNIVERSE.map((row) => row.symbol));
+    const deskSymbols = new Set<string>(
+      EQUITY_UNIVERSE.filter((row) => desk !== 'us' || row.region !== 'Taiwan').map((row) => row.symbol),
+    );
     const freeMonthly = cache.equities.filter(
       (row) => deskSymbols.has(row.symbol) && canAccessEquity(tier, row.symbol, row.timeframe),
     );
@@ -339,13 +344,15 @@ export function PeakProModuleView({
         {!hasAnything ? (
           <EmptyCache locale={locale} />
         ) : (
-          <div className="grid gap-4 md:grid-cols-3">
-            <SentimentCard
-              locale={locale}
-              titleKey="fearTaiwan"
-              data={taiwanBias.sampleSize > 0 ? taiwanBias : null}
-              kind="desk"
-            />
+          <div className={desk === 'us' ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4 md:grid-cols-3'}>
+            {desk === 'us' ? null : (
+              <SentimentCard
+                locale={locale}
+                titleKey="fearTaiwan"
+                data={taiwanBias.sampleSize > 0 ? taiwanBias : null}
+                kind="desk"
+              />
+            )}
             <SentimentCard
               locale={locale}
               titleKey="fearUs"
@@ -385,6 +392,8 @@ export function PeakProModuleView({
         </div>
         {empty ? (
           <EmptyCache locale={locale} />
+        ) : desk === 'us' ? (
+          <TrendingBoard locale={locale} titleKey="trendingUs" items={us} usdTwd={cache.usdTwd} />
         ) : (
           <div className="grid gap-8 lg:grid-cols-2">
             <TrendingBoard locale={locale} titleKey="trendingTaiwan" items={taiwan} usdTwd={cache.usdTwd} />
@@ -413,11 +422,11 @@ export function PeakProModuleView({
   }
 
   if (moduleId === 'learn') {
-    return <PeakProLearnDesk locale={locale} />;
+    return <PeakProLearnDesk locale={locale} desk={desk} />;
   }
 
   if (moduleId === 'concepts') {
-    return <PeakProConceptsDesk locale={locale} />;
+    return <PeakProConceptsDesk locale={locale} desk={desk} />;
   }
 
   if (moduleId === 'advisor') {

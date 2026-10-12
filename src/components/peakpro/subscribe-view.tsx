@@ -3,6 +3,7 @@ import { Check } from 'lucide-react';
 
 import { PeakProFooter } from '@/components/peakpro/footer';
 import { PeakProNav } from '@/components/peakpro/nav';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import type { Locale } from '@/i18n/locale';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { tPeakpro } from '@/lib/peakpro/copy';
@@ -24,6 +25,22 @@ const FEATURES_EN = [
   'Concept names: twenty Taiwan and twenty U.S. mega-caps with labeled suppliers',
 ];
 
+const FEATURES_US_EN = [
+  'U.S. equities on their own desk, plus ticker lookup',
+  'Crypto trends for BTC and ETH',
+  'Spot gold charts and macro analysis',
+  'Market-moving international news — rates, oil, chips, trade, geopolitics',
+  'U.S. bid-offer gauges and crypto Fear & Greed',
+  'U.S. market-wide movers',
+  'AI weekly market summary',
+  'Beginner primer: market principles and how to read the desk',
+  'Desk Advisor, 30 messages per day',
+  'Personal book with cost basis and marked P&L',
+  'Session tape: volume-price turns and relative strength versus QQQ',
+  'Public filings: U.S. politicians and well-known 13F books, delayed',
+  'Concept names: twenty U.S. mega-caps with labeled suppliers',
+];
+
 const FEATURES_ZH = [
   '台股、美股分頁，並可查自己要看的股票',
   '比特幣與以太坊加密趨勢',
@@ -40,20 +57,45 @@ const FEATURES_ZH = [
   '概念股：台股、美股各二十家龍頭，點開可見供應鏈與供應物',
 ];
 
+const FEATURES_US_ZH = [
+  '美股專桌，並可查自己要看的股票',
+  '比特幣與以太坊加密趨勢',
+  '現貨黃金走勢與總體分析',
+  '會動股價的國際新聞：利率、原油、晶片、貿易、地緣',
+  '美股利多利空與加密恐懼貪婪',
+  '全美股熱門排行',
+  'AI 每週市場總結',
+  '新手課：股市原理與怎麼讀本桌指標',
+  '桌面顧問，每日 30 則',
+  '自選組合與持有成本、估算損益',
+  '動能轉折：盤中量價強弱、相對 QQQ',
+  '公開申報：美國政治人物與知名法人 13F，有法定延遲',
+  '概念股：二十家美股龍頭，點開可見供應鏈與供應物',
+];
+
 export function PeakProSubscribeView({
   locale,
   session,
   revoked,
   canceled,
   billingError,
+  desk = 'tw',
 }: {
   locale: Locale;
   session: PeakProSession;
   revoked?: boolean;
   canceled?: boolean;
   billingError?: string;
+  desk?: DeskRegion;
 }) {
-  const features = locale === 'zh' ? FEATURES_ZH : FEATURES_EN;
+  const features =
+    desk === 'us'
+      ? locale === 'zh'
+        ? FEATURES_US_ZH
+        : FEATURES_US_EN
+      : locale === 'zh'
+        ? FEATURES_ZH
+        : FEATURES_EN;
 
   return (
     <div className="min-h-screen bg-black text-zinc-100">
@@ -63,6 +105,7 @@ export function PeakProSubscribeView({
         signedIn={Boolean(session.userId)}
         trial={session.trial}
         expiresAt={session.expiresAt}
+        desk={desk}
         compact
       />
       <main className="mx-auto max-w-3xl px-6 py-16">

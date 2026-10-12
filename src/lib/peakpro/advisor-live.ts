@@ -1,8 +1,10 @@
 import { EQUITY_UNIVERSE, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
-import { fetchYahooQuotes } from '@/lib/peakpro/yahoo';
+import { fetchYahooQuotes, isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
-const CORE_PULSE = ['TSM', 'NVDA', '2330.TW', 'QQQ', '0050.TW', 'BTC-USD'] as const;
+const CORE_PULSE_TW = ['TSM', 'NVDA', '2330.TW', 'QQQ', '0050.TW', 'BTC-USD'] as const;
+const CORE_PULSE_US = ['TSM', 'NVDA', 'QQQ', 'AAPL', 'BTC-USD'] as const;
 
 export async function settleWithTimeout<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -33,23 +35,30 @@ const NAME_ALIASES: Array<{ needle: RegExp; symbols: string[] }> = [
   { needle: /黃金|黄金|\bgold\b/i, symbols: ['GC=F'] },
 ];
 
-export function collectAdvisorSymbols(text: string): string[] {
+export function collectAdvisorSymbols(text: string, desk: DeskRegion = 'tw'): string[] {
   const found = new Set<string>();
   const upper = text.toUpperCase();
+  const us = desk === 'us';
 
   for (const alias of NAME_ALIASES) {
-    if (alias.needle.test(text)) alias.symbols.forEach((symbol) => found.add(symbol));
+    if (!alias.needle.test(text)) continue;
+    alias.symbols
+      .filter((symbol) => !us || !isTaiwanSymbol(symbol))
+      .forEach((symbol) => found.add(symbol));
   }
 
-  for (const match of text.match(/\b\d{4}\b/g) ?? []) {
-    const year = Number(match);
-    if (year >= 1990 && year <= 2100) continue;
-    found.add(`${match}.TW`);
-  }
-  for (const match of upper.match(/\b\d{4}\.(?:TW|TWO)\b/g) ?? []) {
-    found.add(match.replace(/\.TW$/i, '.TW').replace(/\.TWO$/i, '.TWO'));
+  if (!us) {
+    for (const match of text.match(/\b\d{4}\b/g) ?? []) {
+      const year = Number(match);
+      if (year >= 1990 && year <= 2100) continue;
+      found.add(`${match}.TW`);
+    }
+    for (const match of upper.match(/\b\d{4}\.(?:TW|TWO)\b/g) ?? []) {
+      found.add(match.replace(/\.TW$/i, '.TW').replace(/\.TWO$/i, '.TWO'));
+    }
   }
   for (const equity of EQUITY_UNIVERSE) {
+    if (us && equity.region === 'Taiwan') continue;
     const token = equity.symbol.replace('.TW', '').replace('.TWO', '');
     if (new RegExp(`\\b${token.replace('.', '\\.')}\\b`, 'i').test(upper)) {
       found.add(equity.symbol);
@@ -60,9 +69,10 @@ export function collectAdvisorSymbols(text: string): string[] {
   }
 
   found.add('QQQ');
-  found.add('0050.TW');
-  if (found.size <= 2) CORE_PULSE.forEach((symbol) => found.add(symbol));
-  return [...found].slice(0, 12);
+  if (!us) found.add('0050.TW');
+  const pulse = us ? CORE_PULSE_US : CORE_PULSE_TW;
+  if (found.size <= 2) pulse.forEach((symbol) => found.add(symbol));
+  return [...found].filter((symbol) => !us || !isTaiwanSymbol(symbol)).slice(0, 12);
 }
 
 async function fetchFearGreed(signal?: AbortSignal): Promise<string | null> {
@@ -83,12 +93,17 @@ async function fetchFearGreed(signal?: AbortSignal): Promise<string | null> {
   }
 }
 
-export async function buildAdvisorLiveContext(userText: string, signal?: AbortSignal): Promise<string> {
+export async function buildAdvisorLiveContext(
+  userText: string,
+  signal?: AbortSignal,
+  desk: DeskRegion = 'tw',
+): Promise<string> {
   const fetchedAt = new Date().toISOString();
   const zh = /[\u3400-\u9fff]/.test(userText);
-  const symbols = collectAdvisorSymbols(userText);
+  const symbols = collectAdvisorSymbols(userText, desk);
+  const withFx = desk !== 'us' && zh ? [...symbols, USDTWD_YAHOO] : symbols;
   const [quotes, fear] = await Promise.all([
-    fetchYahooQuotes(zh ? [...symbols, USDTWD_YAHOO] : symbols, 12, signal),
+    fetchYahooQuotes(withFx, 12, signal),
     fetchFearGreed(signal),
   ]);
   const fx = quotes.find((row) => row.symbol === USDTWD_YAHOO || row.symbol === 'TWD=X')?.regularMarketPrice;
@@ -112,11 +127,11 @@ export async function buildAdvisorLiveContext(userText: string, signal?: AbortSi
   ].join('\n');
 }
 
-export function liveContextOrFallback(userText: string, ms = 2_500): Promise<string> {
+export function liveContextOrFallback(userText: string, ms = 2_500, desk: DeskRegion = 'tw'): Promise<string> {
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), ms);
   return settleWithTimeout(
-    buildAdvisorLiveContext(userText, abort.signal).finally(() => clearTimeout(timer)),
+    buildAdvisorLiveContext(userText, abort.signal, desk).finally(() => clearTimeout(timer)),
     ms,
     'LIVE_DESK: snapshot timed out this turn; use CACHED_DESK',
   );

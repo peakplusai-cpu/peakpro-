@@ -5,11 +5,13 @@ import { usePathname } from 'next/navigation';
 import { Lock, LogOut } from 'lucide-react';
 
 import { peakproSignOut } from '@/app/login/actions';
+import { PeakProDeskSwitcher } from '@/components/peakpro/desk-switcher';
 import { PeakProLanguageSwitcher } from '@/components/peakpro/language-switcher';
 import { PeakProLogo } from '@/components/peakpro/logo';
 import type { Locale } from '@/i18n/locale';
 import { canAccessModule, premiumExpiresInDays } from '@/lib/peakpro/access';
-import { PEAKPRO_MODULES, type PeakProModule } from '@/lib/peakpro/constants';
+import type { PeakProModule } from '@/lib/peakpro/constants';
+import { modulesForDesk, type DeskRegion } from '@/lib/peakpro/desk-region';
 import { MODULE_HREF, moduleLabel, tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProTier } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
@@ -20,6 +22,7 @@ export function PeakProNav({
   signedIn,
   trial = false,
   expiresAt = null,
+  desk = 'tw',
   compact = false,
 }: {
   locale: Locale;
@@ -27,6 +30,7 @@ export function PeakProNav({
   signedIn: boolean;
   trial?: boolean;
   expiresAt?: string | null;
+  desk?: DeskRegion;
   compact?: boolean;
 }) {
   const pathname = usePathname();
@@ -37,7 +41,10 @@ export function PeakProNav({
         <Link href="/" className="shrink-0">
           <PeakProLogo size="sm" />
         </Link>
-        <PeakProLanguageSwitcher />
+        <div className="flex flex-wrap items-center gap-2">
+          <PeakProDeskSwitcher locale={locale} desk={desk} />
+          <PeakProLanguageSwitcher />
+        </div>
         <div className="flex items-center gap-2 text-xs">
           {signedIn ? (
             <>
@@ -90,7 +97,7 @@ export function PeakProNav({
       {compact ? null : (
         <nav className="overflow-x-auto border-t border-gold/10">
           <div className="mx-auto flex max-w-7xl gap-1 px-3 py-2">
-            {PEAKPRO_MODULES.map((moduleId) => {
+            {modulesForDesk(desk).map((moduleId) => {
               const href = MODULE_HREF[moduleId];
               const active =
                 moduleId === 'overview'

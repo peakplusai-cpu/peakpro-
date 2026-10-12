@@ -6,6 +6,7 @@ import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { PeakProLearnQuiz } from '@/components/peakpro/learn-quiz';
+import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { learnLessons, type LearnLesson, type LearnTab } from '@/lib/peakpro/learn';
 import { cn } from '@/lib/utils';
 
@@ -24,9 +25,9 @@ function LessonCard({ locale, lesson }: { locale: Locale; lesson: LearnLesson })
   );
 }
 
-export function PeakProLearnDesk({ locale }: { locale: Locale }) {
+export function PeakProLearnDesk({ locale, desk = 'tw' }: { locale: Locale; desk?: DeskRegion }) {
   const [tab, setTab] = useState<LearnTab>('principles');
-  const lessons = learnLessons(tab);
+  const lessons = learnLessons(tab, desk);
 
   return (
     <div className="space-y-8">

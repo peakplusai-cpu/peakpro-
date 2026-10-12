@@ -344,10 +344,13 @@ export function buildTapeDesk(input: {
   };
 }
 
-export function formatAdvisorTape(desk: TapeDesk) {
-  const lines = desk.rows.slice(0, 20).map((row) => {
-    const inst =
-      row.inst != null
+export function formatAdvisorTape(desk: TapeDesk, region: 'tw' | 'us' = 'tw') {
+  const us = region === 'us';
+  const rows = us ? desk.rows.filter((row) => row.market === 'us') : desk.rows;
+  const lines = rows.slice(0, 20).map((row) => {
+    const inst = us
+      ? ''
+      : row.inst != null
         ? ` inst_total=${row.inst.totalNet} streak=${row.inst.streak} (${row.inst.date})`
         : row.market === 'taiwan'
           ? ' inst=pending'
@@ -355,8 +358,12 @@ export function formatAdvisorTape(desk: TapeDesk) {
     return `${row.symbol} ${row.name}: chg=${row.changePct ?? 'n/a'} turn=${row.turn} rs=${row.rs} vs ${row.benchmark}${inst}`;
   });
   return [
-    `SESSION_TAPE as_of=${desk.asOf ?? 'none'} tw=${desk.twDate} us=${desk.usDate} inst=${desk.instDate ?? 'none'}`,
-    'Volume-price turns from 3-hour snapshots. Institutional numbers are official TWSE/TPEX after the close — not live chip data, not main-force identity.',
+    us
+      ? `SESSION_TAPE as_of=${desk.asOf ?? 'none'} us=${desk.usDate}`
+      : `SESSION_TAPE as_of=${desk.asOf ?? 'none'} tw=${desk.twDate} us=${desk.usDate} inst=${desk.instDate ?? 'none'}`,
+    us
+      ? 'Volume-price turns from 3-hour snapshots versus QQQ. U.S. names have no TWSE institution file.'
+      : 'Volume-price turns from 3-hour snapshots. Institutional numbers are official TWSE/TPEX after the close — not live chip data, not main-force identity.',
     lines.length ? lines.join('\n') : '(no session prints yet)',
   ].join('\n');
 }

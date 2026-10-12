@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
-import { tPeakpro } from '@/lib/peakpro/copy';
+import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
+import { usePeakPro } from '@/components/peakpro/provider';
 import type { PublicQuizItem, QuizWrongItem } from '@/lib/peakpro/learn-quiz-types';
 import { cn } from '@/lib/utils';
 
@@ -20,6 +21,7 @@ function categoryKey(category: PublicQuizItem['category']) {
 }
 
 export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
+  const { desk } = usePeakPro();
   const [quota, setQuota] = useState<Quota | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [questions, setQuestions] = useState<PublicQuizItem[]>([]);
@@ -69,7 +71,7 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
         limit?: number;
       } | null;
       if (response.status === 429 || json?.error === 'limit') {
-        setError(tPeakpro(locale, 'quizLimit'));
+        setError(tPeakproDesk(locale, desk, 'quizLimit'));
         setQuota({ used: json?.used ?? 5, remaining: 0, limit: json?.limit ?? 5 });
         return;
       }
@@ -137,7 +139,9 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
       <div>
         <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{tPeakpro(locale, 'quizKicker')}</p>
         <h3 className="mt-2 font-peakpro text-2xl text-gold">{tPeakpro(locale, 'quizTitle')}</h3>
-        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'quizLead')}</p>
+        <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
+          {tPeakproDesk(locale, desk, 'quizLead')}
+        </p>
         {quota ? (
           <p className="mt-2 text-xs text-zinc-500">
             {tPeakpro(locale, 'quizRemain').replace('{n}', String(remaining ?? '—')).replace('{used}', String(quota.used)).replace('{limit}', String(quota.limit))}

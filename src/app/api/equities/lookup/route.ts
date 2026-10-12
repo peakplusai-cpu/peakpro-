@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { canAccessEquity } from '@/lib/peakpro/access';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { ingestEquitySymbol } from '@/lib/peakpro/scraper';
 import { resolveEquityLookup, searchEquitySymbols } from '@/lib/peakpro/symbol-search';
@@ -32,13 +33,20 @@ export async function POST(request: Request) {
   if (!isMarket(body?.market)) {
     return NextResponse.json({ error: 'invalid' }, { status: 400 });
   }
+  const desk = await getDeskRegion();
+  if (desk === 'us' && body.market === 'taiwan') {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
 
   const resolved = await resolveEquityLookup(body?.query ?? '', body.market);
   if (resolved.error === 'empty' || resolved.error === 'invalid') {
     return NextResponse.json({ error: resolved.error }, { status: 400 });
   }
   if (resolved.error === 'wrong_market') {
-    return NextResponse.json({ error: 'wrong_market' }, { status: 400 });
+    return NextResponse.json(
+      { error: desk === 'us' ? 'not_found' : 'wrong_market' },
+      { status: desk === 'us' ? 404 : 400 },
+    );
   }
   if (resolved.error === 'ambiguous') {
     return NextResponse.json({ error: 'ambiguous', matches: resolved.matches ?? [] }, { status: 409 });

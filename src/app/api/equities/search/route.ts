@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { canOpenEquity } from '@/lib/peakpro/access';
+import { getDeskRegion } from '@/lib/peakpro/desk-region';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { searchEquitySymbols } from '@/lib/peakpro/symbol-search';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
@@ -21,6 +22,10 @@ export async function GET(request: Request) {
   const market = url.searchParams.get('market');
   const query = url.searchParams.get('q') ?? '';
   if (!isMarket(market)) return NextResponse.json({ error: 'invalid' }, { status: 400 });
+  const desk = await getDeskRegion();
+  if (desk === 'us' && market === 'taiwan') {
+    return NextResponse.json({ error: 'not_found' }, { status: 404 });
+  }
 
   const matches = await searchEquitySymbols(query, market, 8);
   const visible =
