@@ -1,4 +1,6 @@
-import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, TAPE_TW_BENCH, TAPE_US_BENCH, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import { CRYPTO_UNIVERSE, EQUITY_UNIVERSE, MACRO_CALENDAR_SYMBOL, TAPE_TW_BENCH, TAPE_US_BENCH, USDTWD_SYMBOL, USDTWD_YAHOO } from '@/lib/peakpro/constants';
+import { harvestMacroCalendar } from '@/lib/peakpro/macro-calendar-harvest';
+import { isMacroCalendarPayload } from '@/lib/peakpro/macro-calendar';
 import { collectMarketNews, newsCategory, type RssItem } from '@/lib/peakpro/news-scrape';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { harvestPublicFilings } from '@/lib/peakpro/filings';
@@ -518,6 +520,29 @@ export async function ensureNewsTraditionalChinese<
 
 export const NEWS_STALE_MS = 15 * 60 * 1000;
 export const FILINGS_STALE_MS = 3 * 60 * 60 * 1000;
+export const CALENDAR_STALE_MS = 12 * 60 * 60 * 1000;
+
+let calendarInFlight: Promise<number> | null = null;
+
+export async function runPeakProCalendarScrape(): Promise<number> {
+  if (calendarInFlight) return calendarInFlight;
+  calendarInFlight = persistMacroCalendar()
+    .then(async (count) => {
+      if (count > 0) {
+        try {
+          const { revalidateTag } = await import('next/cache');
+          revalidateTag('peakpro-warehouse');
+        } catch (error) {
+          console.warn('[peakpro/scraper] calendar revalidate skipped', error);
+        }
+      }
+      return count;
+    })
+    .finally(() => {
+      calendarInFlight = null;
+    });
+  return calendarInFlight;
+}
 
 let filingsInFlight: Promise<number> | null = null;
 
@@ -539,6 +564,23 @@ export async function runPeakProFilingsScrape(): Promise<number> {
       filingsInFlight = null;
     });
   return filingsInFlight;
+}
+
+async function persistMacroCalendar(): Promise<number> {
+  const admin = peakproAdmin();
+  const existing = await admin.from('market_data').select('payload').eq('symbol', MACRO_CALENDAR_SYMBOL).maybeSingle();
+  const payload = existing.data?.payload as unknown;
+  const prior = isMacroCalendarPayload(payload) ? payload : null;
+  const calendar = await harvestMacroCalendar(prior);
+  await upsertMarket([
+    {
+      asset_class: 'ranking',
+      symbol: MACRO_CALENDAR_SYMBOL,
+      timeframe: 'weekly',
+      payload: calendar,
+    },
+  ]);
+  return calendar.events.length;
 }
 
 async function persistFilings(): Promise<number> {
@@ -834,6 +876,11 @@ export async function runPeakProMarketScrape(): Promise<{
   if (liveCount < 8) {
     await seedWarehouse();
     await upsertMarket(fx.length ? fx : await scrapeUsdTwd());
+    try {
+      await persistMacroCalendar();
+    } catch (error) {
+      console.warn('[peakpro/scraper] calendar harvest skipped', error);
+    }
     return {
       equities: equities.length,
       crypto: crypto.length,
@@ -887,6 +934,11 @@ export async function runPeakProMarketScrape(): Promise<{
     await persistFilings();
   } catch (error) {
     console.warn('[peakpro/scraper] filings harvest skipped', error);
+  }
+  try {
+    await persistMacroCalendar();
+  } catch (error) {
+    console.warn('[peakpro/scraper] calendar harvest skipped', error);
   }
   const context = JSON.stringify({
     equities: equities.slice(0, 8),

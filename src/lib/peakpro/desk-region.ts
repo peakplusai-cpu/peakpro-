@@ -1,4 +1,5 @@
 import { PEAKPRO_MODULES, type PeakProModule } from '@/lib/peakpro/constants';
+import { eventsForDesk } from '@/lib/peakpro/macro-calendar';
 import type { PeakProCacheSnapshot } from '@/lib/peakpro/types';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
@@ -26,5 +27,8 @@ export function stripTaiwanCache(cache: PeakProCacheSnapshot, desk: DeskRegion):
   return {
     ...cache,
     equities: cache.equities.filter((row) => !isTaiwanSymbol(row.symbol)),
+    calendar: cache.calendar
+      ? { ...cache.calendar, events: eventsForDesk(cache.calendar, 'us') }
+      : null,
   };
 }

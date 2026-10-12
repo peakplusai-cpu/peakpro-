@@ -146,6 +146,38 @@ export interface FilingsPayload {
   asOf: string;
 }
 
+export type MacroEventKind = 'nfp' | 'cpi' | 'pce' | 'gdp' | 'fomc';
+export type MacroEventStatus = 'upcoming' | 'live' | 'printed';
+
+export interface MacroLocaleText {
+  en: string;
+  zh: string;
+}
+
+export interface MacroFigure {
+  label: MacroLocaleText;
+  value: string;
+}
+
+export interface MacroEvent {
+  id: string;
+  kind: MacroEventKind;
+  desks: Array<'tw' | 'us'>;
+  title: MacroLocaleText;
+  agency: MacroLocaleText;
+  timezone: string;
+  scheduledAt: string;
+  status: MacroEventStatus;
+  previous: MacroFigure[];
+  actual: MacroFigure[];
+  sourceUrl: string | null;
+}
+
+export interface MacroCalendarPayload {
+  asOf: string;
+  events: MacroEvent[];
+}
+
 export interface PeakProCacheSnapshot {
   equities: MarketDataRow[];
   crypto: MarketDataRow[];
@@ -154,6 +186,7 @@ export interface PeakProCacheSnapshot {
   fearGreed: MarketDataRow | null;
   trending: MarketDataRow | null;
   filings: MarketDataRow | null;
+  calendar: MacroCalendarPayload | null;
   briefs: AiSummaryRow[];
   lastUpdated: string | null;
   usdTwd: number | null;

@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { requireAuthUser } from '@/lib/auth';
 import {
+  calendarCacheAgeMs,
   filingsCacheAgeMs,
   filterCacheForTier,
   newsCacheAgeMs,
@@ -10,10 +11,18 @@ import {
   slimCacheForModule,
 } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
+import { calendarNeedsPrintRefresh } from '@/lib/peakpro/macro-calendar';
 import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
-import { FILINGS_STALE_MS, NEWS_STALE_MS, runPeakProFilingsScrape, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
+import {
+  CALENDAR_STALE_MS,
+  FILINGS_STALE_MS,
+  NEWS_STALE_MS,
+  runPeakProCalendarScrape,
+  runPeakProFilingsScrape,
+  runPeakProNewsScrape,
+} from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 
 export async function loadPeakProDesk(options?: {
@@ -33,6 +42,15 @@ export async function loadPeakProDesk(options?: {
   }
   if (session.revoked && !options?.allowRevoked) {
     redirect('/subscribe?revoked=1');
+  }
+
+  const calendarAge = calendarCacheAgeMs(raw);
+  if (calendarAge == null || calendarAge > CALENDAR_STALE_MS || calendarNeedsPrintRefresh(raw.calendar)) {
+    after(() =>
+      runPeakProCalendarScrape().catch((error) => {
+        console.warn('[peakpro/desk] calendar refresh failed', error);
+      }),
+    );
   }
 
   if (session.tier === 'premium') {

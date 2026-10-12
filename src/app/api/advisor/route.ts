@@ -94,7 +94,7 @@ export async function POST(request: Request) {
 
     const region = await getDeskRegion();
     const cache = stripTaiwanCache(await readPeakProCache(), region);
-    const desk = buildAdvisorDeskContext(cache);
+    const desk = buildAdvisorDeskContext(cache, region);
     const [live, tapeBlock] = await Promise.all([
       liveContextOrFallback(last.content, 2_500, region),
       settleWithTimeout(

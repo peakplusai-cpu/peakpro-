@@ -1,13 +1,14 @@
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { formatPct, formatPx } from '@/lib/peakpro/format';
 import { formatAdvisorFilings } from '@/lib/peakpro/filings';
+import { formatAdvisorCalendar } from '@/lib/peakpro/macro-calendar';
 import type { FearGreedPayload, FilingsPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
 
 function line(symbol: string, name: string, last: number, currency: string, changePct: number) {
   return `${symbol} ${name}: ${formatPx(last, currency)} (${formatPct(changePct)})`;
 }
 
-export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot): string {
+export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot, desk: DeskRegion = 'tw'): string {
   const dailyEquities = cache.equities
     .filter((row) => row.timeframe === 'daily')
     .slice(0, 24)
@@ -55,6 +56,8 @@ export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot): string {
     news.length ? news.join('\n') : '(none)',
     '',
     formatAdvisorFilings(cache.filings?.payload as unknown as FilingsPayload | undefined),
+    '',
+    formatAdvisorCalendar(cache.calendar, desk),
   ];
 
   return parts.join('\n').slice(0, 7000);
@@ -70,8 +73,9 @@ Voice:
 - Traditional Chinese (Taiwan) if they wrote Chinese; English if they wrote English.
 - Tight. No emoji. No "as an AI". No "I cannot comment on markets". No "I cannot give investment advice" in the body. No sending them to TWSE, Yahoo, or a news site instead of answering.
 
-In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade.
+In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade.
 If SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.
+If SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.
 Out of scope only: recipes, general coding, medical, homework unrelated to markets.
 
 Do not:
@@ -84,7 +88,7 @@ End every reply with a blank line, then one line starting with "Disclaimer:" or 
 export function advisorSystemPrompt(desk: DeskRegion = 'tw') {
   if (desk !== 'us') return ADVISOR_SYSTEM_PROMPT;
   return ADVISOR_SYSTEM_PROMPT.replace(
-    'In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade.\nIf SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.',
-    'In scope: U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, delayed U.S. STOCK Act and 13F public filings, how to read the print. Never treat filings as a live copy-trade. Do not discuss Taiwan cash equities, TWSE, TPEX, 0050, or official three-institution nets.\nIf SESSION_TAPE is present, use those U.S. turns. Never call them main-force, live chips, or a day-trade order.',
+    'In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, delayed U.S. STOCK Act and 13F public filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade.\nIf SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
+    'In scope: U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, delayed U.S. STOCK Act and 13F public filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Do not discuss Taiwan cash equities, TWSE, TPEX, 0050, or official three-institution nets.\nIf SESSION_TAPE is present, use those U.S. turns. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
   );
 }

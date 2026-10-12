@@ -24,6 +24,8 @@ import { PeakProLearnDesk } from '@/components/peakpro/learn-desk';
 import { PeakProConceptsDesk } from '@/components/peakpro/concepts-desk';
 import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
+import { PeakProMacroDesk } from '@/components/peakpro/macro-desk';
+import { eventsForDesk } from '@/lib/peakpro/macro-calendar';
 import { pricedTrending } from '@/lib/peakpro/market-trending';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 import Link from 'next/link';
@@ -223,6 +225,7 @@ export function PeakProModuleView({
     );
     return (
       <div className="space-y-8">
+        <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
         <section>
           <h2 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">
             {tPeakpro(locale, 'monthlyOnly')}

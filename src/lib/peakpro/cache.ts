@@ -1,8 +1,9 @@
 import { unstable_cache } from 'next/cache';
 
 import { canAccessEquity, effectiveTier } from '@/lib/peakpro/access';
-import { USDTWD_SYMBOL } from '@/lib/peakpro/constants';
+import { MACRO_CALENDAR_SYMBOL, USDTWD_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
+import { calendarFromRow } from '@/lib/peakpro/macro-calendar';
 import type {
   AiSummaryRow,
   FilingsPayload,
@@ -29,6 +30,7 @@ function emptySnapshot(): PeakProCacheSnapshot {
     fearGreed: null,
     trending: null,
     filings: null,
+    calendar: null,
     briefs: [],
     lastUpdated: null,
     usdTwd: null,
@@ -58,6 +60,9 @@ async function queryPeakProWarehouse(): Promise<PeakProCacheSnapshot> {
       fearGreed: market.find((row) => row.symbol === 'FNG') ?? null,
       trending: market.find((row) => row.symbol === 'WEEKLY') ?? null,
       filings: market.find((row) => row.symbol === 'FILINGS') ?? null,
+      calendar: calendarFromRow(
+        market.find((row) => row.symbol === MACRO_CALENDAR_SYMBOL)?.payload as unknown,
+      ),
       briefs,
       lastUpdated: latestStamp([...market, ...news, ...briefs]),
       usdTwd,
@@ -114,6 +119,7 @@ export function filterCacheForTier(
     fearGreed: null,
     trending: null,
     filings: null,
+    calendar: snapshot.calendar,
     briefs: [],
   };
 }
@@ -125,6 +131,13 @@ export function filingsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null
   const stamp = snapshot.filings?.last_updated ?? payload.asOf;
   if (!stamp) return null;
   return Date.now() - new Date(stamp).getTime();
+}
+
+export function calendarCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
+  if (!snapshot.calendar?.asOf) return null;
+  const at = new Date(snapshot.calendar.asOf).getTime();
+  if (!Number.isFinite(at)) return null;
+  return Date.now() - at;
 }
 
 export function newsCacheAgeMs(snapshot: PeakProCacheSnapshot): number | null {
@@ -155,7 +168,7 @@ export function cacheHasPrints(snapshot: PeakProCacheSnapshot): boolean {
       snapshot.gold.length +
       snapshot.news.length +
       snapshot.briefs.length >
-      0 || Boolean(snapshot.fearGreed || snapshot.trending || snapshot.filings)
+      0 || Boolean(snapshot.fearGreed || snapshot.trending || snapshot.filings || snapshot.calendar)
   );
 }
 
