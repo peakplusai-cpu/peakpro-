@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 import { LocaleProvider } from '@/components/locale-provider';
 import { localeHtmlLang } from '@/i18n/locale';
 import { getLocale, getMessages } from '@/i18n/server';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 
 import './globals.css';
 

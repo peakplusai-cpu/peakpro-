@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { readPeakProCache } from '@/lib/peakpro/cache';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { loadTapeDesk } from '@/lib/peakpro/tape-store';
 import { isTaiwanSymbol, normalizeEquityQuery } from '@/lib/peakpro/yahoo';

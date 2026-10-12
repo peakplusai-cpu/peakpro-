@@ -6,7 +6,7 @@ import { PeakProLanguageSwitcher } from '@/components/peakpro/language-switcher'
 import { PeakProLoginForm } from '@/components/peakpro/login-form';
 import { PeakProLogo } from '@/components/peakpro/logo';
 import { getLocale } from '@/i18n/server';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { tPeakpro } from '@/lib/peakpro/copy';
 
 export default async function LoginPage({

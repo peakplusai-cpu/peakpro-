@@ -1,5 +1,3 @@
-import { cookies, headers } from 'next/headers';
-
 import { PEAKPRO_MODULES, type PeakProModule } from '@/lib/peakpro/constants';
 import type { PeakProCacheSnapshot } from '@/lib/peakpro/types';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -29,14 +27,4 @@ export function stripTaiwanCache(cache: PeakProCacheSnapshot, desk: DeskRegion):
     ...cache,
     equities: cache.equities.filter((row) => !isTaiwanSymbol(row.symbol)),
   };
-}
-
-export async function getDeskRegion(): Promise<DeskRegion> {
-  const jar = await cookies();
-  const pinned = jar.get(DESK_COOKIE)?.value;
-  if (isDeskRegion(pinned)) return pinned;
-  const h = await headers();
-  const country =
-    h.get('x-vercel-ip-country') ?? h.get('cf-ipcountry') ?? h.get('x-country') ?? null;
-  return deskRegionFromCountry(country);
 }

@@ -10,7 +10,8 @@ import {
   slimCacheForModule,
 } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
-import { getDeskRegion, stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { FILINGS_STALE_MS, NEWS_STALE_MS, runPeakProFilingsScrape, runPeakProNewsScrape } from '@/lib/peakpro/scraper';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';

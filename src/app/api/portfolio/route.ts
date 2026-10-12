@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { markLots } from '@/lib/peakpro/portfolio-mark';
 import {
   isPortfolioBook,

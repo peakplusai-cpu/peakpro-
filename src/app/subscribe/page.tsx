@@ -1,6 +1,6 @@
 import { PeakProSubscribeView } from '@/components/peakpro/subscribe-view';
 import { getLocale } from '@/i18n/server';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { createClient } from '@/lib/supabase/server';
 

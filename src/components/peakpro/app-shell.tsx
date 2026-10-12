@@ -7,7 +7,7 @@ import { PeakProProvider } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { premiumExpiresInDays } from '@/lib/peakpro/access';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProCacheSnapshot, PeakProSession } from '@/lib/peakpro/types';
 

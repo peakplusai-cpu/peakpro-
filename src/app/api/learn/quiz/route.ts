@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { gradeQuiz, readQuizToken, startQuiz } from '@/lib/peakpro/learn-quiz';
 import { consumeQuizQuota, readQuizQuota } from '@/lib/peakpro/learn-quiz-quota';
 import { loadPeakProSession } from '@/lib/peakpro/profile';

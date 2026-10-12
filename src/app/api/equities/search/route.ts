@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
 import { canOpenEquity } from '@/lib/peakpro/access';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { searchEquitySymbols } from '@/lib/peakpro/symbol-search';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';

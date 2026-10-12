@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 import { DEFAULT_LOCALE, LOCALE_COOKIE, isLocale, type Locale } from '@/i18n/locale';
 import type { MessageTree } from '@/i18n/translator';
-import { getDeskRegion } from '@/lib/peakpro/desk-region';
+import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 
 export async function getLocale(): Promise<Locale> {
   const cookieStore = await cookies();
