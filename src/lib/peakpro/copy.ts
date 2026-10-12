@@ -62,7 +62,6 @@ const en: CopyTree = {
     'Bind a payment method to open the full desk for seven days. The $20 mandate collects automatically on day eight, then every 30 days.',
   heroCta: 'Open the Terminal',
   heroSecondary: 'View Premium Mandate',
-  heroTrial: 'Bind a card for 7 days of the full desk. Cancel in those 7 days and you are not charged.',
   introKicker: 'Anonymous tape · hyper-growth complex',
   lastPrint: 'Updated',
   synchronizing: '',
@@ -70,8 +69,6 @@ const en: CopyTree = {
   premiumBadge: 'Premium mandate',
   trialBadge: '7-day trial',
   trialDaysLeft: 'Trial · {n} days left',
-  trialNotice:
-    'Card on file. Premium trial has {n} days left. Cancel in these 7 days and you will not be charged. Otherwise $20 collects automatically when the trial ends.',
   trialCancelCta: 'Cancel trial — no charge',
   manageBilling: 'Manage payment',
   trialCanceled: 'Trial canceled. The card will not be charged.',
@@ -117,8 +114,8 @@ const en: CopyTree = {
   calendarEmpty: 'No high-impact prints in this window yet.',
   calendarPrevious: 'Previous',
   calendarActual: 'Actual',
-  calendarFoot:
-    'Dates come from the Fed, BEA, and the BLS monthly release calendar. This desk does not carry a consensus forecast. Actuals fill from the official series after the print.',
+  calendarLocked:
+    'Bind a card to open NFP, CPI, PCE, GDP, and FOMC on this desk. Cancel in the 7-day trial and you are not charged.',
   fearTitle: 'Cross-asset sentiment',
   fearLead: '',
   fearTaiwan: 'Taiwan market · bid / offer',
@@ -378,7 +375,6 @@ const zh: CopyTree = {
     '先綁付款方式才開完整終端 7 日。第 8 日起自動請款 $20，之後每 30 日一次。',
   heroCta: '開啟終端',
   heroSecondary: '查看 Premium 授權',
-  heroTrial: '先綁卡享完整終端 7 日。7 日內取消不扣款，否則到期自動請款 $20。',
   introKicker: '匿名走勢 · 超成長科技複合體',
   lastPrint: '更新',
   synchronizing: '',
@@ -386,7 +382,6 @@ const zh: CopyTree = {
   premiumBadge: 'Premium 授權',
   trialBadge: '7 日試用',
   trialDaysLeft: '試用剩餘 {n} 日',
-  trialNotice: '付款方式已綁定，試用剩餘 {n} 日。7 日內取消不會扣款；否則到期自動請款 $20。',
   trialCancelCta: '取消試用，不扣款',
   manageBilling: '管理付款',
   trialCanceled: '試用已取消，不會請款。',
@@ -430,8 +425,7 @@ const zh: CopyTree = {
   calendarEmpty: '這一窗還沒有高影響官方數據。',
   calendarPrevious: '前值',
   calendarActual: '公布值',
-  calendarFoot:
-    '日程來自聯準會、經濟分析局，以及勞工統計局每月放行表；取不到時非農才退回第一個週五慣例。本桌不放市場預期；公布後才填官方數列。',
+  calendarLocked: '綁卡後才開放非農、CPI、PCE、GDP 與 FOMC。7 日試用內取消不會扣款。',
   fearTitle: '跨資產情緒',
   fearLead: '',
   fearTaiwan: '台股全市場 · 利多／利空',

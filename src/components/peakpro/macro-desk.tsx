@@ -121,9 +121,6 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
           })}
         </div>
       )}
-      {tPeakpro(locale, 'calendarFoot') ? (
-        <p className="text-[11px] leading-relaxed text-zinc-600">{tPeakpro(locale, 'calendarFoot')}</p>
-      ) : null}
     </section>
   );
 }

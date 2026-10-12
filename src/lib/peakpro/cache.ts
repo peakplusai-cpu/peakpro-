@@ -119,7 +119,7 @@ export function filterCacheForTier(
     fearGreed: null,
     trending: null,
     filings: null,
-    calendar: snapshot.calendar,
+    calendar: null,
     briefs: [],
   };
 }

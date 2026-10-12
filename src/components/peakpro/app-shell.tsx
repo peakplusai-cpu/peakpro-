@@ -6,7 +6,6 @@ import { PeakProNav } from '@/components/peakpro/nav';
 import { PeakProProvider } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
-import { premiumExpiresInDays } from '@/lib/peakpro/access';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProCacheSnapshot, PeakProSession } from '@/lib/peakpro/types';
@@ -46,34 +45,6 @@ export async function PeakProAppShell({
           desk={desk}
         />
         <main className="mx-auto max-w-6xl px-4 py-10">
-          {session.trial ? (
-            <div className="mb-6 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
-              <p>
-                {tPeakpro(locale, 'trialNotice').replace(
-                  '{n}',
-                  String(premiumExpiresInDays(session.expiresAt) ?? 0),
-                )}
-              </p>
-              {session.subscriptionId ? (
-                <form action="/api/billing/cancel" method="post" className="mt-3 flex flex-wrap gap-3">
-                  <button
-                    type="submit"
-                    className="rounded-full border border-gold/40 px-3 py-1 text-xs text-gold hover:bg-gold/10"
-                  >
-                    {tPeakpro(locale, 'trialCancelCta')}
-                  </button>
-                  {session.customerId ? (
-                    <a
-                      href="/api/billing/portal"
-                      className="rounded-full border border-gold/20 px-3 py-1 text-xs text-gold-antique hover:text-gold"
-                    >
-                      {tPeakpro(locale, 'manageBilling')}
-                    </a>
-                  ) : null}
-                </form>
-              ) : null}
-            </div>
-          ) : null}
           {notice === 'revoked' ? (
             <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
               {tPeakpro(locale, 'revokedNotice')}

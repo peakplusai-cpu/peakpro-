@@ -225,7 +225,21 @@ export function PeakProModuleView({
     );
     return (
       <div className="space-y-8">
-        <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
+        {tier === 'premium' ? (
+          <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
+        ) : (
+          <section className="space-y-4">
+            <div>
+              <h2 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'calendarTitle')}</h2>
+              {tPeakpro(locale, 'calendarLead') ? (
+                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
+                  {tPeakpro(locale, 'calendarLead')}
+                </p>
+              ) : null}
+            </div>
+            <PeakProPaywall locale={locale} body={tPeakpro(locale, 'calendarLocked')} />
+          </section>
+        )}
         <section>
           <h2 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">
             {tPeakpro(locale, 'monthlyOnly')}
