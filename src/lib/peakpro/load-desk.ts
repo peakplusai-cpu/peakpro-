@@ -11,8 +11,9 @@ import {
   slimCacheForModule,
 } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
-import { calendarNeedsPrintRefresh } from '@/lib/peakpro/macro-calendar';
+import { calendarNeedsPrintRefresh, calendarNeedsReportFill } from '@/lib/peakpro/macro-calendar';
 import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { fillDeskPrintReports } from '@/lib/peakpro/print-report';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import {
@@ -54,6 +55,13 @@ export async function loadPeakProDesk(options?: {
   }
 
   if (session.tier === 'premium') {
+    if (calendarNeedsReportFill(raw.calendar, desk)) {
+      after(() =>
+        fillDeskPrintReports(desk).catch((error) => {
+          console.warn('[peakpro/desk] print reports failed', error);
+        }),
+      );
+    }
     const newsAge = newsCacheAgeMs(raw);
     if (newsAge == null || newsAge > NEWS_STALE_MS) {
       after(() =>

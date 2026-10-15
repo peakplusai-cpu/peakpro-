@@ -159,6 +159,19 @@ export interface MacroFigure {
   value: string;
 }
 
+export interface MacroPrintReport {
+  generatedAt: string;
+  figuresHash: string;
+  source: 'model' | 'template';
+  title: MacroLocaleText;
+  body: MacroLocaleText;
+}
+
+export interface MacroEventReports {
+  tw: MacroPrintReport | null;
+  us: MacroPrintReport | null;
+}
+
 export interface MacroEvent {
   id: string;
   kind: MacroEventKind;
@@ -171,6 +184,7 @@ export interface MacroEvent {
   previous: MacroFigure[];
   actual: MacroFigure[];
   sourceUrl: string | null;
+  reports?: MacroEventReports;
 }
 
 export interface MacroCalendarPayload {

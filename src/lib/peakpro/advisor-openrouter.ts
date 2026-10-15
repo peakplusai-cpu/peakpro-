@@ -8,7 +8,7 @@ export function getOpenRouterApiKey(): string | null {
   return process.env.OPENROUTER_API_KEY?.trim() || null;
 }
 
-type ChatTurn = { role: 'system' | 'user' | 'assistant'; content: string };
+export type ChatTurn = { role: 'system' | 'user' | 'assistant'; content: string };
 
 function advisorModels(): string[] {
   const primary = getAdvisorModel();
@@ -146,4 +146,48 @@ export async function streamOpenRouterText(
   });
 
   return { stream };
+}
+
+export async function completeOpenRouterText(
+  messages: ChatTurn[],
+  options?: { maxTokens?: number; timeoutMs?: number },
+): Promise<string | null> {
+  const key = getOpenRouterApiKey();
+  if (!key) return null;
+
+  const models = advisorModels();
+  const deadline = AbortSignal.timeout(options?.timeoutMs ?? 12_000);
+  for (const model of models) {
+    if (deadline.aborted) break;
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        signal: deadline,
+        headers: {
+          Authorization: `Bearer ${key}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': getAppOrigin(),
+          'X-Title': 'PeakPro+',
+        },
+        body: JSON.stringify({
+          model,
+          temperature: 0.35,
+          max_tokens: options?.maxTokens ?? 900,
+          messages,
+        }),
+        cache: 'no-store',
+      });
+      if (!response.ok) {
+        const body = await response.text().catch(() => '');
+        console.warn('[peakpro/openrouter] complete HTTP', model, response.status, body.slice(0, 400));
+        continue;
+      }
+      const json = (await response.json()) as { choices?: Array<{ message?: { content?: string } }> };
+      const text = json.choices?.[0]?.message?.content?.trim();
+      if (text) return text;
+    } catch (error) {
+      console.warn('[peakpro/openrouter] complete failed', model, error);
+    }
+  }
+  return null;
 }

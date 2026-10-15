@@ -13,6 +13,7 @@ import {
   monthNumber,
   wallTimeIso,
   windowEvents,
+  mergeCalendarReports,
 } from '@/lib/peakpro/macro-calendar';
 import type { MacroCalendarPayload, MacroEvent, MacroEventKind, MacroFigure } from '@/lib/peakpro/types';
 
@@ -330,11 +331,17 @@ export async function harvestMacroCalendar(prior?: MacroCalendarPayload | null):
   if (merged.length === 0 && prior?.events?.length) {
     return {
       asOf: prior.asOf,
-      events: windowEvents(
-        prior.events.map((event) => attachPrints(event, series, nowMs)),
-        nowMs,
+      events: mergeCalendarReports(
+        windowEvents(
+          prior.events.map((event) => attachPrints(event, series, nowMs)),
+          nowMs,
+        ),
+        prior,
       ),
     };
   }
-  return { asOf: new Date(nowMs).toISOString(), events: merged };
+  return {
+    asOf: new Date(nowMs).toISOString(),
+    events: mergeCalendarReports(merged, prior),
+  };
 }

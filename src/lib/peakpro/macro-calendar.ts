@@ -3,9 +3,11 @@ import type {
   MacroCalendarPayload,
   MacroEvent,
   MacroEventKind,
+  MacroEventReports,
   MacroEventStatus,
   MacroFigure,
   MacroLocaleText,
+  MacroPrintReport,
 } from '@/lib/peakpro/types';
 
 export const NY_TZ = 'America/New_York';
@@ -137,10 +139,66 @@ export function makeEventId(kind: MacroEventKind, scheduledAt: string): string {
   return `${kind}-${scheduledAt.slice(0, 10)}`;
 }
 
+export function emptyReports(): MacroEventReports {
+  return { tw: null, us: null };
+}
+
+export function figuresHash(event: Pick<MacroEvent, 'previous' | 'actual' | 'sourceUrl'>): string {
+  return JSON.stringify({
+    previous: event.previous,
+    actual: event.actual,
+    sourceUrl: event.sourceUrl ?? null,
+  });
+}
+
+export function reportFits(event: MacroEvent, desk: DeskRegion): boolean {
+  const report = event.reports?.[desk];
+  return Boolean(report && report.figuresHash === figuresHash(event));
+}
+
+export function calendarNeedsReportFill(
+  payload: MacroCalendarPayload | null | undefined,
+  desk: DeskRegion,
+  nowMs = Date.now(),
+): boolean {
+  return (payload?.events ?? []).some((event) => {
+    if (!event.desks.includes(desk)) return false;
+    const status = eventStatus(event.scheduledAt, nowMs);
+    if (status === 'upcoming') return false;
+    return !reportFits(event, desk);
+  });
+}
+
+function keepReport(report: MacroPrintReport | null | undefined, hash: string): MacroPrintReport | null {
+  if (!report || report.figuresHash !== hash) return null;
+  return report;
+}
+
+export function mergeCalendarReports(
+  events: MacroEvent[],
+  prior?: MacroCalendarPayload | null,
+): MacroEvent[] {
+  const byId = new Map((prior?.events ?? []).map((event) => [event.id, event]));
+  return events.map((event) => {
+    if (event.status === 'upcoming') {
+      return { ...event, reports: emptyReports() };
+    }
+    const hash = figuresHash(event);
+    const old = byId.get(event.id);
+    return {
+      ...event,
+      reports: {
+        tw: keepReport(old?.reports?.tw, hash),
+        us: keepReport(old?.reports?.us, hash),
+      },
+    };
+  });
+}
+
 export function buildEvent(
   kind: MacroEventKind,
   scheduledAt: string,
-  extra?: Partial<Pick<MacroEvent, 'sourceUrl' | 'previous' | 'actual' | 'status'>>,
+  extra?: Partial<Pick<MacroEvent, 'sourceUrl' | 'previous' | 'actual' | 'status' | 'reports'>>,
 ): MacroEvent {
   const meta = MACRO_KIND_META[kind];
   return {
@@ -155,6 +213,7 @@ export function buildEvent(
     previous: extra?.previous ?? [],
     actual: extra?.actual ?? [],
     sourceUrl: extra?.sourceUrl ?? null,
+    reports: extra?.reports ?? emptyReports(),
   };
 }
 
