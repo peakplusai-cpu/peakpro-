@@ -118,23 +118,17 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
                     {event.actual.map((row) => figureText(locale, row)).join(' · ')}
                   </p>
                 ) : null}
-                {status !== 'upcoming' ? (
-                  <p className="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-phosphor">
-                    {tPeakpro(locale, 'calendarOpen')}
-                    <ChevronRight className="h-3.5 w-3.5" />
-                  </p>
-                ) : null}
+                <p className="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-phosphor">
+                  {tPeakpro(locale, 'calendarOpen')}
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </p>
               </>
             );
-            return status === 'upcoming' ? (
-              <article key={event.id} className="peakpro-panel px-5 py-5">
-                {inner}
-              </article>
-            ) : (
+            return (
               <Link
                 key={event.id}
                 href={`/app/prints/${encodeURIComponent(event.id)}`}
-                className="peakpro-panel block px-5 py-5 transition hover:border-phosphor/40"
+                className="peakpro-panel relative z-[1] block cursor-pointer px-5 py-5 transition hover:border-phosphor/40"
               >
                 {inner}
               </Link>
