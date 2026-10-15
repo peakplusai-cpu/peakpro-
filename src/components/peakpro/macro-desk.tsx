@@ -6,7 +6,7 @@ import { ChevronRight } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { eventStatus } from '@/lib/peakpro/macro-calendar';
+import { eventStatus, formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MacroEventStatus, MacroFigure } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
@@ -35,19 +35,9 @@ function figureText(locale: Locale, row: MacroFigure) {
 }
 
 function EventStamp({ locale, event }: { locale: Locale; event: MacroEvent }) {
-  const stamp = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-TW' : 'en-US', {
-    timeZone: event.timezone,
-    month: 'short',
-    day: 'numeric',
-    weekday: 'short',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
-    timeZoneName: 'short',
-  }).format(new Date(event.scheduledAt));
   return (
     <p suppressHydrationWarning className="text-[11px] uppercase tracking-[0.18em] text-gold-antique">
-      {stamp}
+      {formatEventStamp(locale, event)}
     </p>
   );
 }

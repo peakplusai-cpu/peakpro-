@@ -135,6 +135,28 @@ export function eventStatus(scheduledAt: string, nowMs = Date.now()): MacroEvent
   return 'printed';
 }
 
+export function formatEventStamp(
+  locale: 'en' | 'zh',
+  event: Pick<MacroEvent, 'scheduledAt' | 'timezone'>,
+): string {
+  const at = new Date(event.scheduledAt);
+  if (!Number.isFinite(at.getTime())) return event.scheduledAt;
+  try {
+    return new Intl.DateTimeFormat(locale === 'zh' ? 'zh-TW' : 'en-US', {
+      timeZone: event.timezone,
+      month: 'short',
+      day: 'numeric',
+      weekday: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZoneName: 'short',
+    }).format(at);
+  } catch {
+    return event.scheduledAt;
+  }
+}
+
 export function makeEventId(kind: MacroEventKind, scheduledAt: string): string {
   return `${kind}-${scheduledAt.slice(0, 10)}`;
 }

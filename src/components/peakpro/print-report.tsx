@@ -5,6 +5,7 @@ import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
+import { formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MacroEventStatus, MacroFigure } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
@@ -42,15 +43,13 @@ export function PeakProPrintReport({
   }
 
   const report = event.reports?.[desk];
-  const title = locale === 'zh' ? report?.title.zh ?? event.title.zh : report?.title.en ?? event.title.en;
+  const title = locale === 'zh' ? report?.title.zh ?? event.title?.zh : report?.title.en ?? event.title?.en;
   const body = locale === 'zh' ? report?.body.zh : report?.body.en;
   const upcoming = event.status === 'upcoming';
-  const stamp = new Intl.DateTimeFormat(locale === 'zh' ? 'zh-TW' : 'en-US', {
-    timeZone: event.timezone,
-    dateStyle: 'full',
-    timeStyle: 'short',
-    timeZoneName: 'short',
-  }).format(new Date(event.scheduledAt));
+  const stamp = formatEventStamp(locale, event);
+  const previous = event.previous ?? [];
+  const actual = event.actual ?? [];
+  const agency = locale === 'zh' ? event.agency?.zh : event.agency?.en;
 
   return (
     <div className="space-y-8">
@@ -61,7 +60,7 @@ export function PeakProPrintReport({
 
       <article className="peakpro-panel p-6 md:p-8">
         <div className="flex items-start justify-between gap-3">
-          <p className="peakpro-kicker">{locale === 'zh' ? event.agency.zh : event.agency.en}</p>
+          <p className="peakpro-kicker">{agency}</p>
           <span
             className={cn(
               'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em]',
@@ -79,16 +78,16 @@ export function PeakProPrintReport({
         <h1 className="mt-4 font-peakpro text-3xl leading-snug text-zinc-50 md:text-4xl">{title}</h1>
         <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'calendarReportLead')}</p>
 
-        {event.previous.length > 0 ? (
+        {previous.length > 0 ? (
           <p className="mt-6 text-sm text-zinc-400">
             {tPeakpro(locale, 'calendarPrevious')}{' '}
-            {event.previous.map((row) => figureText(locale, row)).join(' · ')}
+            {previous.map((row) => figureText(locale, row)).join(' · ')}
           </p>
         ) : null}
-        {!upcoming && event.actual.length > 0 ? (
+        {!upcoming && actual.length > 0 ? (
           <p className="mt-1 text-sm text-zinc-100">
             {tPeakpro(locale, 'calendarActual')}{' '}
-            {event.actual.map((row) => figureText(locale, row)).join(' · ')}
+            {actual.map((row) => figureText(locale, row)).join(' · ')}
           </p>
         ) : null}
 
