@@ -51,13 +51,13 @@ function SeriesCard({
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{row.symbol}</p>
-          <h3 className="mt-1 font-peakpro text-xl text-white">{payload.name}</h3>
-          <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-zinc-500">{row.timeframe}</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-phosphor">{row.symbol}</p>
+          <h3 className="mt-1 font-peakpro text-xl tracking-tight text-white">{payload.name}</h3>
+          <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500">{row.timeframe}</p>
         </div>
         <div className="text-right">
-          <p className="font-peakpro text-2xl text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
-          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
+          <p className="font-mono text-2xl tabular-nums text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
+          <p className={up ? 'font-mono text-sm text-phosphor' : 'font-mono text-sm text-rose-400'}>{formatPct(payload.changePct)}</p>
         </div>
       </div>
       <div className="mt-4">
@@ -75,14 +75,14 @@ function SeriesCard({
     return (
       <Link
         href={href}
-        className="block rounded-2xl border border-gold/15 bg-black/60 p-5 transition-colors hover:border-gold/50"
+        className="peakpro-panel block p-5"
       >
         {body}
       </Link>
     );
   }
 
-  return <article className="rounded-2xl border border-gold/15 bg-black/60 p-5">{body}</article>;
+  return <article className="peakpro-panel p-5">{body}</article>;
 }
 
 function TrendingBoard({
@@ -98,7 +98,7 @@ function TrendingBoard({
 }) {
   return (
     <section>
-      <h3 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, titleKey)}</h3>
+      <h3 className="peakpro-kicker mb-4">{tPeakpro(locale, titleKey)}</h3>
       {items.length === 0 ? (
         <EmptyCache locale={locale} />
       ) : (
@@ -109,11 +109,11 @@ function TrendingBoard({
               <li key={`${market}-${item.symbol}-${item.rank}`}>
                 <Link
                   href={`/app/${market}/${encodeURIComponent(item.symbol)}`}
-                  className="flex items-start justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4 transition-colors hover:border-gold/50"
+                  className="peakpro-panel flex items-start justify-between gap-4 px-5 py-4"
                 >
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.28em] text-gold">#{item.rank}</p>
-                    <p className="mt-1 font-peakpro text-xl text-white">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-phosphor">#{item.rank}</p>
+                    <p className="mt-1 font-peakpro text-xl tracking-tight text-white">
                       {item.symbol} <span className="text-zinc-500">{item.name}</span>
                     </p>
                     <p className="mt-2 text-sm text-zinc-400">
@@ -122,11 +122,11 @@ function TrendingBoard({
                   </div>
                   <div className="text-right">
                     {item.last != null ? (
-                      <p className="font-peakpro text-lg text-gold">
+                      <p className="font-mono text-lg tabular-nums text-gold">
                         {displayPx(item.last, item.currency ?? (market === 'taiwan' ? 'TWD' : 'USD'), locale, usdTwd)}
                       </p>
                     ) : null}
-                    <p className={item.changePct >= 0 ? 'font-peakpro text-2xl text-emerald-400' : 'font-peakpro text-2xl text-red-400'}>
+                    <p className={item.changePct >= 0 ? 'font-mono text-2xl tabular-nums text-phosphor' : 'font-mono text-2xl tabular-nums text-rose-400'}>
                       {formatPct(item.changePct)}
                     </p>
                   </div>
@@ -142,7 +142,7 @@ function TrendingBoard({
 
 function EmptyCache({ locale }: { locale: Locale }) {
   return (
-    <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
+    <div className="peakpro-panel px-6 py-16 text-center text-sm text-zinc-500">
       {tPeakpro(locale, 'emptyCache')}
     </div>
   );
@@ -169,8 +169,8 @@ function SentimentCard({
   const sample = kind === 'desk' && data && 'sampleSize' in data ? data : null;
 
   return (
-    <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-6">
-      <p className="text-center text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, titleKey)}</p>
+    <article className="peakpro-panel px-5 py-6">
+      <p className="text-center font-mono text-[11px] uppercase tracking-[0.22em] text-phosphor">{tPeakpro(locale, titleKey)}</p>
       {gauge ? (
         <FearGreedGauge data={gauge} locale={locale} compact />
       ) : (
@@ -230,7 +230,7 @@ export function PeakProModuleView({
         ) : (
           <section className="space-y-4">
             <div>
-              <h2 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'calendarTitle')}</h2>
+              <h2 className="peakpro-kicker">{tPeakpro(locale, 'calendarTitle')}</h2>
               {tPeakpro(locale, 'calendarLead') ? (
                 <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
                   {tPeakpro(locale, 'calendarLead')}
@@ -241,7 +241,7 @@ export function PeakProModuleView({
           </section>
         )}
         <section>
-          <h2 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">
+          <h2 className="peakpro-kicker mb-4">
             {tPeakpro(locale, 'monthlyOnly')}
           </h2>
           {freeMonthly.length === 0 ? (
@@ -285,7 +285,7 @@ export function PeakProModuleView({
   if (moduleId === 'crypto') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'cryptoTitle')}</h2>
+        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'cryptoTitle')}</h2>
         {cache.crypto.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.crypto.map((row) => (
@@ -300,7 +300,7 @@ export function PeakProModuleView({
   if (moduleId === 'gold') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'goldTitle')}</h2>
+        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'goldTitle')}</h2>
         {cache.gold.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.gold.map((row) => (
@@ -315,7 +315,7 @@ export function PeakProModuleView({
   if (moduleId === 'geopolitics') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'newsTitle')}</h2>
+        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'newsTitle')}</h2>
         {tPeakpro(locale, 'newsLead') ? (
           <p className="max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'newsLead')}</p>
         ) : null}
@@ -325,7 +325,7 @@ export function PeakProModuleView({
               <Link
                 key={item.id}
                 href={`/app/geopolitics/${encodeURIComponent(item.id)}`}
-                className="block rounded-2xl border border-gold/15 bg-black/60 p-5 transition-colors hover:border-gold/50"
+                className="peakpro-panel block p-5"
               >
                 <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">
                   {newsCategoryLabel(locale, item.category)} · {newsSourceLabel(locale, item.source)}
@@ -353,7 +353,7 @@ export function PeakProModuleView({
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'fearTitle')}</h2>
+          <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'fearTitle')}</h2>
           {tPeakpro(locale, 'fearLead') ? (
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
           ) : null}
@@ -402,7 +402,7 @@ export function PeakProModuleView({
     return (
       <div className="space-y-8">
         <div>
-          <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'trendingTitle')}</h2>
+          <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'trendingTitle')}</h2>
           {tPeakpro(locale, 'trendingLead') ? (
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'trendingLead')}</p>
           ) : null}
@@ -453,11 +453,11 @@ export function PeakProModuleView({
   const brief = cache.briefs.find((row) => row.locale === locale) ?? cache.briefs[0];
   return (
     <div className="space-y-6">
-      <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'briefTitle')}</h2>
+      <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'briefTitle')}</h2>
       {!brief ? (
         <EmptyCache locale={locale} />
       ) : (
-        <article className="rounded-3xl border border-gold/15 bg-black/60 p-8">
+        <article className="peakpro-panel p-8">
           <p className="text-xs uppercase tracking-[0.28em] text-gold-antique">
             {brief.period_start} → {brief.period_end}
           </p>
@@ -484,7 +484,7 @@ function TimeframeBlock({
 }) {
   return (
     <section>
-      <h3 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, titleKey)}</h3>
+      <h3 className="peakpro-kicker mb-4">{tPeakpro(locale, titleKey)}</h3>
       {rows.length === 0 ? (
         <EmptyCache locale={locale} />
       ) : (

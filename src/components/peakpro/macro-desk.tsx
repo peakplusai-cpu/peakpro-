@@ -62,13 +62,13 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
   return (
     <section className="space-y-4">
       <div>
-        <h2 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'calendarTitle')}</h2>
+        <h2 className="peakpro-kicker">{tPeakpro(locale, 'calendarTitle')}</h2>
         {tPeakpro(locale, 'calendarLead') ? (
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'calendarLead')}</p>
         ) : null}
       </div>
       {events.length === 0 ? (
-        <p className="rounded-2xl border border-gold/15 px-6 py-10 text-center text-sm text-zinc-500">
+        <p className="peakpro-panel px-6 py-10 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'calendarEmpty')}
         </p>
       ) : (
@@ -78,14 +78,14 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
             const remain = now == null ? 0 : new Date(event.scheduledAt).getTime() - now;
             const parts = remainParts(remain);
             return (
-              <article key={event.id} className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
+              <article key={event.id} className="peakpro-panel px-5 py-5">
                 <div className="flex items-start justify-between gap-3">
                   <EventStamp locale={locale} event={event} />
                   <span
                     className={cn(
-                      'rounded-full px-2.5 py-1 text-[10px] uppercase tracking-[0.18em]',
+                      'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em]',
                       status === 'live'
-                        ? 'border border-emerald-400/40 bg-emerald-400/10 text-emerald-300'
+                        ? 'border border-phosphor/40 bg-phosphor/10 text-phosphor'
                         : status === 'printed'
                           ? 'border border-zinc-700 text-zinc-400'
                           : 'border border-gold/30 text-gold',
@@ -94,12 +94,12 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
                     {statusLabel(locale, status)}
                   </span>
                 </div>
-                <h3 className="mt-3 font-peakpro text-xl text-gold">
+                <h3 className="mt-3 font-peakpro text-xl tracking-tight text-zinc-50">
                   {locale === 'zh' ? event.title.zh : event.title.en}
                 </h3>
                 <p className="mt-1 text-xs text-zinc-500">{locale === 'zh' ? event.agency.zh : event.agency.en}</p>
                 {status === 'upcoming' && now != null && remain > 0 ? (
-                  <p className="mt-4 font-peakpro text-2xl tabular-nums text-white">
+                  <p className="mt-4 font-mono text-2xl tabular-nums text-phosphor">
                     {parts.days > 0 ? `${parts.days}d ` : ''}
                     {pad(parts.hours)}:{pad(parts.minutes)}:{pad(parts.seconds)}
                   </p>

@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
-import { Cinzel } from 'next/font/google';
+import { IBM_Plex_Mono, IBM_Plex_Sans, Syne } from 'next/font/google';
 import type { ReactNode } from 'react';
 
+import { PeakProAtmosphere } from '@/components/peakpro/atmosphere';
 import { LocaleProvider } from '@/components/locale-provider';
 import { localeHtmlLang } from '@/i18n/locale';
 import { getLocale, getMessages } from '@/i18n/server';
@@ -9,9 +10,24 @@ import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 
 import './globals.css';
 
-const cinzel = Cinzel({
+const display = Syne({
   subsets: ['latin'],
   variable: '--font-peakpro-serif',
+  weight: ['500', '600', '700'],
+  display: 'swap',
+});
+
+const sans = IBM_Plex_Sans({
+  subsets: ['latin'],
+  variable: '--font-peakpro-sans',
+  weight: ['400', '500', '600'],
+  display: 'swap',
+});
+
+const mono = IBM_Plex_Mono({
+  subsets: ['latin'],
+  variable: '--font-peakpro-mono',
+  weight: ['400', '500'],
   display: 'swap',
 });
 
@@ -37,9 +53,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang={localeHtmlLang(locale)} style={{ colorScheme: 'dark' }}>
-      <body className={`${cinzel.variable} min-h-screen bg-black text-zinc-50 antialiased`}>
+      <body
+        className={`${display.variable} ${sans.variable} ${mono.variable} min-h-screen bg-ink text-zinc-50 antialiased`}
+      >
+        <PeakProAtmosphere />
         <LocaleProvider locale={locale} messages={messages}>
-          {children}
+          <div className="relative z-10">{children}</div>
         </LocaleProvider>
       </body>
     </html>

@@ -98,7 +98,7 @@ export function PeakProSubscribeView({
         : FEATURES_EN;
 
   return (
-    <div className="min-h-screen bg-black text-zinc-100">
+    <div className="relative min-h-screen text-zinc-100">
       <PeakProNav
         locale={locale}
         tier={session.tier}
@@ -110,35 +110,38 @@ export function PeakProSubscribeView({
       />
       <main className="mx-auto max-w-3xl px-6 py-16">
         {canceled ? (
-          <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+          <p className="mb-6 border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
             {tPeakpro(locale, 'trialCanceled')}
           </p>
         ) : null}
         {revoked ? (
-          <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             {tPeakpro(locale, 'revokedNotice')}
           </p>
         ) : null}
         {billingError ? (
-          <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+          <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
             {billingError}
           </p>
         ) : null}
-        <p className="text-[11px] uppercase tracking-[0.4em] text-gold">PeakPro+</p>
-        <h1 className="mt-4 font-peakpro text-4xl text-gold">{tPeakpro(locale, 'subscribeTitle')}</h1>
+        <p className="peakpro-kicker">
+          <span className="peakpro-live" />
+          PeakPro+
+        </p>
+        <h1 className="mt-4 font-peakpro text-4xl tracking-tight text-zinc-50">{tPeakpro(locale, 'subscribeTitle')}</h1>
         <p className="mt-4 text-sm text-zinc-400">{tPeakpro(locale, 'subscribeSub')}</p>
-        <div className="mt-10 rounded-3xl border border-gold/25 bg-zinc-950/80 p-8 peakpro-hairline">
-          <p className="font-peakpro text-5xl text-gold">
+        <div className="peakpro-panel peakpro-frame peakpro-sweep mt-10 p-8">
+          <p className="font-mono text-5xl tabular-nums text-gold">
             {tPeakpro(locale, 'subscribePrice')}
             <span className="ml-2 text-base text-zinc-500">{tPeakpro(locale, 'subscribePeriod')}</span>
           </p>
-          <h2 className="mt-8 text-xs uppercase tracking-[0.28em] text-gold-antique">
+          <h2 className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-phosphor">
             {tPeakpro(locale, 'subscribeFeaturesTitle')}
           </h2>
           <ul className="mt-4 space-y-3 text-sm text-zinc-300">
             {features.map((item) => (
               <li key={item} className="flex gap-3">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-phosphor" />
                 {item}
               </li>
             ))}
@@ -146,26 +149,17 @@ export function PeakProSubscribeView({
           {session.userId ? (
             session.trial && session.subscriptionId ? (
               <form action="/api/billing/cancel" method="post" className="mt-8">
-                <button
-                  type="submit"
-                  className="inline-flex w-full items-center justify-center rounded-full border border-gold/30 py-3 text-sm text-gold"
-                >
+                <button type="submit" className="peakpro-btn-ghost w-full">
                   {tPeakpro(locale, 'trialCancelCta')}
                 </button>
               </form>
             ) : (
-              <Link
-                href="/api/checkout"
-                className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-gold py-3 text-sm font-semibold text-black"
-              >
+              <Link href="/api/checkout" className="peakpro-btn mt-8 w-full">
                 {tPeakpro(locale, 'subscribeCta')}
               </Link>
             )
           ) : (
-            <Link
-              href="/login?redirect=/subscribe"
-              className="mt-8 inline-flex w-full items-center justify-center rounded-full bg-gold py-3 text-sm font-semibold text-black"
-            >
+            <Link href="/login?redirect=/subscribe" className="peakpro-btn mt-8 w-full">
               {tPeakpro(locale, 'subscribeLogin')}
             </Link>
           )}

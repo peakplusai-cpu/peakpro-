@@ -41,7 +41,7 @@ export function PeakProDeskSwitcher({
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 rounded-full border border-gold/25 bg-black/70 px-2 py-1',
+        'inline-flex items-center border border-phosphor/20 bg-ink-panel/80 p-0.5',
         pending && 'opacity-60',
       )}
       role="group"
@@ -51,8 +51,8 @@ export function PeakProDeskSwitcher({
         type="button"
         onClick={() => setDesk('tw')}
         className={cn(
-          'rounded-full px-2.5 py-1 text-[11px] tracking-wide transition-colors',
-          desk === 'tw' ? 'bg-gold text-black' : 'text-zinc-400 hover:text-gold',
+          'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
+          desk === 'tw' ? 'bg-phosphor text-black' : 'text-zinc-400 hover:text-phosphor',
         )}
       >
         {tPeakpro(locale, 'deskTw')}
@@ -61,8 +61,8 @@ export function PeakProDeskSwitcher({
         type="button"
         onClick={() => setDesk('us')}
         className={cn(
-          'rounded-full px-2.5 py-1 text-[11px] tracking-wide transition-colors',
-          desk === 'us' ? 'bg-gold text-black' : 'text-zinc-400 hover:text-gold',
+          'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
+          desk === 'us' ? 'bg-phosphor text-black' : 'text-zinc-400 hover:text-phosphor',
         )}
       >
         {tPeakpro(locale, 'deskUs')}

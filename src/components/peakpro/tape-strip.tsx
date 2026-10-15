@@ -36,8 +36,8 @@ export function PeakProTapeStrip({
   if (!row || (row.prints === 0 && !row.inst)) return null;
 
   return (
-    <section className="rounded-3xl border border-gold/15 bg-black/60 p-6">
-      <p className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeTitle')}</p>
+    <section className="peakpro-panel p-6">
+      <p className="peakpro-kicker">{tPeakpro(locale, 'tapeTitle')}</p>
       <div className="mt-4 grid gap-3 md:grid-cols-4">
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">{tPeakpro(locale, 'tapeTurn')}</p>
@@ -61,7 +61,7 @@ export function PeakProTapeStrip({
           <p
             className={cn(
               'mt-1 text-sm',
-              row.inst ? (row.inst.totalNet >= 0 ? 'text-emerald-300' : 'text-red-300') : 'text-zinc-500',
+              row.inst ? (row.inst.totalNet >= 0 ? 'text-phosphor' : 'text-rose-300') : 'text-zinc-500',
             )}
           >
             {row.market === 'us'

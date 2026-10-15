@@ -35,7 +35,7 @@ export async function PeakProAppShell({
       usdTwd={desk === 'us' ? null : cache.usdTwd}
       desk={desk}
     >
-      <div className="min-h-screen bg-black text-zinc-100">
+      <div className="relative min-h-screen text-zinc-100">
         <PeakProNav
           locale={locale}
           tier={session.tier}
@@ -46,17 +46,17 @@ export async function PeakProAppShell({
         />
         <main className="mx-auto max-w-6xl px-4 py-10">
           {notice === 'revoked' ? (
-            <p className="mb-6 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+            <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
               {tPeakpro(locale, 'revokedNotice')}
             </p>
           ) : null}
           {notice === 'success' ? (
-            <p className="mb-6 rounded-2xl border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+            <p className="mb-6 border border-phosphor/30 bg-phosphor/10 px-4 py-3 text-sm text-phosphor">
               {tPeakpro(locale, session.trial ? 'trialStarted' : 'paymentSuccess')}
             </p>
           ) : null}
           {cache.lastUpdated ? (
-            <p className="mb-8 text-[11px] uppercase tracking-[0.28em] text-zinc-500">
+            <p className="mb-8 font-mono text-[11px] uppercase tracking-[0.28em] text-phosphor/70">
               {tPeakpro(locale, 'lastPrint')}:{' '}
               {new Date(cache.lastUpdated).toLocaleString(locale === 'zh' ? 'zh-TW' : 'en-US', {
                 month: 'short',
