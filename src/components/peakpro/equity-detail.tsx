@@ -161,6 +161,15 @@ export function PeakProEquityDetail({
         ))}
       </dl>
 
+      {market !== 'crypto' ? (
+        <Link
+          href={tier === 'premium' ? `/app/notes/${encodeURIComponent(symbol)}` : '/subscribe'}
+          className="peakpro-panel block px-5 py-4 text-sm text-phosphor hover:border-phosphor/40"
+        >
+          {tPeakpro(locale, 'nameOpen')}
+        </Link>
+      ) : null}
+
       {tier === 'premium' && market !== 'crypto' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
 
       <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} exchange={payload.exchange} />

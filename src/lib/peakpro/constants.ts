@@ -42,6 +42,7 @@ export const TAPE_US_BENCH = 'QQQ';
 export const USDTWD_SYMBOL = 'USDTWD';
 export const USDTWD_YAHOO = 'TWD=X';
 export const MACRO_CALENDAR_SYMBOL = 'CALENDAR';
+export const NAME_NOTES_SYMBOL = 'NAME_NOTES';
 
 export const PEAKPRO_MODULES = [
   'overview',

@@ -192,6 +192,23 @@ export interface MacroCalendarPayload {
   events: MacroEvent[];
 }
 
+export type NameDeskLean = 'add' | 'trim' | 'wait';
+
+export interface NameDeskNote {
+  symbol: string;
+  generatedAt: string;
+  figuresHash: string;
+  source: 'model' | 'template';
+  lean: NameDeskLean;
+  title: MacroLocaleText;
+  body: MacroLocaleText;
+}
+
+export interface NameNotesPayload {
+  asOf: string;
+  notes: Record<string, NameDeskNote>;
+}
+
 export interface PeakProCacheSnapshot {
   equities: MarketDataRow[];
   crypto: MarketDataRow[];
