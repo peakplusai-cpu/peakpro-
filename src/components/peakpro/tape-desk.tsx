@@ -5,22 +5,24 @@ import { useEffect, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
+import { Delta } from '@/components/peakpro/delta';
+import { Notice } from '@/components/peakpro/notice';
 import { usePeakPro } from '@/components/peakpro/provider';
 import { displayPx, formatPct, formatVol, formatZhang } from '@/lib/peakpro/format';
 import type { TapeDesk, TapeRow, TapeRs, TapeTurn } from '@/lib/peakpro/tape';
 import { cn } from '@/lib/utils';
 
 function turnClass(turn: TapeTurn) {
-  if (turn === 'thrust') return 'border-emerald-400/40 bg-emerald-400/10 text-emerald-300';
-  if (turn === 'press') return 'border-red-400/40 bg-red-400/10 text-red-300';
-  if (turn === 'fade') return 'border-amber-400/40 bg-amber-400/10 text-amber-200';
-  if (turn === 'first') return 'border-gold/40 bg-gold/10 text-gold';
+  if (turn === 'thrust') return 'border-signal/50 bg-signal/10 text-signal';
+  if (turn === 'press') return 'border-plasma/50 bg-plasma/10 text-plasma';
+  if (turn === 'fade') return 'border-warn/50 bg-warn/10 text-warn';
+  if (turn === 'first') return 'border-ice/40 bg-ice/10 text-ice';
   return 'border-zinc-700 bg-zinc-900 text-zinc-400';
 }
 
 function rsClass(rs: TapeRs) {
-  if (rs === 'lead') return 'text-emerald-300';
-  if (rs === 'lag') return 'text-red-300';
+  if (rs === 'lead') return 'text-signal';
+  if (rs === 'lag') return 'text-plasma';
   return 'text-zinc-400';
 }
 
@@ -47,9 +49,10 @@ function TapeTable({
   hideInst?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-3xl border border-gold/15">
+    <div className="peakpro-panel">
+      <div className="overflow-x-auto">
       <table className="w-full min-w-[880px] text-left text-sm">
-        <thead className="bg-black/80 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+        <thead className="bg-void/60 font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">
           <tr>
             <th className="px-4 py-3">{tPeakpro(locale, 'bookSymbol')}</th>
             <th className="px-4 py-3">{tPeakpro(locale, 'last')}</th>
@@ -62,9 +65,9 @@ function TapeTable({
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.symbol} className={cn('border-t border-gold/10', row.inBook && 'bg-gold/[0.04]')}>
+            <tr key={row.symbol} className={cn('border-t border-signal/10', row.inBook && 'bg-signal/[0.04]')}>
               <td className="px-4 py-3">
-                <Link href={hrefFor(row)} className="text-gold hover:underline">
+                <Link href={hrefFor(row)} className="text-ice hover:underline">
                   {row.symbol}
                 </Link>
                 <p className="text-xs text-zinc-500">{row.name}</p>
@@ -73,12 +76,12 @@ function TapeTable({
                 <p className="text-zinc-100">
                   {row.last != null ? displayPx(row.last, row.currency, locale, usdTwd) : '—'}
                 </p>
-                <p className={cn('text-xs', (row.changePct ?? 0) >= 0 ? 'text-emerald-400' : 'text-red-400')}>
-                  {row.changePct != null ? formatPct(row.changePct) : '—'}
+                <p className="text-xs">
+                  {row.changePct != null ? <Delta value={row.changePct} /> : '—'}
                 </p>
               </td>
               <td className="px-4 py-3">
-                <span className={cn('inline-flex rounded-full border px-2 py-0.5 text-[11px]', turnClass(row.turn))}>
+                <span className={cn('inline-flex border px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.1em]', turnClass(row.turn))}>
                   {tPeakpro(locale, `tape_${row.turn}`)}
                 </span>
                 <p className="mt-1 text-[11px] text-zinc-600">
@@ -106,8 +109,8 @@ function TapeTable({
                     <p className="text-[11px] text-zinc-600">{tPeakpro(locale, 'tapeNoInst')}</p>
                   ) : row.inst ? (
                     <>
-                      <p className={row.inst.totalNet >= 0 ? 'text-emerald-300' : 'text-red-300'}>
-                        {formatZhang(row.inst.totalNet)}
+                      <p>
+                        <Delta value={row.inst.totalNet}>{formatZhang(row.inst.totalNet)}</Delta>
                       </p>
                       <p className="text-[11px] text-zinc-500">
                         {tPeakpro(locale, 'tapeForeign')} {formatZhang(row.inst.foreignNet)} ·{' '}
@@ -123,6 +126,7 @@ function TapeTable({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }
@@ -166,33 +170,31 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'tapeTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'tapeTitle')}</h2>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
           {tPeakproDesk(locale, region, 'tapeLead')}
         </p>
       </div>
 
       {setup ? (
-        <p className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          {tPeakpro(locale, 'tapeSetup')}
-        </p>
+        <Notice>{tPeakpro(locale, 'tapeSetup')}</Notice>
       ) : null}
 
       {loading ? (
         <p className="text-sm text-zinc-500">{tPeakpro(locale, 'tapeLoading')}</p>
       ) : error ? (
-        <p className="rounded-2xl border border-gold/15 px-6 py-12 text-center text-sm text-zinc-500">{error}</p>
+        <p className="peakpro-panel px-6 py-12 text-center text-sm text-zinc-500">{error}</p>
       ) : !desk || desk.rows.every((row) => row.prints === 0 && !row.inst) ? (
-        <p className="rounded-2xl border border-gold/15 px-6 py-12 text-center text-sm text-zinc-500">
+        <p className="peakpro-panel px-6 py-12 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'tapeEmpty')}
         </p>
       ) : (
         <>
           <div className={hideInst ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4 md:grid-cols-3'}>
             {hideInst ? null : (
-              <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
-                <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeTaiwan')}</p>
-                <p className="mt-3 font-peakpro text-2xl text-white">
+              <article className="peakpro-panel px-5 py-5">
+                <p className="peakpro-kicker">{tPeakpro(locale, 'tapeTaiwan')}</p>
+                <p className="mt-3 font-mono text-2xl text-ice">
                   {desk.summary.twLead} {tPeakpro(locale, 'tapeLeadCount')}
                 </p>
                 <p className="mt-1 text-sm text-zinc-500">
@@ -203,9 +205,9 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
                 </p>
               </article>
             )}
-            <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeUs')}</p>
-              <p className="mt-3 font-peakpro text-2xl text-white">
+            <article className="peakpro-panel px-5 py-5">
+              <p className="peakpro-kicker">{tPeakpro(locale, 'tapeUs')}</p>
+              <p className="mt-3 font-mono text-2xl text-ice">
                 {desk.summary.usLead} {tPeakpro(locale, 'tapeLeadCount')}
               </p>
               <p className="mt-1 text-sm text-zinc-500">
@@ -213,12 +215,12 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
                 {desk.benches.us.changePct != null ? ` · QQQ ${formatPct(desk.benches.us.changePct)}` : ''}
               </p>
             </article>
-            <article className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5">
-              <p className="text-[11px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'tapeBookPulse')}</p>
-              <p className="mt-3 font-peakpro text-2xl text-emerald-300">
+            <article className="peakpro-panel px-5 py-5">
+              <p className="peakpro-kicker">{tPeakpro(locale, 'tapeBookPulse')}</p>
+              <p className="mt-3 font-mono text-2xl text-signal">
                 {desk.summary.bookThrust} {tPeakpro(locale, 'tape_thrust')}
               </p>
-              <p className="mt-1 text-sm text-red-300">
+              <p className="mt-1 text-sm text-plasma">
                 {desk.summary.bookPress} {tPeakpro(locale, 'tape_press')}
               </p>
               {!hideInst && desk.instDate ? (
@@ -231,15 +233,15 @@ export function PeakProTapeDesk({ locale }: { locale: Locale }) {
 
           {book.length > 0 ? (
             <section className="space-y-3">
-              <h3 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeBook')}</h3>
+              <h3 className="peakpro-kicker">{tPeakpro(locale, 'tapeBook')}</h3>
               <TapeTable locale={locale} rows={book} usdTwd={usdTwd} hideInst={hideInst} />
             </section>
           ) : null}
 
           <section className="space-y-3">
-            <h3 className="text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, 'tapeDesk')}</h3>
+            <h3 className="peakpro-kicker">{tPeakpro(locale, 'tapeDesk')}</h3>
             {rest.length === 0 ? (
-              <p className="rounded-2xl border border-gold/15 px-6 py-10 text-center text-sm text-zinc-500">
+              <p className="peakpro-panel px-6 py-10 text-center text-sm text-zinc-500">
                 {tPeakpro(locale, 'tapeEmpty')}
               </p>
             ) : (

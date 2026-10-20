@@ -16,6 +16,7 @@ import type {
   TrendingPayload,
 } from '@/lib/peakpro/types';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
+import { Delta } from '@/components/peakpro/delta';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
 import { PeakProPortfolioDesk } from '@/components/peakpro/portfolio-desk';
@@ -41,7 +42,6 @@ function SeriesCard({
   usdTwd?: number | null;
 }) {
   const payload = row.payload;
-  const up = payload.changePct >= 0;
   const href =
     row.asset_class === 'equity'
       ? `/app/${isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us'}/${encodeURIComponent(row.symbol)}`
@@ -52,13 +52,13 @@ function SeriesCard({
     <>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-phosphor">{row.symbol}</p>
-          <h3 className="mt-1 font-peakpro text-xl tracking-tight text-white">{payload.name}</h3>
+          <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">{row.symbol}</p>
+          <h3 className="mt-1 font-peakpro text-xl font-semibold tracking-tight text-ice">{payload.name}</h3>
           <p className="mt-1 font-mono text-[11px] uppercase tracking-[0.2em] text-zinc-500">{row.timeframe}</p>
         </div>
         <div className="text-right">
-          <p className="font-mono text-2xl tabular-nums text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
-          <p className={up ? 'font-mono text-sm text-phosphor' : 'font-mono text-sm text-rose-400'}>{formatPct(payload.changePct)}</p>
+          <p className="font-mono text-2xl tabular-nums text-ice">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
+          <Delta value={payload.changePct} className="font-mono text-sm" />
         </div>
       </div>
       <div className="mt-4">
@@ -113,8 +113,8 @@ function TrendingBoard({
                   className="peakpro-panel flex items-start justify-between gap-4 px-5 py-4"
                 >
                   <div>
-                    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-phosphor">#{item.rank}</p>
-                    <p className="mt-1 font-peakpro text-xl tracking-tight text-white">
+                    <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">#{item.rank}</p>
+                    <p className="mt-1 font-peakpro text-xl font-semibold tracking-tight text-ice">
                       {item.symbol} <span className="text-zinc-500">{item.name}</span>
                     </p>
                     <p className="mt-2 text-sm text-zinc-400">
@@ -123,12 +123,12 @@ function TrendingBoard({
                   </div>
                   <div className="text-right">
                     {item.last != null ? (
-                      <p className="font-mono text-lg tabular-nums text-gold">
+                      <p className="font-mono text-lg tabular-nums text-ice">
                         {displayPx(item.last, item.currency ?? (market === 'taiwan' ? 'TWD' : 'USD'), locale, usdTwd)}
                       </p>
                     ) : null}
-                    <p className={item.changePct >= 0 ? 'font-mono text-2xl tabular-nums text-phosphor' : 'font-mono text-2xl tabular-nums text-rose-400'}>
-                      {formatPct(item.changePct)}
+                    <p className="font-mono text-2xl">
+                      <Delta value={item.changePct} />
                     </p>
                   </div>
                 </Link>
@@ -171,7 +171,7 @@ function SentimentCard({
 
   return (
     <article className="peakpro-panel px-5 py-6">
-      <p className="text-center font-mono text-[11px] uppercase tracking-[0.22em] text-phosphor">{tPeakpro(locale, titleKey)}</p>
+      <p className="text-center font-mono text-[11px] uppercase tracking-[0.22em] text-signal">{tPeakpro(locale, titleKey)}</p>
       {gauge ? (
         <FearGreedGauge data={gauge} locale={locale} compact />
       ) : (
@@ -294,7 +294,7 @@ export function PeakProModuleView({
   if (moduleId === 'crypto') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'cryptoTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'cryptoTitle')}</h2>
         {cache.crypto.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.crypto.map((row) => (
@@ -309,7 +309,7 @@ export function PeakProModuleView({
   if (moduleId === 'gold') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'goldTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'goldTitle')}</h2>
         {cache.gold.length === 0 ? <EmptyCache locale={locale} /> : (
           <div className="grid gap-4 md:grid-cols-2">
             {cache.gold.map((row) => (
@@ -324,7 +324,7 @@ export function PeakProModuleView({
   if (moduleId === 'geopolitics') {
     return (
       <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'newsTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'newsTitle')}</h2>
         {tPeakpro(locale, 'newsLead') ? (
           <p className="max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'newsLead')}</p>
         ) : null}
@@ -336,10 +336,10 @@ export function PeakProModuleView({
                 href={`/app/geopolitics/${encodeURIComponent(item.id)}`}
                 className="peakpro-panel block p-5"
               >
-                <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">
+                <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">
                   {newsCategoryLabel(locale, item.category)} · {newsSourceLabel(locale, item.source)}
                 </p>
-                <h3 className="mt-2 font-peakpro text-xl text-white">
+                <h3 className="mt-2 font-peakpro text-xl font-semibold text-ice">
                   {localizedNewsText(locale, item.title, item.title_zh)}
                 </h3>
                 <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-zinc-400">
@@ -362,7 +362,7 @@ export function PeakProModuleView({
     return (
       <div className="space-y-6">
         <div>
-          <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'fearTitle')}</h2>
+          <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'fearTitle')}</h2>
           {tPeakpro(locale, 'fearLead') ? (
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
           ) : null}
@@ -411,7 +411,7 @@ export function PeakProModuleView({
     return (
       <div className="space-y-8">
         <div>
-          <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'trendingTitle')}</h2>
+          <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'trendingTitle')}</h2>
           {tPeakpro(locale, 'trendingLead') ? (
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'trendingLead')}</p>
           ) : null}
@@ -462,47 +462,20 @@ export function PeakProModuleView({
   const brief = cache.briefs.find((row) => row.locale === locale) ?? cache.briefs[0];
   return (
     <div className="space-y-6">
-      <h2 className="font-peakpro text-3xl tracking-tight text-zinc-50">{tPeakpro(locale, 'briefTitle')}</h2>
+      <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'briefTitle')}</h2>
       {!brief ? (
         <EmptyCache locale={locale} />
       ) : (
         <article className="peakpro-panel p-8">
-          <p className="text-xs uppercase tracking-[0.28em] text-gold-antique">
+          <p className="text-xs uppercase tracking-[0.28em] text-ice-dim">
             {brief.period_start} → {brief.period_end}
           </p>
-          <h3 className="mt-3 font-peakpro text-2xl text-white">{brief.title}</h3>
-          <div className="prose prose-invert mt-6 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+          <h3 className="mt-3 font-peakpro text-2xl font-semibold text-ice">{brief.title}</h3>
+          <div className="mt-6 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
             {brief.content}
           </div>
         </article>
       )}
     </div>
-  );
-}
-
-function TimeframeBlock({
-  locale,
-  titleKey,
-  rows,
-  usdTwd,
-}: {
-  locale: Locale;
-  titleKey: string;
-  rows: MarketDataRow[];
-  usdTwd?: number | null;
-}) {
-  return (
-    <section>
-      <h3 className="peakpro-kicker mb-4">{tPeakpro(locale, titleKey)}</h3>
-      {rows.length === 0 ? (
-        <EmptyCache locale={locale} />
-      ) : (
-        <div className="grid gap-4 md:grid-cols-2">
-          {rows.map((row) => (
-            <SeriesCard key={row.id} locale={locale} row={row} usdTwd={usdTwd} />
-          ))}
-        </div>
-      )}
-    </section>
   );
 }

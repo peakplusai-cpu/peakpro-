@@ -1,6 +1,6 @@
 import { effectiveTier, isTrialGrant } from '@/lib/peakpro/access';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import { claimTrialGrant, sealTrialGrant } from '@/lib/peakpro/trial';
+import { sealTrialGrant } from '@/lib/peakpro/trial';
 import type { PeakProProfile, PeakProSession } from '@/lib/peakpro/types';
 
 const EMPTY: PeakProSession = {

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { Delta } from '@/components/peakpro/delta';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { formatPct, formatZhang } from '@/lib/peakpro/format';
@@ -58,17 +59,14 @@ export function PeakProTapeStrip({
         </div>
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-zinc-500">{tPeakpro(locale, 'tapeInst')}</p>
-          <p
-            className={cn(
-              'mt-1 text-sm',
-              row.inst ? (row.inst.totalNet >= 0 ? 'text-phosphor' : 'text-rose-300') : 'text-zinc-500',
+          <p className={cn('mt-1 text-sm', row.market === 'us' || !row.inst ? 'text-zinc-500' : '')}>
+            {row.market === 'us' ? (
+              tPeakpro(locale, 'tapeNoInst')
+            ) : row.inst ? (
+              <Delta value={row.inst.totalNet}>{formatZhang(row.inst.totalNet)}</Delta>
+            ) : (
+              tPeakpro(locale, 'tapePendingInst')
             )}
-          >
-            {row.market === 'us'
-              ? tPeakpro(locale, 'tapeNoInst')
-              : row.inst
-                ? formatZhang(row.inst.totalNet)
-                : tPeakpro(locale, 'tapePendingInst')}
           </p>
         </div>
       </div>

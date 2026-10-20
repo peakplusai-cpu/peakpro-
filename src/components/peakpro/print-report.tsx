@@ -31,7 +31,7 @@ export function PeakProPrintReport({
   if (!event) {
     return (
       <div className="space-y-6">
-        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'backToDesk')}
         </Link>
@@ -53,29 +53,29 @@ export function PeakProPrintReport({
 
   return (
     <div className="space-y-8">
-      <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+      <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
         <ArrowLeft className="h-4 w-4" />
         {tPeakpro(locale, 'backToDesk')}
       </Link>
 
-      <article className="peakpro-panel p-6 md:p-8">
+      <article className="peakpro-panel peakpro-frame p-6 md:p-8">
         <div className="flex items-start justify-between gap-3">
           <p className="peakpro-kicker">{agency}</p>
           <span
             className={cn(
               'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em]',
               event.status === 'live'
-                ? 'border border-phosphor/40 bg-phosphor/10 text-phosphor'
+                ? 'border border-signal/40 bg-signal/10 text-signal'
                 : event.status === 'printed'
                   ? 'border border-zinc-700 text-zinc-400'
-                  : 'border border-gold/30 text-gold',
+                  : 'border border-signal/30 text-ice',
             )}
           >
             {statusLabel(locale, event.status)}
           </span>
         </div>
-        <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-gold-antique">{stamp}</p>
-        <h1 className="mt-4 font-peakpro text-3xl leading-snug text-zinc-50 md:text-4xl">{title}</h1>
+        <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-ice-dim">{stamp}</p>
+        <h1 className="mt-4 font-peakpro text-3xl leading-snug text-ice md:text-4xl">{title}</h1>
         <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'calendarReportLead')}</p>
 
         {previous.length > 0 ? (
@@ -94,7 +94,7 @@ export function PeakProPrintReport({
         {upcoming ? (
           <p className="mt-8 text-sm leading-7 text-zinc-400">{tPeakpro(locale, 'calendarNotYet')}</p>
         ) : body ? (
-          <div className="prose prose-invert mt-8 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+          <div className="mt-8 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
             {body}
           </div>
         ) : (
@@ -106,7 +106,7 @@ export function PeakProPrintReport({
             href={event.sourceUrl}
             target="_blank"
             rel="noreferrer"
-            className="mt-8 inline-flex items-center gap-2 text-sm text-gold hover:underline"
+            className="mt-8 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-signal hover:underline"
           >
             {tPeakpro(locale, 'calendarSource')}
             <ExternalLink className="h-3.5 w-3.5" />

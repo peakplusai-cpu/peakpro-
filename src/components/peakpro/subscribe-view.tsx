@@ -2,10 +2,10 @@ import Link from 'next/link';
 import { Check } from 'lucide-react';
 
 import { PeakProFooter } from '@/components/peakpro/footer';
-import { PeakProNav } from '@/components/peakpro/nav';
+import { Notice } from '@/components/peakpro/notice';
+import { PeakProTopBar } from '@/components/peakpro/top-bar';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import type { Locale } from '@/i18n/locale';
-import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { PeakProSession } from '@/lib/peakpro/types';
 
@@ -98,50 +98,42 @@ export function PeakProSubscribeView({
         : FEATURES_EN;
 
   return (
-    <div className="relative min-h-screen text-zinc-100">
-      <PeakProNav
-        locale={locale}
-        tier={session.tier}
-        signedIn={Boolean(session.userId)}
-        trial={session.trial}
-        expiresAt={session.expiresAt}
-        desk={desk}
-        compact
-      />
-      <main className="mx-auto max-w-3xl px-6 py-16">
+    <div className="relative min-h-screen text-ice">
+      <PeakProTopBar locale={locale} signedIn={Boolean(session.userId)} desk={desk} />
+      <main className="peakpro-rise mx-auto max-w-3xl px-5 py-16">
         {canceled ? (
-          <p className="mb-6 border border-gold/30 bg-gold/10 px-4 py-3 text-sm text-gold">
+          <Notice tone="ok" role="status" className="mb-6">
             {tPeakpro(locale, 'trialCanceled')}
-          </p>
+          </Notice>
         ) : null}
         {revoked ? (
-          <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <Notice role="alert" className="mb-6">
             {tPeakpro(locale, 'revokedNotice')}
-          </p>
+          </Notice>
         ) : null}
         {billingError ? (
-          <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+          <Notice role="alert" className="mb-6">
             {billingError}
-          </p>
+          </Notice>
         ) : null}
         <p className="peakpro-kicker">
           <span className="peakpro-live" />
           PeakPro+
         </p>
-        <h1 className="mt-4 font-peakpro text-5xl tracking-tight text-gold sm:text-6xl">{tPeakpro(locale, 'subscribeTitle')}</h1>
-        <p className="mt-4 text-sm text-gold/55">{tPeakpro(locale, 'subscribeSub')}</p>
-        <div className="peakpro-panel mt-10 p-8">
-          <p className="font-mono text-5xl tabular-nums text-gold">
+        <h1 className="mt-4 font-peakpro text-4xl font-bold tracking-tight text-ice sm:text-5xl">{tPeakpro(locale, 'subscribeTitle')}</h1>
+        <p className="mt-4 text-sm text-ice-dim">{tPeakpro(locale, 'subscribeSub')}</p>
+        <div className="peakpro-panel peakpro-frame mt-10 p-8">
+          <p className="peakpro-glow font-mono text-5xl tabular-nums text-ice">
             {tPeakpro(locale, 'subscribePrice')}
             <span className="ml-2 text-base text-zinc-500">{tPeakpro(locale, 'subscribePeriod')}</span>
           </p>
-          <h2 className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-phosphor">
+          <h2 className="mt-8 font-mono text-[11px] uppercase tracking-[0.28em] text-signal">
             {tPeakpro(locale, 'subscribeFeaturesTitle')}
           </h2>
           <ul className="mt-4 space-y-3 text-sm text-zinc-300">
             {features.map((item) => (
               <li key={item} className="flex gap-3">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-phosphor" />
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-signal" />
                 {item}
               </li>
             ))}
@@ -153,21 +145,29 @@ export function PeakProSubscribeView({
                   {tPeakpro(locale, 'trialCancelCta')}
                 </button>
               </form>
+            ) : session.tier === 'premium' ? (
+              <p className="peakpro-chip mt-8 w-full justify-center border-plasma/50 bg-plasma/10 !py-3 text-plasma">
+                {tPeakpro(locale, 'premiumBadge')}
+              </p>
             ) : (
-              <Link href="/api/checkout" className="peakpro-btn mt-8 w-full">
+              <a href="/api/checkout" className="peakpro-btn mt-8 w-full">
                 {tPeakpro(locale, 'subscribeCta')}
-              </Link>
+              </a>
             )
           ) : (
             <Link href="/login?redirect=/subscribe" className="peakpro-btn mt-8 w-full">
               {tPeakpro(locale, 'subscribeLogin')}
             </Link>
           )}
+          {session.userId && session.customerId ? (
+            <a
+              href="/api/billing/portal"
+              className="mt-5 block text-center font-mono text-[11px] uppercase tracking-[0.16em] text-zinc-500 transition-colors hover:text-signal"
+            >
+              {tPeakpro(locale, 'manageBilling')}
+            </a>
+          ) : null}
         </div>
-        <section className="mt-10 space-y-4 text-xs leading-relaxed text-zinc-500">
-          <p>{PEAKPRO_DISCLAIMER_EN}</p>
-          <p>{PEAKPRO_DISCLAIMER_ZH}</p>
-        </section>
       </main>
       <PeakProFooter locale={locale} />
     </div>

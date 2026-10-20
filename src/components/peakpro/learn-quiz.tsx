@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
+import { Notice } from '@/components/peakpro/notice';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { usePeakPro } from '@/components/peakpro/provider';
@@ -135,10 +136,10 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
   const blocked = remaining === 0;
 
   return (
-    <section className="space-y-6 rounded-3xl border border-gold/15 bg-black/60 px-6 py-8">
+    <section className="peakpro-panel space-y-6 px-6 py-8">
       <div>
-        <p className="text-[10px] uppercase tracking-[0.28em] text-gold">{tPeakpro(locale, 'quizKicker')}</p>
-        <h3 className="mt-2 font-peakpro text-2xl text-gold">{tPeakpro(locale, 'quizTitle')}</h3>
+        <p className="peakpro-kicker">{tPeakpro(locale, 'quizKicker')}</p>
+        <h3 className="mt-2 font-peakpro text-2xl font-semibold text-ice">{tPeakpro(locale, 'quizTitle')}</h3>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
           {tPeakproDesk(locale, desk, 'quizLead')}
         </p>
@@ -149,13 +150,13 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
         ) : null}
       </div>
 
-      {error ? <p className="text-sm text-gold">{error}</p> : null}
+      {error ? <Notice role="alert">{error}</Notice> : null}
 
       {result ? (
         <div className="space-y-5">
-          <div className="rounded-2xl border border-gold/20 px-5 py-5">
-            <p className="text-[10px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'quizScore')}</p>
-            <p className="mt-2 font-peakpro text-4xl text-white">
+          <div className="border border-signal/25 bg-signal/5 px-5 py-5">
+            <p className="peakpro-kicker">{tPeakpro(locale, 'quizScore')}</p>
+            <p className="mt-2 font-mono text-4xl text-ice">
               {result.score}
               <span className="ml-2 text-lg text-zinc-500">/ {result.total}</span>
             </p>
@@ -170,17 +171,17 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
           </div>
           {result.wrong.length > 0 ? (
             <div className="space-y-3">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'quizExplain')}</p>
+              <p className="peakpro-kicker">{tPeakpro(locale, 'quizExplain')}</p>
               {result.wrong.map((item) => (
-                <article key={`${item.id}-${item.index}`} className="rounded-2xl border border-gold/10 px-5 py-4">
-                  <p className="text-[11px] text-gold-antique">
+                <article key={`${item.id}-${item.index}`} className="border border-signal/15 px-5 py-4">
+                  <p className="text-[11px] text-ice-dim">
                     {locale === 'zh' ? `第 ${item.index} 題` : `Question ${item.index}`}
                   </p>
-                  <p className="mt-1 text-sm text-white">{text(locale, item.prompt)}</p>
-                  <p className="mt-3 text-sm text-red-300">
+                  <p className="mt-1 text-sm text-ice">{text(locale, item.prompt)}</p>
+                  <p className="mt-3 text-sm text-plasma">
                     {tPeakpro(locale, 'quizYourPick')} {item.picked ? text(locale, item.picked) : tPeakpro(locale, 'quizBlank')}
                   </p>
-                  <p className="mt-1 text-sm text-emerald-300">
+                  <p className="mt-1 text-sm text-signal">
                     {tPeakpro(locale, 'quizAnswer')} {text(locale, item.correct)}
                   </p>
                   <p className="mt-3 text-sm leading-relaxed text-zinc-400">{text(locale, item.explain)}</p>
@@ -192,7 +193,7 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void start()}
             disabled={pending || blocked}
-            className="h-11 rounded-full bg-gold px-6 text-sm font-semibold text-black disabled:opacity-40"
+            className="peakpro-btn"
           >
             {blocked ? tPeakpro(locale, 'quizLimit') : tPeakpro(locale, 'quizAgain')}
           </button>
@@ -200,11 +201,11 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
       ) : questions.length > 0 ? (
         <div className="space-y-6">
           {questions.map((item, index) => (
-            <article key={item.id} className="rounded-2xl border border-gold/10 px-5 py-4">
-              <p className="text-[10px] uppercase tracking-[0.22em] text-gold">
+            <article key={item.id} className="border border-signal/15 px-5 py-4">
+              <p className="peakpro-kicker">
                 {index + 1} / 10 · {tPeakpro(locale, categoryKey(item.category))}
               </p>
-              <p className="mt-2 text-sm text-white">{text(locale, item.prompt)}</p>
+              <p className="mt-2 text-sm text-ice">{text(locale, item.prompt)}</p>
               <div className="mt-3 space-y-2">
                 {item.choices.map((choice, choiceIndex) => {
                   const selected = answers[item.id] === choiceIndex;
@@ -214,10 +215,10 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
                       type="button"
                       onClick={() => setAnswers((prev) => ({ ...prev, [item.id]: choiceIndex }))}
                       className={cn(
-                        'block w-full rounded-xl border px-4 py-2.5 text-left text-sm',
+                        'block w-full border px-4 py-2.5 text-left text-sm transition-colors',
                         selected
-                          ? 'border-gold bg-gold/10 text-gold'
-                          : 'border-gold/10 text-zinc-300 hover:border-gold/40',
+                          ? 'border-signal bg-signal/10 text-ice'
+                          : 'border-signal/10 text-zinc-300',
                       )}
                     >
                       {text(locale, choice)}
@@ -231,7 +232,7 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
             type="button"
             onClick={() => void submit()}
             disabled={pending}
-            className="h-11 rounded-full bg-gold px-6 text-sm font-semibold text-black disabled:opacity-40"
+            className="peakpro-btn"
           >
             {tPeakpro(locale, 'quizSubmit')}
           </button>
@@ -241,7 +242,7 @@ export function PeakProLearnQuiz({ locale }: { locale: Locale }) {
           type="button"
           onClick={() => void start()}
           disabled={pending || blocked}
-          className="h-11 rounded-full bg-gold px-6 text-sm font-semibold text-black disabled:opacity-40"
+          className="peakpro-btn"
         >
           {blocked ? tPeakpro(locale, 'quizLimit') : tPeakpro(locale, 'quizStart')}
         </button>

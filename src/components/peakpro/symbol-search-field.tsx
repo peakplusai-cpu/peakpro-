@@ -70,18 +70,15 @@ export function SymbolSearchField({
         placeholder={placeholder}
         disabled={disabled}
         autoComplete="off"
-        className={cn(
-          'w-full border border-gold/25 bg-black text-sm text-white outline-none placeholder:text-zinc-600 focus:border-gold disabled:opacity-60',
-          variant === 'box' ? 'rounded-2xl px-3 py-2' : 'h-11 rounded-full px-4',
-        )}
+        className={cn('peakpro-input disabled:opacity-60', variant === 'box' ? '!h-10 !px-3' : '!h-11')}
       />
       {open && hits.length > 0 ? (
-        <ul className="absolute z-20 mt-2 max-h-72 w-full overflow-auto rounded-2xl border border-gold/20 bg-zinc-950 py-1 shadow-2xl">
+        <ul className="absolute z-20 mt-2 max-h-72 w-full overflow-auto border border-signal/30 bg-void-panel py-1 shadow-[0_0_40px_rgba(77,240,255,0.14)]">
           {hits.map((hit) => (
             <li key={hit.symbol}>
               <button
                 type="button"
-                className="flex w-full items-baseline justify-between gap-3 px-4 py-2.5 text-left hover:bg-gold/10"
+                className="flex w-full items-baseline justify-between gap-3 px-4 py-2.5 text-left hover:bg-signal/10"
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   onChange(hit.symbol);
@@ -89,7 +86,7 @@ export function SymbolSearchField({
                   onPick?.(hit);
                 }}
               >
-                <span className="font-peakpro text-sm text-gold">{hit.symbol}</span>
+                <span className="font-mono text-sm text-signal">{hit.symbol}</span>
                 <span className="truncate text-xs text-zinc-400">{hit.name}</span>
               </button>
             </li>

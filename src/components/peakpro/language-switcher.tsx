@@ -29,20 +29,20 @@ export function PeakProLanguageSwitcher({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        'inline-flex items-center gap-1 border border-phosphor/20 bg-ink-panel/80 px-1.5 py-0.5',
+        'inline-flex items-center gap-1 border border-signal/20 bg-void-panel/80 px-1.5 py-0.5',
         pending && 'opacity-60',
         className,
       )}
       role="group"
       aria-label={tPeakpro(locale, 'langAria')}
     >
-      <Languages className="h-3.5 w-3.5 text-gold" />
+      <Languages className="h-3.5 w-3.5 text-ice" />
       <button
         type="button"
         onClick={() => setLocale('zh')}
         className={cn(
           'px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          locale === 'zh' ? 'bg-gold text-black' : 'text-zinc-400 hover:text-gold',
+          locale === 'zh' ? 'bg-signal text-void' : 'text-zinc-400 hover:text-signal',
         )}
       >
         {tPeakpro(locale, 'langZh')}
@@ -52,7 +52,7 @@ export function PeakProLanguageSwitcher({ className }: { className?: string }) {
         onClick={() => setLocale('en')}
         className={cn(
           'px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          locale === 'en' ? 'bg-gold text-black' : 'text-zinc-400 hover:text-gold',
+          locale === 'en' ? 'bg-signal text-void' : 'text-zinc-400 hover:text-signal',
         )}
       >
         {tPeakpro(locale, 'langEn')}

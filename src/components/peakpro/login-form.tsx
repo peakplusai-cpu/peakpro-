@@ -1,4 +1,5 @@
 import { peakproSignIn, peakproSignUp } from '@/app/login/actions';
+import { Notice } from '@/components/peakpro/notice';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 
@@ -14,9 +15,9 @@ export function PeakProLoginForm({
   return (
     <div className="space-y-8">
       {error ? (
-        <p role="alert" className="border border-rose-400/30 bg-rose-500/10 px-4 py-3 font-mono text-sm text-rose-200">
+        <Notice role="alert" className="font-mono">
           {error}
-        </p>
+        </Notice>
       ) : null}
       <form action={peakproSignIn} className="space-y-4">
         {redirectTo ? <input type="hidden" name="redirect" value={redirectTo} /> : null}
@@ -36,7 +37,7 @@ export function PeakProLoginForm({
           {tPeakpro(locale, 'signIn')}
         </button>
       </form>
-      <form action={peakproSignUp} className="space-y-4 border-t border-phosphor/10 pt-6">
+      <form action={peakproSignUp} className="space-y-4 border-t border-signal/10 pt-6">
         {redirectTo ? <input type="hidden" name="redirect" value={redirectTo} /> : null}
         <div>
           <label htmlFor="signup-email" className="mb-2 block font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">

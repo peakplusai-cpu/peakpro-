@@ -4,7 +4,8 @@ import { ArrowLeft } from 'lucide-react';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
-import { displayPx, formatPct } from '@/lib/peakpro/format';
+import { Delta } from '@/components/peakpro/delta';
+import { displayPx } from '@/lib/peakpro/format';
 import { formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MarketDataRow, NameDeskNote, NewsCacheRow } from '@/lib/peakpro/types';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -41,7 +42,7 @@ export function PeakProNameNote({
   if (!row && !note) {
     return (
       <div className="space-y-6">
-        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'backToDesk')}
         </Link>
@@ -54,23 +55,21 @@ export function PeakProNameNote({
 
   return (
     <div className="space-y-8">
-      <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+      <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
         <ArrowLeft className="h-4 w-4" />
         {tPeakpro(locale, 'backToDesk')}
       </Link>
 
-      <article className="peakpro-panel p-6 md:p-8">
+      <article className="peakpro-panel peakpro-frame p-6 md:p-8">
         <p className="peakpro-kicker">{symbol}</p>
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <h1 className="font-peakpro text-3xl leading-snug text-zinc-50 md:text-4xl">{title}</h1>
+          <h1 className="font-peakpro text-3xl font-bold leading-snug text-ice md:text-4xl">{title}</h1>
           {row ? (
             <div className="md:text-right">
-              <p className="font-mono text-2xl text-zinc-50">
+              <p className="font-mono text-2xl text-ice">
                 {displayPx(row.payload.last, row.payload.currency, locale, usdTwd)}
               </p>
-              <p className={row.payload.changePct >= 0 ? 'text-phosphor' : 'text-rose-400'}>
-                {formatPct(row.payload.changePct)}
-              </p>
+              <Delta value={row.payload.changePct} className="font-mono text-base" />
             </div>
           ) : null}
         </div>
@@ -82,10 +81,10 @@ export function PeakProNameNote({
             className={cn(
               'mt-6 inline-flex border px-3 py-1 font-mono text-[11px] uppercase tracking-[0.18em]',
               note.lean === 'add'
-                ? 'border-phosphor/40 bg-phosphor/10 text-phosphor'
+                ? 'border-signal/50 bg-signal/10 text-signal'
                 : note.lean === 'trim'
-                  ? 'border-rose-400/40 bg-rose-500/10 text-rose-200'
-                  : 'border-gold/30 text-gold',
+                  ? 'border-plasma/50 bg-plasma/10 text-plasma'
+                  : 'border-warn/50 bg-warn/10 text-warn',
             )}
           >
             {tPeakpro(locale, 'nameLeanLabel')} · {leanLabel(locale, note.lean)}
@@ -93,7 +92,7 @@ export function PeakProNameNote({
         ) : null}
 
         {body ? (
-          <div className="prose prose-invert mt-8 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
+          <div className="mt-8 max-w-none whitespace-pre-wrap text-sm leading-7 text-zinc-300">
             {body}
           </div>
         ) : null}
@@ -104,7 +103,7 @@ export function PeakProNameNote({
             <ul className="mt-4 space-y-2 text-sm text-zinc-400">
               {prints.map((event) => (
                 <li key={event.id}>
-                  <Link href={`/app/prints/${encodeURIComponent(event.id)}`} className="hover:text-phosphor">
+                  <Link href={`/app/prints/${encodeURIComponent(event.id)}`} className="hover:text-signal">
                     {formatEventStamp(locale, event)} · {locale === 'zh' ? event.title.zh : event.title.en}
                   </Link>
                 </li>
@@ -126,7 +125,7 @@ export function PeakProNameNote({
           </section>
         ) : null}
 
-        <Link href={`/app/${market}/${encodeURIComponent(symbol)}`} className="mt-8 inline-block text-sm text-gold hover:underline">
+        <Link href={`/app/${market}/${encodeURIComponent(symbol)}`} className="mt-8 inline-block font-mono text-xs uppercase tracking-[0.16em] text-signal hover:underline">
           {tPeakpro(locale, 'nameChart')}
         </Link>
         <p className="mt-8 text-[11px] leading-relaxed text-zinc-600">

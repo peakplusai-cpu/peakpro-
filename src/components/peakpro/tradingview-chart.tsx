@@ -29,7 +29,7 @@ export function PeakProTradingViewChart({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-full bg-gold px-6 py-2.5 text-sm text-black hover:bg-gold-antique"
+          className="peakpro-btn"
         >
           {tPeakpro(locale, 'tvOpen')}
         </a>
@@ -42,7 +42,7 @@ export function PeakProTradingViewChart({
       key={symbol}
       title={symbol}
       src={tradingviewEmbedSrc(symbol, locale, timezone)}
-      className="h-[520px] w-full min-h-[520px] border-0 bg-black"
+      className="h-[520px] w-full min-h-[520px] border-0 bg-void"
       referrerPolicy="origin-when-cross-origin"
     />
   );

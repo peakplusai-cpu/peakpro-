@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { Loader2, Send, Trash2 } from 'lucide-react';
 
+import { Notice } from '@/components/peakpro/notice';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { usePeakPro } from '@/components/peakpro/provider';
@@ -179,7 +180,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'advisorTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'advisorTitle')}</h2>
         {tPeakproDesk(locale, desk, 'advisorLead') ? (
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
             {tPeakproDesk(locale, desk, 'advisorLead')}
@@ -190,7 +191,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
         ) : null}
       </div>
 
-      <div className="overflow-hidden rounded-3xl border border-gold/15 bg-black/60">
+      <div className="peakpro-panel overflow-hidden">
         <div className="max-h-[min(28rem,55vh)] space-y-4 overflow-y-auto px-5 py-6">
           {turns.length === 0 ? (
             tPeakpro(locale, 'advisorEmpty') ? (
@@ -204,10 +205,10 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
               >
                 <div
                   className={cn(
-                    'max-w-[90%] whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-relaxed',
+                    'max-w-[90%] whitespace-pre-wrap px-4 py-3 text-sm leading-relaxed',
                     turn.role === 'user'
-                      ? 'bg-gold/15 text-zinc-100'
-                      : 'border border-gold/15 bg-zinc-950 text-zinc-300',
+                      ? 'border-r-2 border-signal bg-signal/10 text-ice'
+                      : 'border-l-2 border-plasma/70 bg-void-panel/80 text-zinc-300',
                   )}
                 >
                   {turn.content || (pending && index === turns.length - 1 ? '…' : '')}
@@ -218,8 +219,8 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
           <div ref={bottomRef} />
         </div>
 
-        <form onSubmit={send} className="border-t border-gold/10 p-4">
-          {error ? <p className="mb-3 text-sm text-red-300">{error}</p> : null}
+        <form onSubmit={send} className="border-t border-signal/10 p-4">
+          {error ? <Notice role="alert" className="mb-3">{error}</Notice> : null}
           <div className="flex items-end gap-2">
             <textarea
               ref={boxRef}
@@ -229,13 +230,13 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
               rows={3}
               disabled={false}
               placeholder={tPeakproDesk(locale, desk, 'advisorPlaceholder')}
-              className="min-h-[4.5rem] flex-1 resize-none rounded-2xl border border-gold/20 bg-black px-4 py-3 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-gold/50"
+              className="peakpro-input !h-auto min-h-[4.5rem] flex-1 resize-none py-3"
             />
             <div className="flex flex-col gap-2">
               <button
                 type="submit"
                 disabled={pending || !draft.trim()}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full bg-gold text-black disabled:opacity-40"
+                className="peakpro-btn !h-11 !w-11 !p-0"
                 aria-label={tPeakpro(locale, 'advisorSend')}
               >
                 {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -246,7 +247,7 @@ export function PeakProAdvisorChat({ locale }: { locale: Locale }) {
                   setTurns([]);
                   setError(null);
                 }}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-gold/20 text-zinc-500 hover:text-gold"
+                className="peakpro-btn-ghost !h-11 !w-11 !p-0"
                 aria-label={tPeakpro(locale, 'advisorClear')}
               >
                 <Trash2 className="h-4 w-4" />

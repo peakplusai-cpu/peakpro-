@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { SparkCandles } from '@/components/peakpro/charts';
+import { Delta } from '@/components/peakpro/delta';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { usePeakPro } from '@/components/peakpro/provider';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
@@ -12,7 +13,7 @@ import type { Locale } from '@/i18n/locale';
 import { canAccessEquity } from '@/lib/peakpro/access';
 import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
+import { displayCap, displayPx, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, PeakProTier } from '@/lib/peakpro/types';
 import type { EquityMarket } from '@/lib/peakpro/yahoo';
 import { cn } from '@/lib/utils';
@@ -30,28 +31,27 @@ function SeriesCard({
 }) {
   const { usdTwd } = usePeakPro();
   const payload = row.payload;
-  const up = payload.changePct >= 0;
   const cap = displayCap(payload.marketCap, payload.currency, locale, usdTwd);
   return (
     <Link
       href={`/app/${market}/${encodeURIComponent(row.symbol)}`}
       className={cn(
-        'block rounded-2xl border bg-black/60 p-5 transition-colors hover:border-gold/50',
-        highlight ? 'border-gold' : 'border-gold/15',
+        'peakpro-panel block p-5',
+        highlight && 'peakpro-frame',
       )}
     >
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{row.symbol}</p>
-          <h3 className="mt-1 font-peakpro text-xl text-white">{payload.name}</h3>
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{row.symbol}</p>
+          <h3 className="mt-1 font-peakpro text-xl font-semibold text-ice">{payload.name}</h3>
           <p className="mt-1 text-[11px] uppercase tracking-[0.2em] text-zinc-500">
             {payload.exchange ? `${payload.exchange} · ` : ''}
             {row.timeframe}
           </p>
         </div>
         <div className="text-right">
-          <p className="font-peakpro text-2xl text-gold">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
-          <p className={up ? 'text-sm text-emerald-400' : 'text-sm text-red-400'}>{formatPct(payload.changePct)}</p>
+          <p className="font-mono text-2xl text-ice">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
+          <Delta value={payload.changePct} className="font-mono text-sm" />
         </div>
       </div>
       {(cap || payload.pe) && (
@@ -90,9 +90,9 @@ function TimeframeBlock({
 }) {
   return (
     <section>
-      <h3 className="mb-4 text-xs uppercase tracking-[0.32em] text-gold">{tPeakpro(locale, titleKey)}</h3>
+      <h3 className="peakpro-kicker mb-4">{tPeakpro(locale, titleKey)}</h3>
       {rows.length === 0 ? (
-        <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
+        <div className="peakpro-panel px-6 py-16 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'emptyCache')}
         </div>
       ) : (
@@ -205,7 +205,7 @@ export function PeakProEquityDesk({
   return (
     <div className="space-y-10">
       <div>
-        <h2 className="font-peakpro text-3xl text-gold">
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">
           {tPeakpro(locale, market === 'taiwan' ? 'taiwanTitle' : 'usTitle')}
         </h2>
         <form onSubmit={onLookup} className="mt-6 flex flex-col gap-3 sm:flex-row">
@@ -224,13 +224,13 @@ export function PeakProEquityDesk({
           <button
             type="submit"
             disabled={pending}
-            className="h-11 rounded-full bg-gold px-6 text-sm font-semibold text-black disabled:opacity-60"
+            className="peakpro-btn"
           >
             {tPeakpro(locale, 'searchCta')}
           </button>
         </form>
         <p className="mt-2 text-xs text-zinc-500">{tPeakpro(locale, 'searchHint')}</p>
-        {message ? <p className="mt-2 text-sm text-gold">{message}</p> : null}
+        {message ? <p className="mt-2 text-sm text-ice">{message}</p> : null}
       </div>
       {tier === 'premium' ? (
         <>

@@ -16,11 +16,11 @@ export function PeakProNewsDetail({
   if (!item) {
     return (
       <div className="space-y-6">
-        <Link href="/app/geopolitics" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+        <Link href="/app/geopolitics" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'backToDesk')}
         </Link>
-        <div className="rounded-2xl border border-gold/15 px-6 py-16 text-center text-sm text-zinc-500">
+        <div className="peakpro-panel px-6 py-16 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'missingNews')}
         </div>
       </div>
@@ -36,17 +36,17 @@ export function PeakProNewsDetail({
 
   return (
     <div className="space-y-8">
-      <Link href="/app/geopolitics" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+      <Link href="/app/geopolitics" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
         <ArrowLeft className="h-4 w-4" />
         {tPeakpro(locale, 'backToDesk')}
       </Link>
 
-      <article className="rounded-3xl border border-gold/15 bg-black/60 p-6 md:p-8">
-        <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">
+      <article className="peakpro-panel p-6 md:p-8">
+        <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">
           {newsCategoryLabel(locale, item.category)} · {newsSourceLabel(locale, item.source)}
         </p>
         {published ? <p className="mt-2 text-xs text-zinc-500">{published}</p> : null}
-        <h1 className="mt-4 font-peakpro text-3xl leading-snug text-gold md:text-4xl">
+        <h1 className="mt-4 font-peakpro text-3xl font-bold leading-snug text-ice md:text-4xl">
           {localizedNewsText(locale, item.title, item.title_zh)}
         </h1>
         <p className="mt-6 whitespace-pre-wrap text-sm leading-7 text-zinc-300">
@@ -57,7 +57,7 @@ export function PeakProNewsDetail({
             href={item.url}
             target="_blank"
             rel="noreferrer"
-            className="mt-8 inline-flex items-center gap-2 text-sm text-gold hover:underline"
+            className="mt-8 inline-flex items-center gap-2 font-mono text-xs uppercase tracking-[0.16em] text-signal hover:underline"
           >
             {tPeakpro(locale, 'readOriginal')}
             <ExternalLink className="h-3.5 w-3.5" />

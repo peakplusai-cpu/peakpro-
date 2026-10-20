@@ -6,7 +6,7 @@ import { useMemo, useState } from 'react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import type { FilingBook, FilingTrade, FilingsPayload } from '@/lib/peakpro/types';
+import type { FilingTrade, FilingsPayload } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
 type OpenPerson =
@@ -62,13 +62,13 @@ function TickerName({ ticker, issuer }: { ticker: string; issuer: string }) {
   const label = ticker || issuer;
   if (ticker) {
     return (
-      <Link href={`/app/us/${encodeURIComponent(ticker)}`} className="text-white hover:text-gold">
+      <Link href={`/app/us/${encodeURIComponent(ticker)}`} className="text-ice hover:text-signal">
         {label}
         {issuer && issuer !== ticker ? <span className="ml-2 text-zinc-500">{issuer}</span> : null}
       </Link>
     );
   }
-  return <span className="text-white">{issuer}</span>;
+  return <span className="text-ice">{issuer}</span>;
 }
 
 export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payload: FilingsPayload | null }) {
@@ -83,28 +83,28 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
   if (politician) {
     return (
       <div className="space-y-6">
-        <button type="button" onClick={() => setOpen(null)} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+        <button type="button" onClick={() => setOpen(null)} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'filingsBack')}
         </button>
         <header>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{chamberLabel(locale, politician.chamber)}</p>
-          <h2 className="mt-2 font-peakpro text-3xl text-gold">{displayPerson(locale, politician.person)}</h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{chamberLabel(locale, politician.chamber)}</p>
+          <h2 className="mt-2 font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{displayPerson(locale, politician.person)}</h2>
         </header>
         <div className="space-y-3">
           {politician.trades.map((trade, index) => (
             <article
               key={`${trade.ticker}-${trade.side}-${trade.amount}-${index}`}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4"
+              className="flex items-center justify-between gap-4 peakpro-panel px-5 py-4"
             >
               <TickerName ticker={trade.ticker} issuer={trade.issuer} />
               <div className="shrink-0 text-right">
                 <p
                   className={
                     trade.side === 'buy'
-                      ? 'text-sm text-emerald-400'
+                      ? 'text-sm text-signal'
                       : trade.side === 'sell'
-                        ? 'text-sm text-red-400'
+                        ? 'text-sm text-plasma'
                         : 'text-sm text-zinc-400'
                   }
                 >
@@ -122,19 +122,19 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
   if (book) {
     return (
       <div className="space-y-6">
-        <button type="button" onClick={() => setOpen(null)} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold">
+        <button type="button" onClick={() => setOpen(null)} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'filingsBack')}
         </button>
         <header>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{book.principal}</p>
-          <h2 className="mt-2 font-peakpro text-3xl text-gold">{locale === 'zh' ? book.nameZh : book.name}</h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{book.principal}</p>
+          <h2 className="mt-2 font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{locale === 'zh' ? book.nameZh : book.name}</h2>
         </header>
         <div className="space-y-3">
           {book.holdings.map((row) => (
             <article
               key={`${book.cik}-${row.issuer}`}
-              className="flex items-center justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4"
+              className="flex items-center justify-between gap-4 peakpro-panel px-5 py-4"
             >
               <TickerName ticker={row.ticker} issuer={row.issuer} />
               <p className="shrink-0 text-sm text-zinc-300">{money(row.valueUsd000)}</p>
@@ -149,7 +149,7 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
 
   return (
     <div className="space-y-6">
-      <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'filingsTitle')}</h2>
+      <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'filingsTitle')}</h2>
       <div className="flex flex-wrap gap-2">
         {(
           [
@@ -162,8 +162,8 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
             type="button"
             onClick={() => setTab(id)}
             className={cn(
-              'rounded-full px-4 py-1.5 text-xs tracking-wide',
-              tab === id ? 'bg-gold text-black' : 'border border-gold/25 text-zinc-400 hover:text-gold',
+              'px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em]',
+              tab === id ? 'bg-signal text-void' : 'border border-signal/25 text-zinc-400 hover:text-signal',
             )}
           >
             {tPeakpro(locale, key)}
@@ -179,10 +179,10 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
               key={politicianKey(row.person, row.chamber)}
               type="button"
               onClick={() => setOpen({ kind: 'politician', key: politicianKey(row.person, row.chamber) })}
-              className="rounded-2xl border border-gold/15 bg-black/60 px-5 py-6 text-left transition-colors hover:border-gold/50"
+              className="peakpro-panel px-5 py-6 text-left transition-colors"
             >
-              <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{chamberLabel(locale, row.chamber)}</p>
-              <h3 className="mt-2 font-peakpro text-xl text-gold">{displayPerson(locale, row.person)}</h3>
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{chamberLabel(locale, row.chamber)}</p>
+              <h3 className="mt-2 font-peakpro text-xl font-semibold text-ice">{displayPerson(locale, row.person)}</h3>
             </button>
           ))}
         </div>
@@ -193,10 +193,10 @@ export function PeakProFilingsDesk({ locale, payload }: { locale: Locale; payloa
               key={row.cik}
               type="button"
               onClick={() => setOpen({ kind: 'investor', key: row.cik })}
-              className="rounded-2xl border border-gold/15 bg-black/60 px-5 py-6 text-left transition-colors hover:border-gold/50"
+              className="peakpro-panel px-5 py-6 text-left transition-colors"
             >
-              <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{row.principal}</p>
-              <h3 className="mt-2 font-peakpro text-xl text-gold">{locale === 'zh' ? row.nameZh : row.name}</h3>
+              <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{row.principal}</p>
+              <h3 className="mt-2 font-peakpro text-xl font-semibold text-ice">{locale === 'zh' ? row.nameZh : row.name}</h3>
             </button>
           ))}
         </div>

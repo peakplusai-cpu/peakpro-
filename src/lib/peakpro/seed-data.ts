@@ -509,18 +509,6 @@ function briefRows(): AiSummaryRow[] {
   ];
 }
 
-/** Deterministic climbing candles for the landing intro — not a named listing. */
-export function anonymousGrowthBars(count = 42): OhlcBar[] {
-  return walkBars({
-    seed: 42,
-    count,
-    start: 18,
-    drift: 0.034,
-    vol: 0.045,
-    stepDays: 1,
-  });
-}
-
 export function buildSeedSnapshot(): {
   market: MarketDataRow[];
   news: NewsCacheRow[];

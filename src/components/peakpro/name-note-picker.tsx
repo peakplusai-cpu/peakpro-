@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { Notice } from '@/components/peakpro/notice';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import type { Locale } from '@/i18n/locale';
 import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
@@ -86,13 +87,12 @@ export function PeakProNameNotePicker({ locale, desk }: { locale: Locale; desk: 
           }}
           placeholder={tPeakpro(locale, market === 'taiwan' ? 'searchPlaceholderTw' : 'searchPlaceholderUs')}
           disabled={pending}
-          variant="box"
         />
-        <button type="submit" disabled={pending} className="peakpro-btn h-11 px-6 disabled:opacity-60">
+        <button type="submit" disabled={pending} className="peakpro-btn">
           {tPeakpro(locale, 'nameCta')}
         </button>
       </form>
-      {message ? <p className="text-sm text-gold">{message}</p> : null}
+      {message ? <Notice tone="ok" role="status">{message}</Notice> : null}
       <div className="flex flex-wrap gap-2">
         {chips.map((row) => (
           <button

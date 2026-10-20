@@ -2,8 +2,9 @@ import type { ReactNode } from 'react';
 
 import { PeakProFooter } from '@/components/peakpro/footer';
 import { PeakProModuleView } from '@/components/peakpro/modules';
-import { PeakProNav } from '@/components/peakpro/nav';
+import { Notice } from '@/components/peakpro/notice';
 import { PeakProProvider } from '@/components/peakpro/provider';
+import { PeakProRail } from '@/components/peakpro/rail';
 import type { Locale } from '@/i18n/locale';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
@@ -35,8 +36,8 @@ export async function PeakProAppShell({
       usdTwd={desk === 'us' ? null : cache.usdTwd}
       desk={desk}
     >
-      <div className="relative min-h-screen text-zinc-100">
-        <PeakProNav
+      <div className="relative min-h-screen text-ice">
+        <PeakProRail
           locale={locale}
           tier={session.tier}
           signedIn={Boolean(session.userId)}
@@ -44,28 +45,30 @@ export async function PeakProAppShell({
           expiresAt={session.expiresAt}
           desk={desk}
         />
-        <main className="mx-auto max-w-6xl px-4 py-10 pl-8">
-          {notice === 'revoked' ? (
-            <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
-              {tPeakpro(locale, 'revokedNotice')}
-            </p>
-          ) : null}
-          {notice === 'success' ? (
-            <p className="mb-6 border border-phosphor/30 bg-phosphor/10 px-4 py-3 text-sm text-phosphor">
-              {tPeakpro(locale, session.trial ? 'trialStarted' : 'paymentSuccess')}
-            </p>
-          ) : null}
-          {cache.lastUpdated ? (
-            <p className="mb-8 font-mono text-[11px] uppercase tracking-[0.28em] text-phosphor/70">
-              {tPeakpro(locale, 'lastPrint')}:{' '}
-              {new Date(cache.lastUpdated).toLocaleString(locale === 'zh' ? 'zh-TW' : 'en-US', {
-                month: 'short',
-                day: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
-            </p>
-          ) : null}
+        <div className="lg:pl-64">
+          <main className="peakpro-rise mx-auto max-w-6xl px-5 pb-10 pt-24 lg:px-10 lg:pt-12">
+            {notice === 'revoked' ? (
+              <Notice role="alert" className="mb-6">
+                {tPeakpro(locale, 'revokedNotice')}
+              </Notice>
+            ) : null}
+            {notice === 'success' ? (
+              <Notice tone="ok" role="status" className="mb-6">
+                {tPeakpro(locale, session.trial ? 'trialStarted' : 'paymentSuccess')}
+              </Notice>
+            ) : null}
+            {cache.lastUpdated ? (
+              <p className="peakpro-kicker mb-8">
+                <span className="peakpro-live" />
+                {tPeakpro(locale, 'lastPrint')}{' '}
+                {new Date(cache.lastUpdated).toLocaleString(locale === 'zh' ? 'zh-TW' : 'en-US', {
+                  month: 'short',
+                  day: 'numeric',
+                  hour: 'numeric',
+                  minute: '2-digit',
+                })}
+              </p>
+            ) : null}
           {children ?? (
             <PeakProModuleView
               locale={locale}
@@ -76,8 +79,9 @@ export async function PeakProAppShell({
               desk={desk}
             />
           )}
-        </main>
-        <PeakProFooter locale={locale} />
+          </main>
+          <PeakProFooter locale={locale} />
+        </div>
       </div>
     </PeakProProvider>
   );

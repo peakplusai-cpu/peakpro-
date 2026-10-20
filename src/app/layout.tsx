@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Mono, Instrument_Serif, Noto_Sans_TC } from 'next/font/google';
+import { Chakra_Petch, IBM_Plex_Sans, JetBrains_Mono } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { PeakProAtmosphere } from '@/components/peakpro/atmosphere';
@@ -10,24 +10,24 @@ import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 
 import './globals.css';
 
-const display = Instrument_Serif({
+const display = Chakra_Petch({
   subsets: ['latin'],
-  variable: '--font-peakpro-serif',
-  weight: '400',
+  variable: '--font-peakpro-display',
+  weight: ['500', '600', '700'],
   display: 'swap',
 });
 
-const sans = Noto_Sans_TC({
+const sans = IBM_Plex_Sans({
   subsets: ['latin'],
   variable: '--font-peakpro-sans',
-  weight: ['400', '500', '700'],
+  weight: ['400', '500', '600'],
   display: 'swap',
 });
 
-const mono = IBM_Plex_Mono({
+const mono = JetBrains_Mono({
   subsets: ['latin'],
   variable: '--font-peakpro-mono',
-  weight: ['400', '500'],
+  weight: ['400', '500', '700'],
   display: 'swap',
 });
 
@@ -54,7 +54,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   return (
     <html lang={localeHtmlLang(locale)} style={{ colorScheme: 'dark' }}>
       <body
-        className={`${display.variable} ${sans.variable} ${mono.variable} min-h-screen bg-ink text-zinc-50 antialiased`}
+        className={`${display.variable} ${sans.variable} ${mono.variable} min-h-screen bg-void text-ice antialiased`}
       >
         <PeakProAtmosphere />
         <LocaleProvider locale={locale} messages={messages}>

@@ -36,7 +36,7 @@ function figureText(locale: Locale, row: MacroFigure) {
 
 function EventStamp({ locale, event }: { locale: Locale; event: MacroEvent }) {
   return (
-    <p suppressHydrationWarning className="text-[11px] uppercase tracking-[0.18em] text-gold-antique">
+    <p suppressHydrationWarning className="font-mono text-[11px] uppercase tracking-[0.18em] text-ice-dim">
       {formatEventStamp(locale, event)}
     </p>
   );
@@ -77,21 +77,21 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
                     className={cn(
                       'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.18em]',
                       status === 'live'
-                        ? 'border border-phosphor/40 bg-phosphor/10 text-phosphor'
+                        ? 'border border-signal/40 bg-signal/10 text-signal'
                         : status === 'printed'
                           ? 'border border-zinc-700 text-zinc-400'
-                          : 'border border-gold/30 text-gold',
+                          : 'border border-plasma/40 text-plasma',
                     )}
                   >
                     {statusLabel(locale, status)}
                   </span>
                 </div>
-                <h3 className="mt-3 font-peakpro text-xl tracking-tight text-zinc-50">
+                <h3 className="mt-3 font-peakpro text-xl font-semibold tracking-tight text-ice">
                   {locale === 'zh' ? event.title.zh : event.title.en}
                 </h3>
                 <p className="mt-1 text-xs text-zinc-500">{locale === 'zh' ? event.agency.zh : event.agency.en}</p>
                 {status === 'upcoming' && now != null && remain > 0 ? (
-                  <p className="mt-4 font-mono text-2xl tabular-nums text-phosphor">
+                  <p className="mt-4 font-mono text-2xl tabular-nums text-signal">
                     {parts.days > 0 ? `${parts.days}d ` : ''}
                     {pad(parts.hours)}:{pad(parts.minutes)}:{pad(parts.seconds)}
                   </p>
@@ -108,7 +108,7 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
                     {event.actual.map((row) => figureText(locale, row)).join(' · ')}
                   </p>
                 ) : null}
-                <p className="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-phosphor">
+                <p className="mt-4 inline-flex items-center gap-1 text-xs uppercase tracking-[0.18em] text-signal">
                   {tPeakpro(locale, 'calendarOpen')}
                   <ChevronRight className="h-3.5 w-3.5" />
                 </p>
@@ -118,7 +118,7 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
               <Link
                 key={event.id}
                 href={`/app/prints/${encodeURIComponent(event.id)}`}
-                className="peakpro-panel relative z-[1] block cursor-pointer px-5 py-5 transition hover:border-phosphor/40"
+                className="peakpro-panel relative z-[1] block cursor-pointer px-5 py-5"
               >
                 {inner}
               </Link>

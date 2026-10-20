@@ -22,12 +22,12 @@ export function PeakProPaywall({
       {blurred && children ? (
         <div className="pointer-events-none select-none blur-md opacity-40">{children}</div>
       ) : (
-        <div className="h-64 bg-[radial-gradient(circle_at_top,_rgb(94_234_212_/_0.14),_transparent_55%)]" />
+        <div className="h-64 bg-[radial-gradient(circle_at_top,_rgb(183_148_255_/_0.16),_transparent_60%)]" />
       )}
-      <div className="absolute inset-0 flex items-center justify-center bg-ink/55 p-6">
-        <div className="max-w-md border border-white/10 bg-ink px-6 py-8 text-center">
-          <Lock className="mx-auto h-6 w-6 text-phosphor" />
-          <h3 className="mt-4 font-peakpro text-2xl tracking-tight text-zinc-50">{tPeakpro(locale, 'lockedTitle')}</h3>
+      <div className="absolute inset-0 flex items-center justify-center bg-void/60 p-6">
+        <div className="peakpro-panel peakpro-frame max-w-md px-6 py-8 text-center">
+          <Lock className="mx-auto h-6 w-6 text-plasma" />
+          <h3 className="mt-4 font-peakpro text-2xl font-semibold tracking-tight text-ice">{tPeakpro(locale, 'lockedTitle')}</h3>
           <p className="mt-3 text-sm leading-relaxed text-zinc-400">{body ?? tPeakpro(locale, 'lockedBody')}</p>
           <Link href="/subscribe" className="peakpro-btn mt-6">
             {tPeakpro(locale, 'lockedCta')}

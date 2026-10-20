@@ -34,11 +34,11 @@ function SupplierRow({
   const body = (
     <>
       <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-gold-antique">{row.symbol}</p>
-        <p className="mt-1 text-sm text-white">{text(locale, row.name)}</p>
+        <p className="text-[10px] uppercase tracking-[0.22em] text-ice-dim">{row.symbol}</p>
+        <p className="mt-1 text-sm text-ice">{text(locale, row.name)}</p>
       </div>
       <div className="flex shrink-0 items-center gap-2">
-        <span className="rounded-full border border-gold/25 bg-gold/10 px-3 py-1 text-xs text-gold">
+        <span className="peakpro-chip">
           {text(locale, row.supply)}
         </span>
         {href ? <ArrowUpRight className="h-3.5 w-3.5 text-zinc-600" /> : null}
@@ -47,11 +47,11 @@ function SupplierRow({
   );
 
   const className =
-    'flex items-center justify-between gap-4 rounded-2xl border border-gold/15 bg-black/60 px-5 py-4';
+    'flex items-center justify-between gap-4 peakpro-panel px-5 py-4';
 
   if (href) {
     return (
-      <Link href={href} className={cn(className, 'hover:border-gold/40')}>
+      <Link href={href} className={cn(className, '')}>
         {body}
       </Link>
     );
@@ -72,10 +72,10 @@ function AnchorCard({
     <button
       type="button"
       onClick={() => onOpen(row.id)}
-      className="rounded-3xl border border-gold/15 bg-black/60 px-5 py-5 text-left hover:border-gold/40"
+      className="peakpro-panel px-5 py-5 text-left"
     >
-      <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{row.symbol}</p>
-      <h3 className="mt-2 font-peakpro text-xl text-gold">{text(locale, row.name)}</h3>
+      <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{row.symbol}</p>
+      <h3 className="mt-2 font-peakpro text-xl font-semibold text-ice">{text(locale, row.name)}</h3>
       <p className="mt-2 text-xs text-zinc-500">{text(locale, row.sector)}</p>
       <p className="mt-4 text-[11px] tracking-wide text-zinc-400">
         {tPeakpro(locale, 'conceptsCount').replace('{n}', String(row.suppliers.length))}
@@ -104,24 +104,24 @@ export function PeakProConceptsDesk({ locale, desk = 'tw' }: { locale: Locale; d
             setTab(open.market);
             setOpenId(null);
           }}
-          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-gold"
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal"
         >
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'conceptsBack')}
         </button>
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.28em] text-gold-antique">{open.symbol}</p>
-            <h2 className="mt-2 font-peakpro text-3xl text-gold">{text(locale, open.name)}</h2>
+            <p className="font-mono text-[10px] uppercase tracking-[0.24em] text-signal/80">{open.symbol}</p>
+            <h2 className="mt-2 font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{text(locale, open.name)}</h2>
             <p className="mt-2 text-sm text-zinc-500">{text(locale, open.sector)}</p>
           </div>
           {deskHref && !(desk === 'us' && open.market === 'taiwan') ? (
-            <Link href={deskHref} className="text-sm text-gold hover:underline">
+            <Link href={deskHref} className="font-mono text-xs uppercase tracking-[0.16em] text-signal hover:underline">
               {tPeakpro(locale, 'conceptsOpenTape')}
             </Link>
           ) : null}
         </header>
-        <p className="text-[10px] uppercase tracking-[0.22em] text-gold">{tPeakpro(locale, 'conceptsChain')}</p>
+        <p className="peakpro-kicker">{tPeakpro(locale, 'conceptsChain')}</p>
         <div className="space-y-3">
           {open.suppliers
             .filter((row) => desk !== 'us' || row.market !== 'taiwan')
@@ -144,7 +144,7 @@ export function PeakProConceptsDesk({ locale, desk = 'tw' }: { locale: Locale; d
   return (
     <div className="space-y-8">
       <div>
-        <h2 className="font-peakpro text-3xl text-gold">{tPeakpro(locale, 'conceptsTitle')}</h2>
+        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'conceptsTitle')}</h2>
         {tPeakpro(locale, 'conceptsLead') ? (
           <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'conceptsLead')}</p>
         ) : null}
@@ -158,8 +158,8 @@ export function PeakProConceptsDesk({ locale, desk = 'tw' }: { locale: Locale; d
               type="button"
               onClick={() => setTab(id)}
               className={cn(
-                'rounded-full px-4 py-1.5 text-xs tracking-wide',
-                tab === id ? 'bg-gold text-black' : 'border border-gold/25 text-zinc-400 hover:text-gold',
+                'px-4 py-1.5 font-mono text-[11px] uppercase tracking-[0.14em]',
+                tab === id ? 'bg-signal text-void' : 'border border-signal/25 text-zinc-400 hover:text-signal',
               )}
             >
               {tPeakpro(locale, id === 'taiwan' ? 'conceptsTaiwan' : 'conceptsUs')}

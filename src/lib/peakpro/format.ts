@@ -71,3 +71,23 @@ export function publicThesis(text: string | null | undefined) {
   if (!value || /yahoo|warehouse|scraper|快取|cache print/i.test(value)) return '';
   return value;
 }
+
+export type DeltaTone = 'up' | 'down' | 'flat';
+
+/** Direction without market-color semantics: up = signal cyan, down = plasma violet. */
+export function deltaTone(value: number | null | undefined): DeltaTone {
+  if (value == null || !Number.isFinite(value) || value === 0) return 'flat';
+  return value > 0 ? 'up' : 'down';
+}
+
+export function deltaClass(tone: DeltaTone) {
+  if (tone === 'up') return 'text-signal';
+  if (tone === 'down') return 'text-plasma';
+  return 'text-zinc-500';
+}
+
+export function deltaArrow(tone: DeltaTone) {
+  if (tone === 'up') return '▲';
+  if (tone === 'down') return '▼';
+  return '◆';
+}
