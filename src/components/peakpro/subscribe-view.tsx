@@ -128,9 +128,9 @@ export function PeakProSubscribeView({
           <span className="peakpro-live" />
           PeakPro+
         </p>
-        <h1 className="mt-4 font-peakpro text-4xl tracking-tight text-zinc-50">{tPeakpro(locale, 'subscribeTitle')}</h1>
-        <p className="mt-4 text-sm text-zinc-400">{tPeakpro(locale, 'subscribeSub')}</p>
-        <div className="peakpro-panel peakpro-frame peakpro-sweep mt-10 p-8">
+        <h1 className="mt-4 font-peakpro text-5xl tracking-tight text-gold sm:text-6xl">{tPeakpro(locale, 'subscribeTitle')}</h1>
+        <p className="mt-4 text-sm text-gold/55">{tPeakpro(locale, 'subscribeSub')}</p>
+        <div className="peakpro-panel mt-10 p-8">
           <p className="font-mono text-5xl tabular-nums text-gold">
             {tPeakpro(locale, 'subscribePrice')}
             <span className="ml-2 text-base text-zinc-500">{tPeakpro(locale, 'subscribePeriod')}</span>

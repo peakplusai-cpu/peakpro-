@@ -10,26 +10,19 @@ export function PeakProLogo({
   align?: 'center' | 'left';
 }) {
   const scale =
-    size === 'xl' ? 'text-6xl sm:text-7xl md:text-8xl' : size === 'sm' ? 'text-lg' : 'text-2xl';
+    size === 'xl'
+      ? 'text-[18vw] leading-[0.82] sm:text-[8.5rem] md:text-[10rem]'
+      : size === 'sm'
+        ? 'text-xl'
+        : 'text-3xl';
 
   return (
     <div className={cn('select-none', align === 'left' ? 'text-left' : 'text-center', className)}>
-      <p
-        className={cn(
-          'font-peakpro font-semibold leading-none tracking-tight',
-          size === 'xl' ? 'tracking-[-0.04em]' : 'tracking-tight',
-          scale,
-        )}
-      >
-        <span className="text-zinc-50">Peak</span>
-        <span className="peakpro-gold-text">Pro</span>
+      <p className={cn('font-peakpro font-normal tracking-tight text-gold', scale)}>
+        Peak
+        <span className="italic">Pro</span>
         <span className="text-phosphor">+</span>
       </p>
-      {size === 'xl' ? (
-        <p className="mt-5 font-mono text-[11px] uppercase tracking-[0.42em] text-phosphor/80">
-          Private terminal
-        </p>
-      ) : null}
     </div>
   );
 }

@@ -44,7 +44,7 @@ export async function PeakProAppShell({
           expiresAt={session.expiresAt}
           desk={desk}
         />
-        <main className="mx-auto max-w-6xl px-4 py-10">
+        <main className="mx-auto max-w-6xl px-4 py-10 pl-8">
           {notice === 'revoked' ? (
             <p className="mb-6 border border-rose-400/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
               {tPeakpro(locale, 'revokedNotice')}

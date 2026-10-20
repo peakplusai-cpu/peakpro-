@@ -37,7 +37,7 @@ export function SparkCandles({
               x2={x + candleW / 2}
               y1={y(bar.h)}
               y2={y(bar.l)}
-              stroke={up ? '#5eead4' : '#e4c15a'}
+              stroke={up ? '#ff3b30' : '#2f9e6b'}
               strokeWidth="1"
             />
             <rect
@@ -45,8 +45,8 @@ export function SparkCandles({
               y={Math.min(y(bar.o), y(bar.c))}
               width={candleW}
               height={Math.max(1.5, Math.abs(y(bar.c) - y(bar.o)))}
-              fill={up ? '#5eead4' : '#14110a'}
-              stroke={up ? '#5eead4' : '#e4c15a'}
+              fill={up ? '#ff3b30' : '#080704'}
+              stroke={up ? '#ff3b30' : '#2f9e6b'}
               strokeWidth="0.6"
             />
           </g>
@@ -90,14 +90,14 @@ export function FearGreedGauge({
       <svg viewBox="0 0 200 120" className={cn('w-full max-w-sm', compact ? 'h-28' : 'h-40')}>
         <defs>
           <linearGradient id={`pp-gauge-${clamped}`} x1="20" y1="100" x2="180" y2="100">
-            <stop offset="0%" stopColor="#e4c15a" />
-            <stop offset="100%" stopColor="#5eead4" />
+            <stop offset="0%" stopColor="#2f9e6b" />
+            <stop offset="100%" stopColor="#ff3b30" />
           </linearGradient>
         </defs>
         <path
           d="M20 100 A80 80 0 0 1 180 100"
           fill="none"
-          stroke="#16302c"
+          stroke="#241f1a"
           strokeWidth="14"
           strokeLinecap="round"
         />
@@ -109,8 +109,8 @@ export function FearGreedGauge({
           strokeLinecap="round"
           strokeDasharray={`${(clamped / 100) * 251} 251`}
         />
-        <line x1="100" y1="100" x2={x} y2={y} stroke="#5eead4" strokeWidth="3" />
-        <circle cx="100" cy="100" r="5" fill="#5eead4" />
+        <line x1="100" y1="100" x2={x} y2={y} stroke="#f3ece0" strokeWidth="3" />
+        <circle cx="100" cy="100" r="5" fill="#ff3b30" />
       </svg>
       <p className={cn('font-mono tabular-nums text-phosphor', compact ? 'text-3xl' : 'text-4xl')}>{clamped}</p>
       <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.28em] text-zinc-400">{label}</p>

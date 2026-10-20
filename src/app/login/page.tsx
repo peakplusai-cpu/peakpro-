@@ -32,9 +32,9 @@ export default async function LoginPage({
           <span className="peakpro-live" />
           {locale === 'zh' ? '客戶端閘道' : 'Client gate'}
         </p>
-        <h1 className="mt-4 font-peakpro text-4xl tracking-tight text-zinc-50">{tPeakpro(locale, 'loginTitle')}</h1>
-        <p className="mt-3 text-sm text-zinc-400">{tPeakpro(locale, 'loginSub')}</p>
-        <div className="peakpro-panel peakpro-frame mt-8 p-8">
+        <h1 className="mt-4 font-peakpro text-5xl tracking-tight text-gold">{tPeakpro(locale, 'loginTitle')}</h1>
+        <p className="mt-3 text-sm text-gold/55">{tPeakpro(locale, 'loginSub')}</p>
+        <div className="peakpro-panel mt-8 p-8">
           <PeakProLoginForm locale={locale} error={error} redirectTo={redirectTo} />
         </div>
         <Link href="/" className="mt-6 inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-500 hover:text-phosphor">

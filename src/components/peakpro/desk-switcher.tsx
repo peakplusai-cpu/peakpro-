@@ -52,7 +52,7 @@ export function PeakProDeskSwitcher({
         onClick={() => setDesk('tw')}
         className={cn(
           'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          desk === 'tw' ? 'bg-phosphor text-black' : 'text-zinc-400 hover:text-phosphor',
+          desk === 'tw' ? 'bg-phosphor text-white' : 'text-zinc-400 hover:text-phosphor',
         )}
       >
         {tPeakpro(locale, 'deskTw')}
@@ -62,7 +62,7 @@ export function PeakProDeskSwitcher({
         onClick={() => setDesk('us')}
         className={cn(
           'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          desk === 'us' ? 'bg-phosphor text-black' : 'text-zinc-400 hover:text-phosphor',
+          desk === 'us' ? 'bg-phosphor text-white' : 'text-zinc-400 hover:text-phosphor',
         )}
       >
         {tPeakpro(locale, 'deskUs')}

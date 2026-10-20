@@ -5,267 +5,200 @@
 @layer base {
   :root {
     color-scheme: dark;
-    --pp-bg: #07080b;
-    --pp-panel: #0c1016;
-    --pp-line: rgba(94, 234, 212, 0.16);
-    --pp-gold: #e4c15a;
-    --pp-cyan: #5eead4;
-    --pp-rose: #fb7185;
+    --pp-bg: #080704;
+    --pp-panel: #100e0c;
+    --pp-line: rgba(243, 236, 224, 0.12);
+    --pp-gold: #e8dfd0;
+    --pp-cyan: #ff3b30;
+    --pp-rose: #ff3b30;
+    --pp-bone: #f3ece0;
     background-color: var(--pp-bg);
-    color: #eef2f6;
+    color: var(--pp-bone);
   }
 
   html,
   body {
     @apply min-h-screen antialiased;
     background-color: var(--pp-bg);
-    color: #e8eef4;
-    font-family: var(--font-peakpro-sans), 'IBM Plex Sans', system-ui, sans-serif;
+    color: var(--pp-bone);
+    font-family: var(--font-peakpro-sans), 'Noto Sans TC', system-ui, sans-serif;
   }
 
   *,
   ::before,
   ::after {
-    border-color: #1c2430;
+    border-color: rgba(243, 236, 224, 0.12);
   }
 
   input,
   textarea,
   select {
-    background-color: #07090d;
-    color: #eef2f6;
-    border-color: #243040;
+    background-color: #0c0a08;
+    color: var(--pp-bone);
+    border-color: rgba(243, 236, 224, 0.16);
     -webkit-appearance: none;
     appearance: none;
   }
 
   input::placeholder,
   textarea::placeholder {
-    color: #64748b;
+    color: #6f685c;
   }
 
   ::selection {
-    background: rgba(94, 234, 212, 0.28);
-    color: #04110e;
+    background: #ff3b30;
+    color: #fff;
   }
 }
 
 @layer components {
   .peakpro-kicker {
-    @apply inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.28em];
-    color: var(--pp-cyan);
+    @apply inline-flex items-center gap-2 font-mono text-[10px] uppercase tracking-[0.22em];
+    color: rgba(243, 236, 224, 0.45);
   }
 
   .peakpro-live {
     @apply relative inline-block h-1.5 w-1.5 rounded-full;
     background: var(--pp-cyan);
-    box-shadow: 0 0 10px #5eead4;
-    animation: peakproPulse 1.8s ease-in-out infinite;
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
+    animation: peakproPulse 2.4s ease-out infinite;
   }
 
   .peakpro-panel {
     position: relative;
-    border: 1px solid rgba(94, 234, 212, 0.12);
-    background:
-      linear-gradient(180deg, rgba(18, 24, 34, 0.92), rgba(8, 10, 14, 0.96));
-    border-radius: 4px;
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.04),
-      0 0 0 1px rgba(228, 193, 90, 0.04);
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    border: 1px solid var(--pp-line);
+    background: rgba(16, 14, 12, 0.88);
+    border-radius: 0;
   }
 
   .peakpro-panel:hover {
-    border-color: rgba(94, 234, 212, 0.32);
-    box-shadow:
-      0 0 36px rgba(94, 234, 212, 0.08),
-      inset 0 1px 0 rgba(255, 255, 255, 0.06);
-    transform: translateY(-1px);
+    border-color: rgba(243, 236, 224, 0.28);
   }
 
   .peakpro-frame {
     position: relative;
   }
 
-  .peakpro-frame::before,
-  .peakpro-frame::after {
-    content: '';
-    position: absolute;
-    width: 22px;
-    height: 22px;
-    pointer-events: none;
-    z-index: 2;
-  }
-
   .peakpro-frame::before {
-    top: 0;
-    left: 0;
-    border-top: 1px solid var(--pp-cyan);
-    border-left: 1px solid var(--pp-cyan);
+    content: none;
   }
 
   .peakpro-frame::after {
-    right: 0;
-    bottom: 0;
-    border-right: 1px solid var(--pp-gold);
-    border-bottom: 1px solid var(--pp-gold);
+    content: none;
   }
 
   .peakpro-btn {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 font-mono text-xs font-medium uppercase tracking-[0.18em] text-black;
-    background: linear-gradient(180deg, #f3e0a0 0%, var(--pp-gold) 48%, #b8962e 100%);
-    border-radius: 2px;
-    box-shadow: 0 0 24px rgba(228, 193, 90, 0.18);
-    transition: transform 0.15s ease, filter 0.15s ease;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 font-mono text-xs font-medium uppercase tracking-[0.16em] text-black;
+    background: var(--pp-bone);
+    border-radius: 0;
+    transition: background 0.15s ease, color 0.15s ease;
   }
 
   .peakpro-btn:hover {
-    filter: brightness(1.08);
-    transform: translateY(-1px);
+    background: var(--pp-cyan);
+    color: #fff;
   }
 
   .peakpro-btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 border px-5 py-2.5 font-mono text-xs uppercase tracking-[0.18em];
-    color: var(--pp-cyan);
-    border-color: rgba(94, 234, 212, 0.35);
-    border-radius: 2px;
-    background: rgba(94, 234, 212, 0.04);
-    transition: background 0.15s ease, border-color 0.15s ease;
+    @apply inline-flex items-center justify-center gap-2 border px-6 py-3 font-mono text-xs uppercase tracking-[0.16em];
+    color: var(--pp-bone);
+    border-color: rgba(243, 236, 224, 0.28);
+    border-radius: 0;
+    background: transparent;
+    transition: border-color 0.15s ease, color 0.15s ease;
   }
 
   .peakpro-btn-ghost:hover {
-    background: rgba(94, 234, 212, 0.1);
     border-color: var(--pp-cyan);
+    color: var(--pp-cyan);
   }
 
   .peakpro-chip {
     @apply inline-flex items-center gap-1 px-2 py-1 font-mono text-[10px] uppercase tracking-[0.16em];
-    border: 1px solid rgba(94, 234, 212, 0.22);
-    border-radius: 2px;
-    color: var(--pp-cyan);
-    background: rgba(94, 234, 212, 0.06);
+    border: 1px solid var(--pp-line);
+    border-radius: 0;
+    color: var(--pp-bone);
+    background: transparent;
   }
 
   .peakpro-input {
-    @apply flex h-11 w-full px-4 font-mono text-sm text-white placeholder:text-zinc-600;
-    border: 1px solid rgba(94, 234, 212, 0.16);
-    border-radius: 2px;
-    background: #07090d;
+    @apply flex h-12 w-full px-4 font-mono text-sm text-white placeholder:text-zinc-600;
+    border: 1px solid var(--pp-line);
+    border-radius: 0;
+    background: #0c0a08;
   }
 
   .peakpro-input:focus {
     outline: none;
     border-color: var(--pp-cyan);
-    box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.25);
   }
 
   .peakpro-sweep {
     position: relative;
-    overflow: hidden;
   }
 
   .peakpro-sweep::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(105deg, transparent 40%, rgba(94, 234, 212, 0.12) 50%, transparent 60%);
-    transform: translateX(-120%);
-    animation: peakproSweep 5.5s ease-in-out infinite;
-    pointer-events: none;
+    content: none;
   }
 }
 
 @layer utilities {
   .peakpro-gold-text {
-    background-image: linear-gradient(180deg, #fff6d0 0%, var(--pp-gold) 52%, #9a7b1a 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: var(--pp-gold);
+    color: var(--pp-bone);
   }
 
   .peakpro-hairline {
-    box-shadow: inset 0 0 0 1px rgb(94 234 212 / 0.16);
+    box-shadow: inset 0 0 0 1px var(--pp-line);
   }
 
-  .peakpro-grid {
+  .peakpro-spine {
+    pointer-events: none;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 60;
+    width: 3px;
+    background: var(--pp-cyan);
+  }
+
+  .peakpro-depth {
     pointer-events: none;
     position: fixed;
     inset: 0;
     z-index: 0;
-    background-image:
-      linear-gradient(rgba(94, 234, 212, 0.035) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(94, 234, 212, 0.035) 1px, transparent 1px);
-    background-size: 72px 72px;
-    mask-image: radial-gradient(ellipse at center, black 18%, transparent 78%);
+    overflow: hidden;
+    opacity: 0.22;
   }
 
-  .peakpro-grain {
-    pointer-events: none !important;
-    position: fixed;
-    inset: 0;
-    z-index: 70;
-    opacity: 0.09;
-    mix-blend-mode: overlay;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  }
-
-  .peakpro-spot {
-    pointer-events: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    background: radial-gradient(
-      560px circle at var(--mx, 50%) var(--my, 18%),
-      rgba(94, 234, 212, 0.1),
-      transparent 42%
-    );
+  .peakpro-depth span {
+    position: absolute;
+    left: 0;
+    height: 7px;
+    background: linear-gradient(90deg, rgba(255, 59, 48, 0.85), rgba(243, 236, 224, 0.08) 62%, transparent);
+    animation: peakproDepth 14s linear infinite;
   }
 
   .peakpro-scan {
-    pointer-events: none;
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      to bottom,
-      rgba(255, 255, 255, 0.035) 0px,
-      rgba(255, 255, 255, 0.035) 1px,
-      transparent 1px,
-      transparent 3px
-    );
-    mix-blend-mode: overlay;
-    animation: peakproScan 7s linear infinite;
+    display: none;
+  }
+
+  .peakpro-grid,
+  .peakpro-grain,
+  .peakpro-spot {
+    display: none;
   }
 }
 
 @keyframes peakproPulse {
-  0%,
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(255, 59, 48, 0);
+  }
   100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.45;
-    transform: scale(0.72);
-  }
-}
-
-@keyframes peakproSweep {
-  0%,
-  55% {
-    transform: translateX(-120%);
-  }
-  80%,
-  100% {
-    transform: translateX(120%);
-  }
-}
-
-@keyframes peakproScan {
-  from {
-    background-position: 0 0;
-  }
-  to {
-    background-position: 0 120px;
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
   }
 }
 
@@ -275,22 +208,6 @@
   }
   to {
     transform: translateX(-50%);
-  }
-}
-
-@keyframes peakproFlicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  46% {
-    opacity: 0.86;
-  }
-  48% {
-    opacity: 1;
-  }
-  92% {
-    opacity: 0.92;
   }
 }
 
@@ -305,16 +222,23 @@
   }
 }
 
+@keyframes peakproDepth {
+  from {
+    transform: translateX(-8%);
+  }
+  to {
+    transform: translateX(6%);
+  }
+}
+
 .rounded-2xl,
 .rounded-3xl {
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .peakpro-live,
-  .peakpro-sweep::after,
-  .peakpro-scan,
-  .peakpro-spot {
+  .peakpro-depth span {
     animation: none;
   }
 }

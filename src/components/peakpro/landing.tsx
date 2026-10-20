@@ -23,18 +23,21 @@ export function PeakProLanding({
   desk?: DeskRegion;
 }) {
   return (
-    <div className="relative min-h-screen text-zinc-100">
+    <div className="relative min-h-screen text-gold">
       <IntroCandles locale={locale} onComplete={() => undefined} />
-      <header className="sticky top-0 z-30 border-b border-phosphor/10 bg-ink/70 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3">
+      <header className="sticky top-0 z-30 border-b border-white/10 bg-ink/90">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-4 pl-8">
           <PeakProLogo size="sm" align="left" />
           <div className="flex flex-wrap items-center justify-end gap-2">
             <PeakProDeskSwitcher locale={locale} desk={desk} />
             <PeakProLanguageSwitcher />
-            <Link href={signedIn ? '/app' : '/login'} className="font-mono text-[11px] uppercase tracking-[0.18em] text-zinc-300 hover:text-phosphor">
+            <Link
+              href={signedIn ? '/app' : '/login'}
+              className="font-mono text-[11px] uppercase tracking-[0.16em] text-gold/70 hover:text-phosphor"
+            >
               {tPeakpro(locale, signedIn ? 'navApp' : 'navLogin')}
             </Link>
-            <Link href="/subscribe" className="peakpro-btn !px-3 !py-1.5 text-[10px]">
+            <Link href="/subscribe" className="peakpro-btn !px-4 !py-2 text-[10px]">
               {tPeakpro(locale, 'navSubscribe')}
             </Link>
           </div>
@@ -42,26 +45,22 @@ export function PeakProLanding({
       </header>
 
       <main>
-        <section className="mx-auto grid max-w-7xl items-stretch gap-8 px-6 py-16 lg:grid-cols-12 lg:py-24">
-          <div className="peakpro-frame peakpro-sweep p-6 sm:p-10 lg:col-span-7">
-            <p className="peakpro-kicker">
-              <span className="peakpro-live" />
-              {locale === 'zh' ? '終端連線中' : 'Terminal online'}
-            </p>
-            <div className="mt-8">
-              <PeakProLogo size="xl" align="left" />
-            </div>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-zinc-400 sm:text-lg">
-              {tPeakpro(locale, 'tagline')}
-            </p>
-            <div className="mt-10 flex flex-wrap items-center gap-3">
-              <Link href={signedIn ? '/app' : '/login'} className="peakpro-btn">
-                {tPeakpro(locale, 'heroCta')}
-              </Link>
-              <Link href="/subscribe" className="peakpro-btn-ghost">
-                {tPeakpro(locale, 'heroSecondary')}
-              </Link>
-            </div>
+        <section className="relative mx-auto flex min-h-[86vh] max-w-7xl flex-col justify-end px-6 pb-16 pl-8 pt-20">
+          <p className="peakpro-kicker">
+            <span className="peakpro-live" />
+            {locale === 'zh' ? '延遲倉儲 · 官方公布' : 'Delayed warehouse · official prints'}
+          </p>
+          <PeakProLogo size="xl" align="left" className="mt-6" />
+          <p className="mt-8 max-w-xl text-lg leading-relaxed text-gold/60 sm:text-xl">
+            {tPeakpro(locale, 'tagline')}
+          </p>
+          <div className="mt-10 flex flex-wrap items-center gap-3">
+            <Link href={signedIn ? '/app' : '/login'} className="peakpro-btn">
+              {tPeakpro(locale, 'heroCta')}
+            </Link>
+            <Link href="/subscribe" className="peakpro-btn-ghost">
+              {tPeakpro(locale, 'heroSecondary')}
+            </Link>
           </div>
           <WorldClocks locale={locale} desk={desk} variant="hud" />
         </section>

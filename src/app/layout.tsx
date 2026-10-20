@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { IBM_Plex_Mono, IBM_Plex_Sans, Syne } from 'next/font/google';
+import { IBM_Plex_Mono, Instrument_Serif, Noto_Sans_TC } from 'next/font/google';
 import type { ReactNode } from 'react';
 
 import { PeakProAtmosphere } from '@/components/peakpro/atmosphere';
@@ -10,17 +10,17 @@ import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 
 import './globals.css';
 
-const display = Syne({
+const display = Instrument_Serif({
   subsets: ['latin'],
   variable: '--font-peakpro-serif',
-  weight: ['500', '600', '700'],
+  weight: '400',
   display: 'swap',
 });
 
-const sans = IBM_Plex_Sans({
+const sans = Noto_Sans_TC({
   subsets: ['latin'],
   variable: '--font-peakpro-sans',
-  weight: ['400', '500', '600'],
+  weight: ['400', '500', '700'],
   display: 'swap',
 });
 

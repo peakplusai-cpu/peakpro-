@@ -7,7 +7,7 @@ import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { anonymousGrowthBars } from '@/lib/peakpro/seed-data';
 
-const INTRO_KEY = 'peakpro-intro-seen-v5';
+const INTRO_KEY = 'peakpro-intro-seen-v6';
 
 export function IntroCandles({
   locale,
@@ -54,16 +54,12 @@ export function IntroCandles({
     <AnimatePresence>
       {visible ? (
         <motion.div
-          className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-ink"
+          className="fixed inset-0 z-[80] flex flex-col items-center justify-center bg-[#080704]"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.7 }}
         >
-          <div className="peakpro-scan" />
-          <p className="peakpro-kicker mb-10 animate-[peakproFlicker_2.4s_linear_infinite]">
-            <span className="peakpro-live" />
-            {tPeakpro(locale, 'introKicker')}
-          </p>
+          <p className="mb-12 font-peakpro text-2xl italic text-gold/70">{tPeakpro(locale, 'introKicker')}</p>
           <svg
             viewBox={`0 0 ${width} ${height}`}
             className="h-[42vh] w-[min(94vw,920px)]"
@@ -75,7 +71,7 @@ export function IntroCandles({
               const y = (v: number) => ((max - v) / span) * (height - 24) + 12;
               const up = bar.c >= bar.o;
               const bodyH = Math.max(6, Math.abs(y(bar.c) - y(bar.o)));
-              const color = up ? '#5eead4' : '#e4c15a';
+              const color = up ? '#ff3b30' : '#2f9e6b';
               return (
                 <g
                   key={`${bar.t}-${index}`}
@@ -98,7 +94,7 @@ export function IntroCandles({
                     y={Math.min(y(bar.o), y(bar.c))}
                     width="10"
                     height={bodyH}
-                    fill={up ? '#5eead4' : '#14110a'}
+                    fill={up ? '#ff3b30' : '#080704'}
                     stroke={color}
                     strokeWidth="0.8"
                   />

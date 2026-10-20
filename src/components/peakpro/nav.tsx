@@ -36,7 +36,7 @@ export function PeakProNav({
   const pathname = usePathname();
 
   return (
-    <header className="sticky top-0 z-40 border-b border-phosphor/10 bg-ink/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-white/10 bg-ink/95">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3">
         <Link href="/" className="shrink-0">
           <PeakProLogo size="sm" align="left" />
@@ -87,7 +87,7 @@ export function PeakProNav({
         </div>
       </div>
       {compact ? null : (
-        <nav className="overflow-x-auto border-t border-phosphor/10">
+        <nav className="overflow-x-auto border-t border-white/10">
           <div className="mx-auto flex max-w-7xl gap-1 px-3 py-1">
             {modulesForDesk(desk).map((moduleId) => {
               const href = MODULE_HREF[moduleId];

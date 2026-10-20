@@ -10,23 +10,23 @@ const config: Config = {
     extend: {
       colors: {
         gold: {
-          DEFAULT: '#e4c15a',
-          dim: '#9a7b1a',
-          light: '#f3e0a0',
-          antique: '#c5a059',
+          DEFAULT: '#e8dfd0',
+          dim: '#8a8174',
+          light: '#f7f1e6',
+          antique: '#9a8f7e',
         },
         phosphor: {
-          DEFAULT: '#5eead4',
-          dim: '#2dd4bf',
+          DEFAULT: '#ff3b30',
+          dim: '#c81e16',
         },
         ink: {
-          DEFAULT: '#07080b',
-          panel: '#0c1016',
+          DEFAULT: '#080704',
+          panel: '#100e0c',
         },
       },
       fontFamily: {
-        sans: ['var(--font-peakpro-sans)', 'IBM Plex Sans', 'system-ui', 'sans-serif'],
-        peakpro: ['var(--font-peakpro-serif)', 'Syne', 'sans-serif'],
+        sans: ['var(--font-peakpro-sans)', 'Noto Sans TC', 'system-ui', 'sans-serif'],
+        peakpro: ['var(--font-peakpro-serif)', 'var(--font-peakpro-sans)', 'Georgia', 'serif'],
         mono: ['var(--font-peakpro-mono)', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
       },
     },
