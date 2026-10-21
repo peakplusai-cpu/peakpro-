@@ -10,6 +10,7 @@ import { loadPeakProDesk } from '@/lib/peakpro/load-desk';
 import {
   buildFallbackNameNote,
   ensureNameDeskNote,
+  forecastContextForName,
   nameFiguresHash,
   newsForName,
   noteFits,
@@ -67,6 +68,7 @@ export default async function ForecastSymbolPage({
           note={blocked ? null : note}
           prints={blocked ? [] : eventsForDesk(cache.calendar, desk)}
           news={blocked ? [] : newsForName(snapshot, symbol, name)}
+          context={blocked ? undefined : forecastContextForName(snapshot, desk, symbol)}
         />
       ) : (
         <PeakProPaywall locale={locale} body={tPeakpro(locale, 'nameLocked')} />

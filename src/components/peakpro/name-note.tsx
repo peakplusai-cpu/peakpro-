@@ -6,6 +6,7 @@ import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { Delta } from '@/components/peakpro/delta';
 import { PeakProProjectedCandles } from '@/components/peakpro/projected-candles';
+import type { ForecastContext } from '@/lib/peakpro/forecast';
 import { displayPx } from '@/lib/peakpro/format';
 import { formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MarketDataRow, NameDeskNote, NewsCacheRow } from '@/lib/peakpro/types';
@@ -26,6 +27,7 @@ export function PeakProNameNote({
   note,
   prints,
   news,
+  context,
 }: {
   locale: Locale;
   usdTwd?: number | null;
@@ -34,6 +36,7 @@ export function PeakProNameNote({
   note: NameDeskNote | null;
   prints: MacroEvent[];
   news: NewsCacheRow[];
+  context?: ForecastContext;
 }) {
   const market = isTaiwanSymbol(symbol) ? 'taiwan' : 'us';
   const name = row?.payload.name ?? symbol;
@@ -83,6 +86,7 @@ export function PeakProNameNote({
               timeframe={row.timeframe}
               currency={row.payload.currency}
               usdTwd={usdTwd}
+              context={context}
             />
           </div>
         ) : null}

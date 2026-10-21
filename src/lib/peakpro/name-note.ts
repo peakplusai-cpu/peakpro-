@@ -3,9 +3,12 @@ import { NAME_NOTES_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { eventsForDesk, eventStatus, formatAdvisorCalendar } from '@/lib/peakpro/macro-calendar';
-import { projectBars } from '@/lib/peakpro/forecast';
+import { leanFromProjection, projectBars, strategyLine, type ForecastContext } from '@/lib/peakpro/forecast';
+import { deskBiasGauges } from '@/lib/peakpro/sentiment';
+import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
 import { formatPct, formatPx } from '@/lib/peakpro/format';
 import type {
+  FearGreedPayload,
   FilingsPayload,
   MacroEvent,
   MarketDataRow,
@@ -67,6 +70,34 @@ export function filingsForName(cache: PeakProCacheSnapshot, symbol: string): str
   return [...trades, ...books];
 }
 
+export function forecastContextForName(
+  cache: PeakProCacheSnapshot,
+  desk: DeskRegion,
+  symbol: string,
+): ForecastContext {
+  const row = dailyRow(cache, symbol);
+  const name = row?.payload.name ?? symbol;
+  const news = newsForName(cache, symbol, name);
+  const events = eventsForDesk(cache.calendar, desk);
+  const bias = deskBiasGauges(cache.equities);
+  const fear = cache.fearGreed?.payload as FearGreedPayload | undefined;
+  const fromFear = isTaiwanSymbol(symbol) ? fear?.taiwan?.value : fear?.us?.value;
+  return {
+    changePct: row?.payload.changePct,
+    newsText: news
+      .map((item) => `${item.title} ${item.title_zh} ${item.summary} ${item.summary_zh}`)
+      .join('\n'),
+    filings: filingsForName(cache, symbol),
+    deskBias: fromFear ?? (isTaiwanSymbol(symbol) ? bias.taiwan.value : bias.us.value),
+    livePrints: events.filter((event) => eventStatus(event.scheduledAt) === 'live').length,
+  };
+}
+
+function projectForName(cache: PeakProCacheSnapshot, desk: DeskRegion, symbol: string) {
+  const row = dailyRow(cache, symbol);
+  return row ? projectBars(row.payload.bars, 'daily', forecastContextForName(cache, desk, symbol)) : null;
+}
+
 export function nameFiguresHash(
   cache: PeakProCacheSnapshot,
   desk: DeskRegion,
@@ -80,7 +111,7 @@ export function nameFiguresHash(
   }));
   const news = newsForName(cache, symbol, row?.payload.name ?? symbol).map((item) => item.id);
   return JSON.stringify({
-    v: 2,
+    v: 4,
     last: row?.payload.last ?? null,
     changePct: row?.payload.changePct ?? null,
     prints,
@@ -92,8 +123,13 @@ export function noteFits(note: NameDeskNote | null | undefined, hash: string): b
   return Boolean(note && note.figuresHash === hash);
 }
 
-function projectionLines(row: MarketDataRow | undefined): { en: string; zh: string } {
-  const projection = row ? projectBars(row.payload.bars, 'daily') : null;
+function projectionLines(
+  cache: PeakProCacheSnapshot,
+  desk: DeskRegion,
+  symbol: string,
+): { en: string; zh: string } {
+  const row = dailyRow(cache, symbol);
+  const projection = projectForName(cache, desk, symbol);
   if (!row || !projection) return { en: '', zh: '' };
   const end = projection.bars[projection.bars.length - 1];
   const cur = row.payload.currency;
@@ -101,16 +137,14 @@ function projectionLines(row: MarketDataRow | undefined): { en: string; zh: stri
   const range = `${formatPx(end.lo, cur)} – ${formatPx(end.hi, cur)}`;
   const move = formatPct(projection.movePct);
   return {
-    en: `Model path next ${n} sessions: median ${formatPx(end.c, cur)} (${move}), 1σ ${range}.`,
-    zh: `模型路徑：未來 ${n} 個交易日中位 ${formatPx(end.c, cur)}（${move}），1σ 區間 ${range}。`,
+    en: `Strategy path next ${n} sessions: median ${formatPx(end.c, cur)} (${move}), 1σ ${range}. ${strategyLine(projection.strategy, 'en')}.`,
+    zh: `策略路徑：未來 ${n} 個交易日中位 ${formatPx(end.c, cur)}（${move}），1σ 區間 ${range}。${strategyLine(projection.strategy, 'zh')}。`,
   };
 }
 
-function fallbackLean(changePct: number | undefined): NameDeskLean {
-  if (changePct == null || !Number.isFinite(changePct)) return 'wait';
-  if (changePct >= 1.5) return 'add';
-  if (changePct <= -1.5) return 'trim';
-  return 'wait';
+function fallbackLean(cache: PeakProCacheSnapshot, desk: DeskRegion, symbol: string): NameDeskLean {
+  const row = dailyRow(cache, symbol);
+  return leanFromProjection(projectForName(cache, desk, symbol), row?.payload.changePct);
 }
 
 function printLines(events: MacroEvent[], locale: 'en' | 'zh'): string {
@@ -136,9 +170,8 @@ export function buildFallbackNameNote(
 ): NameDeskNote {
   const row = dailyRow(cache, symbol);
   const name = row?.payload.name ?? symbol;
-  const changePct = row?.payload.changePct;
-  const lean = fallbackLean(changePct);
-  const { en: projEn, zh: projZh } = projectionLines(row);
+  const lean = fallbackLean(cache, desk, symbol);
+  const { en: projEn, zh: projZh } = projectionLines(cache, desk, symbol);
   const last = row ? `${formatPx(row.payload.last, row.payload.currency)} (${formatPct(row.payload.changePct)})` : 'n/a';
   const events = eventsForDesk(cache.calendar, desk);
   const news = newsForName(cache, symbol, name);
@@ -203,11 +236,11 @@ async function generateNameNote(
   const name = row?.payload.name ?? symbol;
   const news = newsForName(cache, symbol, name);
   const filings = filingsForName(cache, symbol);
-  const { en: projEn } = projectionLines(row);
+  const { en: projEn } = projectionLines(cache, desk, symbol);
   const user = [
     `NAME ${symbol} ${name}`,
     `warehouse last=${row ? formatPx(row.payload.last, row.payload.currency) : 'n/a'} change=${row ? formatPct(row.payload.changePct) : 'n/a'}`,
-    projEn ? `PROJECTION ${projEn}` : 'PROJECTION n/a',
+    projEn ? `STRATEGY ${projEn}` : 'STRATEGY n/a',
     formatAdvisorCalendar(cache.calendar, desk),
     'HEADLINES mentioning this name:',
     news.length ? news.map((item) => `- ${item.source}: ${item.title} | ${item.title_zh}`).join('\n') : '(none)',
@@ -220,7 +253,7 @@ async function generateNameNote(
       {
         role: 'system',
         content:
-          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). Use only the warehouse last, the PROJECTION line (a statistical extrapolation of the daily bars, quote it as the model path), official prints, cached headlines, and cached public filings. Take a clear add/trim/wait stance and say why. Never invent earnings, analyst targets, or "institutions are buying". Tight. No emoji. No disclaimer line.',
+          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). The STRATEGY line is the desk call: Bollinger %B, RSI versus its mean, tape, headlines, filings, and session bias. Quote those numbers. Follow that path: up → LEAN: add, down → LEAN: trim, flat or missing → LEAN: wait. Do not default to wait when the path has a direction. Never invent earnings, analyst targets, or "institutions are buying". Tight. No emoji. No disclaimer line.',
       },
       { role: 'user', content: user.slice(0, 4000) },
     ],

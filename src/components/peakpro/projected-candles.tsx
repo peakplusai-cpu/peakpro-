@@ -1,7 +1,7 @@
 import { SparkCandles } from '@/components/peakpro/charts';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { projectBars } from '@/lib/peakpro/forecast';
+import { projectBars, strategyLine, type ForecastContext } from '@/lib/peakpro/forecast';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarketTimeframe, OhlcBar } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
@@ -12,6 +12,7 @@ export function PeakProProjectedCandles({
   timeframe,
   currency,
   usdTwd,
+  context,
   className,
 }: {
   locale: Locale;
@@ -19,9 +20,10 @@ export function PeakProProjectedCandles({
   timeframe: MarketTimeframe;
   currency: string;
   usdTwd?: number | null;
+  context?: ForecastContext;
   className?: string;
 }) {
-  const projection = projectBars(bars, timeframe);
+  const projection = projectBars(bars, timeframe, context);
   const px = (value: number) => displayPx(value, currency, locale, usdTwd);
 
   if (!projection) {
@@ -47,16 +49,21 @@ export function PeakProProjectedCandles({
         height={360}
         className={cn('h-64 w-full md:h-80', className)}
       />
-      <div className="mt-4 flex flex-wrap items-baseline gap-x-6 gap-y-2 border-t border-signal/10 pt-4">
-        <p className={cn('font-mono text-xs uppercase tracking-[0.18em]', tone)}>
-          {arrow} {dirLabel} · {formatPct(projection.movePct)}
-        </p>
-        <p className="font-mono text-xs text-zinc-400">
-          {tPeakpro(locale, 'projHorizon')} {projection.bars.length} {unit}
-          <span className="mx-2 text-zinc-700">/</span>
-          {tPeakpro(locale, 'projMedian')} {px(end.c)}
-          <span className="mx-2 text-zinc-700">/</span>
-          1σ {px(end.lo)} – {px(end.hi)}
+      <div className="mt-4 space-y-2 border-t border-signal/10 pt-4">
+        <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+          <p className={cn('font-mono text-xs uppercase tracking-[0.18em]', tone)}>
+            {arrow} {dirLabel} · {formatPct(projection.movePct)}
+          </p>
+          <p className="font-mono text-xs text-zinc-400">
+            {tPeakpro(locale, 'projHorizon')} {projection.bars.length} {unit}
+            <span className="mx-2 text-zinc-700">/</span>
+            {tPeakpro(locale, 'projMedian')} {px(end.c)}
+            <span className="mx-2 text-zinc-700">/</span>
+            1σ {px(end.lo)} – {px(end.hi)}
+          </p>
+        </div>
+        <p className="font-mono text-[11px] tracking-wide text-zinc-500">
+          {tPeakpro(locale, 'projStrategy')} · {strategyLine(projection.strategy, locale)}
         </p>
       </div>
     </div>

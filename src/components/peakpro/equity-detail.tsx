@@ -209,6 +209,7 @@ export function PeakProEquityDetail({
             timeframe={resolvedTab}
             currency={payload.currency}
             usdTwd={usdTwd}
+            context={{ changePct: payload.changePct }}
           />
         ) : (
           <SparkCandles bars={payload.bars} width={960} height={360} className="h-64 w-full md:h-80" />

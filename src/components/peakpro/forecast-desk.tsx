@@ -11,7 +11,7 @@ import type { Locale } from '@/i18n/locale';
 import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
-import { projectBars } from '@/lib/peakpro/forecast';
+import { projectBars, strategyLine } from '@/lib/peakpro/forecast';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarketDataRow } from '@/lib/peakpro/types';
 import { isTaiwanSymbol, type EquityMarket } from '@/lib/peakpro/yahoo';
@@ -33,7 +33,7 @@ function ForecastCard({
   usdTwd?: number | null;
   row: MarketDataRow;
 }) {
-  const projection = projectBars(row.payload.bars, row.timeframe);
+  const projection = projectBars(row.payload.bars, row.timeframe, { changePct: row.payload.changePct });
   const arrow = projection?.direction === 'up' ? '▲' : projection?.direction === 'down' ? '▼' : '◆';
   const tone =
     projection?.direction === 'up'
@@ -70,6 +70,11 @@ function ForecastCard({
             className="h-32 w-full"
           />
         </div>
+      ) : null}
+      {projection ? (
+        <p className="mt-3 font-mono text-[10px] tracking-wide text-zinc-500">
+          {strategyLine(projection.strategy, locale)}
+        </p>
       ) : null}
     </Link>
   );
