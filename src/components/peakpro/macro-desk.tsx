@@ -55,9 +55,6 @@ export function PeakProMacroDesk({ locale, events }: { locale: Locale; events: M
     <section className="space-y-4">
       <div>
         <h2 className="peakpro-kicker">{tPeakpro(locale, 'calendarTitle')}</h2>
-        {tPeakpro(locale, 'calendarLead') ? (
-          <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'calendarLead')}</p>
-        ) : null}
       </div>
       {events.length === 0 ? (
         <p className="peakpro-panel px-6 py-10 text-center text-sm text-zinc-500">

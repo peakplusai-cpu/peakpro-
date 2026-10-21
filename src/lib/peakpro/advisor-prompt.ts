@@ -81,9 +81,7 @@ Out of scope only: recipes, general coding, medical, homework unrelated to marke
 Do not:
 - Write order tickets, share counts, % of portfolio, or how to click buy/sell.
 - Invent a last print if the name is in neither LIVE_DESK nor CACHED_DESK — say it was not in this turn's snapshot, then still give a useful stance.
-- Repeat the disclaimer in the body. One line at the end is enough.
-
-End every reply with a blank line, then one line starting with "Disclaimer:" or "免責聲明：": desk commentary from a cache snapshot, not a broker ticket and not a promise.`;
+- Add a disclaimer, warning, or "not advice" line anywhere in the reply. The app footer already carries it.`;
 
 export function advisorSystemPrompt(desk: DeskRegion = 'tw') {
   if (desk !== 'us') return ADVISOR_SYSTEM_PROMPT;

@@ -1,36 +1,64 @@
 import { useId } from 'react';
 
 import type { Locale } from '@/i18n/locale';
+import type { ProjectedBar } from '@/lib/peakpro/forecast';
 import { PALETTE } from '@/lib/peakpro/palette';
 import type { OhlcBar, SentimentGauge } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
 
 export function SparkCandles({
   bars,
+  projection,
+  projectionLabel,
   className,
   width = 320,
   height = 120,
 }: {
   bars: OhlcBar[];
+  projection?: ProjectedBar[];
+  projectionLabel?: string;
   className?: string;
   width?: number;
   height?: number;
 }) {
   const gradientId = useId();
   if (bars.length < 2) return null;
-  const visible = height > 200 ? bars : bars.length > 48 ? bars.slice(-48) : bars;
-  const min = Math.min(...visible.map((b) => b.l));
-  const max = Math.max(...visible.map((b) => b.h));
+  const tall = height > 200;
+  const proj = projection?.length ? projection : [];
+  const cap = proj.length ? (tall ? 56 : 36) : tall ? Infinity : 48;
+  const visible = bars.length > cap ? bars.slice(-cap) : bars;
+  const total = visible.length + proj.length;
+  const min = Math.min(...visible.map((b) => b.l), ...proj.map((b) => b.lo));
+  const max = Math.max(...visible.map((b) => b.h), ...proj.map((b) => b.hi));
   const span = Math.max(max - min, 1);
-  const padTop = 8;
-  const padBottom = height > 200 ? 22 : 8;
+  const padTop = tall ? 20 : 8;
+  const padBottom = tall ? 22 : 8;
   const innerH = height - padTop - padBottom;
-  const candleW = Math.max(2, width / visible.length - 1.4);
+  const slot = width / total;
+  const candleW = Math.max(2, slot - 1.4);
   const y = (v: number) => ((max - v) / span) * innerH + padTop;
-  const labelIdx = [0, Math.floor((visible.length - 1) / 2), visible.length - 1];
+  const cx = (index: number) => index * slot + candleW / 2;
+  const labelIdx = proj.length
+    ? [0, Math.floor((visible.length - 1) / 2)]
+    : [0, Math.floor((visible.length - 1) / 2), visible.length - 1];
   const last = visible[visible.length - 1];
   const lastY = y(last.c);
+  const lastX = cx(visible.length - 1);
   const gridLines = [0.25, 0.5, 0.75].map((f) => padTop + innerH * f);
+  const dividerX = visible.length * slot - 0.7;
+
+  const bandPoints = proj.length
+    ? [
+        `${lastX},${lastY}`,
+        ...proj.map((bar, i) => `${cx(visible.length + i)},${y(bar.hi)}`),
+        ...proj
+          .map((bar, i) => `${cx(visible.length + i)},${y(bar.lo)}`)
+          .reverse(),
+      ].join(' ')
+    : '';
+  const medianPoints = proj.length
+    ? [`${lastX},${lastY}`, ...proj.map((bar, i) => `${cx(visible.length + i)},${y(bar.c)}`)].join(' ')
+    : '';
 
   return (
     <svg
@@ -43,12 +71,35 @@ export function SparkCandles({
           <stop offset="0%" stopColor={PALETTE.plasma} stopOpacity="0.5" />
           <stop offset="100%" stopColor={PALETTE.plasma} stopOpacity="0.08" />
         </linearGradient>
+        <linearGradient id={`${gradientId}-band`} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={PALETTE.signal} stopOpacity="0.2" />
+          <stop offset="100%" stopColor={PALETTE.signal} stopOpacity="0.05" />
+        </linearGradient>
       </defs>
       {gridLines.map((gy) => (
         <line key={gy} x1="0" x2={width} y1={gy} y2={gy} stroke={PALETTE.grid} strokeWidth="1" strokeDasharray="2 5" />
       ))}
+      {proj.length ? (
+        <>
+          <rect x={dividerX} y={padTop - 8} width={width - dividerX} height={innerH + 8} fill={PALETTE.signal} opacity="0.035" />
+          <line x1={dividerX} x2={dividerX} y1={padTop - 8} y2={padTop + innerH} stroke={PALETTE.signal} strokeWidth="0.8" strokeDasharray="2 3" opacity="0.5" />
+          {tall ? (
+            <text
+              x={dividerX + 5}
+              y={padTop - 1}
+              fill={PALETTE.signal}
+              fontSize="9"
+              letterSpacing="1.5"
+              fontFamily="var(--font-peakpro-mono), monospace"
+            >
+              {projectionLabel ?? 'PROJECTION'}
+            </text>
+          ) : null}
+          <polygon points={bandPoints} fill={`url(#${gradientId}-band)`} />
+        </>
+      ) : null}
       {visible.map((bar, index) => {
-        const x = (index / visible.length) * width;
+        const x = index * slot;
         const up = bar.c >= bar.o;
         return (
           <g key={`${bar.t}-${index}`}>
@@ -74,22 +125,63 @@ export function SparkCandles({
           </g>
         );
       })}
-      <line x1="0" x2={width} y1={lastY} y2={lastY} stroke={PALETTE.signal} strokeWidth="0.8" strokeDasharray="3 4" opacity="0.55" />
-      <circle cx={width - 2} cy={lastY} r="2.6" fill={PALETTE.signal} />
-      {height > 200
-        ? labelIdx.map((index) => (
-            <text
-              key={`label-${index}`}
-              x={(index / visible.length) * width + candleW / 2}
-              y={height - 6}
-              textAnchor={index === 0 ? 'start' : index === visible.length - 1 ? 'end' : 'middle'}
-              fill={PALETTE.muted}
-              fontSize="10"
-              fontFamily="var(--font-peakpro-mono), monospace"
-            >
-              {visible[index]?.t}
-            </text>
-          ))
+      {proj.map((bar, i) => {
+        const index = visible.length + i;
+        const x = index * slot;
+        const up = bar.c >= bar.o;
+        const tone = up ? PALETTE.signal : PALETTE.plasma;
+        return (
+          <g key={`proj-${bar.t}-${i}`} opacity="0.85">
+            <line x1={cx(index)} x2={cx(index)} y1={y(bar.h)} y2={y(bar.l)} stroke={tone} strokeWidth="1" strokeDasharray="2 2" />
+            <rect
+              x={x}
+              y={Math.min(y(bar.o), y(bar.c))}
+              width={candleW}
+              height={Math.max(1.5, Math.abs(y(bar.c) - y(bar.o)))}
+              fill={tone}
+              fillOpacity="0.14"
+              stroke={tone}
+              strokeWidth="0.8"
+              strokeDasharray="2 2"
+            />
+          </g>
+        );
+      })}
+      {proj.length ? (
+        <polyline points={medianPoints} fill="none" stroke={PALETTE.signal} strokeWidth="1.2" strokeDasharray="4 3" opacity="0.9" />
+      ) : null}
+      <line x1="0" x2={proj.length ? dividerX : width} y1={lastY} y2={lastY} stroke={PALETTE.signal} strokeWidth="0.8" strokeDasharray="3 4" opacity="0.55" />
+      <circle cx={proj.length ? lastX : width - 2} cy={lastY} r="2.6" fill={PALETTE.signal} />
+      {tall
+        ? [
+            ...labelIdx.map((index) => (
+              <text
+                key={`label-${index}`}
+                x={cx(index)}
+                y={height - 6}
+                textAnchor={index === 0 ? 'start' : index === visible.length - 1 && !proj.length ? 'end' : 'middle'}
+                fill={PALETTE.muted}
+                fontSize="10"
+                fontFamily="var(--font-peakpro-mono), monospace"
+              >
+                {visible[index]?.t}
+              </text>
+            )),
+            proj.length ? (
+              <text
+                key="label-proj-end"
+                x={width - 1}
+                y={height - 6}
+                textAnchor="end"
+                fill={PALETTE.signal}
+                fontSize="10"
+                opacity="0.8"
+                fontFamily="var(--font-peakpro-mono), monospace"
+              >
+                {proj[proj.length - 1].t}
+              </text>
+            ) : null,
+          ]
         : null}
     </svg>
   );

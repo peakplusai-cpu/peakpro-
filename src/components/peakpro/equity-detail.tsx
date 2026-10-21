@@ -6,6 +6,7 @@ import { ArrowLeft } from 'lucide-react';
 
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Delta } from '@/components/peakpro/delta';
+import { PeakProProjectedCandles } from '@/components/peakpro/projected-candles';
 import { PeakProTapeStrip } from '@/components/peakpro/tape-strip';
 import { PeakProTradingViewChart } from '@/components/peakpro/tradingview-chart';
 import type { Locale } from '@/i18n/locale';
@@ -40,7 +41,6 @@ function LiveTape({
     <section className="peakpro-panel overflow-hidden">
       <div className="border-b border-signal/10 px-5 py-3">
         <p className="peakpro-kicker">{tPeakpro(locale, 'tvTitle')}</p>
-        <p className="mt-1 text-xs text-zinc-500">{tPeakpro(locale, 'tvLead')}</p>
         <p className="mt-1 font-mono text-[10px] tracking-wide text-zinc-600">{tvSymbol}</p>
       </div>
       <PeakProTradingViewChart
@@ -163,7 +163,7 @@ export function PeakProEquityDetail({
 
       {market !== 'crypto' ? (
         <Link
-          href={tier === 'premium' ? `/app/notes/${encodeURIComponent(symbol)}` : '/subscribe'}
+          href={tier === 'premium' ? `/app/forecast/${encodeURIComponent(symbol)}` : '/subscribe'}
           className="peakpro-panel block px-5 py-4 font-mono text-xs uppercase tracking-[0.16em] text-signal"
         >
           {tPeakpro(locale, 'nameOpen')}
@@ -202,7 +202,17 @@ export function PeakProEquityDetail({
       ) : null}
 
       <div className="peakpro-panel p-4 md:p-6">
-        <SparkCandles bars={payload.bars} width={960} height={360} className="h-64 w-full md:h-80" />
+        {tier === 'premium' ? (
+          <PeakProProjectedCandles
+            locale={locale}
+            bars={payload.bars}
+            timeframe={resolvedTab}
+            currency={payload.currency}
+            usdTwd={usdTwd}
+          />
+        ) : (
+          <SparkCandles bars={payload.bars} width={960} height={360} className="h-64 w-full md:h-80" />
+        )}
       </div>
 
       <section className="peakpro-panel p-6">

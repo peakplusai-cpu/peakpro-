@@ -62,8 +62,7 @@ export function buildFallbackPrintReport(event: MacroEvent): MacroPrintReport {
         `Previous: ${previousEn}`,
         `Actual: ${actualEn}`,
         noInventedPrint(event.kind, 'en'),
-        'Tape: warehouse last prints only. U.S. last sale on this desk is delayed.',
-        'No consensus or forecast is stored on this desk.',
+        'Tape: warehouse last prints only.',
       ].join('\n\n'),
       zh: [
         `數據：${event.title.zh}（${event.agency.zh}）`,
@@ -72,8 +71,7 @@ export function buildFallbackPrintReport(event: MacroEvent): MacroPrintReport {
         `前值：${previousZh}`,
         `公布值：${actualZh}`,
         noInventedPrint(event.kind, 'zh'),
-        '走勢只引用倉儲最新價。美股在本桌為延遲報價。',
-        '本桌不存共識或預估。',
+        '走勢只引用倉儲最新價。',
       ].join('\n\n'),
     },
   };
@@ -115,7 +113,7 @@ async function generatePrintReport(
       {
         role: 'system',
         content:
-          'You are a sell-side desk writing a post-print note for a private terminal. Write English first, then a line of ---, then Traditional Chinese (Taiwan). Use only the PRINT block and the warehouse tape. Headings: Print, Tape, Read. If actual is NONE, say the official series is not in the warehouse yet — do not invent a rate, payrolls, CPI, GDP, or PCE figure, and do not invent consensus. U.S. last sale on this desk is delayed. Stance language is allowed (add / trim / wait) but this is not a broker ticket. Tight. No emoji. No "as an AI".',
+          'You are a sell-side desk writing a post-print note for a private terminal. Write English first, then a line of ---, then Traditional Chinese (Taiwan). Use only the PRINT block and the warehouse tape. Headings: Print, Tape, Read. If actual is NONE, say the official series is not in the warehouse yet — do not invent a rate, payrolls, CPI, GDP, or PCE figure, and do not invent consensus. Stance language is allowed (add / trim / wait). No disclaimer line. Tight. No emoji. No "as an AI".',
       },
       {
         role: 'user',

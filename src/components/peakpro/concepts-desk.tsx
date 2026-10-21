@@ -134,9 +134,6 @@ export function PeakProConceptsDesk({ locale, desk = 'tw' }: { locale: Locale; d
             />
           ))}
         </div>
-        <p className="text-[11px] leading-relaxed text-zinc-600">
-          {tPeakpro(locale, 'conceptsFoot')}
-        </p>
       </div>
     );
   }

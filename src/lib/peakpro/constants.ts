@@ -49,6 +49,7 @@ export const PEAKPRO_MODULES = [
   'learn',
   'portfolio',
   'tape',
+  'forecast',
   'taiwan',
   'us',
   'concepts',

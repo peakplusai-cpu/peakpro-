@@ -76,8 +76,6 @@ export function PeakProPrintReport({
         </div>
         <p className="mt-3 text-[11px] uppercase tracking-[0.18em] text-ice-dim">{stamp}</p>
         <h1 className="mt-4 font-peakpro text-3xl leading-snug text-ice md:text-4xl">{title}</h1>
-        <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'calendarReportLead')}</p>
-
         {previous.length > 0 ? (
           <p className="mt-6 text-sm text-zinc-400">
             {tPeakpro(locale, 'calendarPrevious')}{' '}

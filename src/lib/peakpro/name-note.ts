@@ -3,6 +3,7 @@ import { NAME_NOTES_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { eventsForDesk, eventStatus, formatAdvisorCalendar } from '@/lib/peakpro/macro-calendar';
+import { projectBars } from '@/lib/peakpro/forecast';
 import { formatPct, formatPx } from '@/lib/peakpro/format';
 import type {
   FilingsPayload,
@@ -79,6 +80,7 @@ export function nameFiguresHash(
   }));
   const news = newsForName(cache, symbol, row?.payload.name ?? symbol).map((item) => item.id);
   return JSON.stringify({
+    v: 2,
     last: row?.payload.last ?? null,
     changePct: row?.payload.changePct ?? null,
     prints,
@@ -88,6 +90,20 @@ export function nameFiguresHash(
 
 export function noteFits(note: NameDeskNote | null | undefined, hash: string): boolean {
   return Boolean(note && note.figuresHash === hash);
+}
+
+function projectionLines(row: MarketDataRow | undefined): { en: string; zh: string } {
+  const projection = row ? projectBars(row.payload.bars, 'daily') : null;
+  if (!row || !projection) return { en: '', zh: '' };
+  const end = projection.bars[projection.bars.length - 1];
+  const cur = row.payload.currency;
+  const n = projection.bars.length;
+  const range = `${formatPx(end.lo, cur)} – ${formatPx(end.hi, cur)}`;
+  const move = formatPct(projection.movePct);
+  return {
+    en: `Model path next ${n} sessions: median ${formatPx(end.c, cur)} (${move}), 1σ ${range}.`,
+    zh: `模型路徑：未來 ${n} 個交易日中位 ${formatPx(end.c, cur)}（${move}），1σ 區間 ${range}。`,
+  };
 }
 
 function fallbackLean(changePct: number | undefined): NameDeskLean {
@@ -122,6 +138,7 @@ export function buildFallbackNameNote(
   const name = row?.payload.name ?? symbol;
   const changePct = row?.payload.changePct;
   const lean = fallbackLean(changePct);
+  const { en: projEn, zh: projZh } = projectionLines(row);
   const last = row ? `${formatPx(row.payload.last, row.payload.currency)} (${formatPct(row.payload.changePct)})` : 'n/a';
   const events = eventsForDesk(cache.calendar, desk);
   const news = newsForName(cache, symbol, name);
@@ -143,20 +160,18 @@ export function buildFallbackNameNote(
     },
     body: {
       en: [
-        `Tape: ${symbol} ${name} warehouse last ${last}. U.S. last sale on this desk is delayed.`,
-        `Stance from the daily print only: ${lean}. Not a forecast path and not an institutional target.`,
+        `Tape: ${symbol} ${name} last ${last}.`,
+        `Stance: ${lean}.${projEn ? ` ${projEn}` : ''}`,
         `Official prints in this window:\n${printLines(events, 'en')}`,
         `Headlines that mention this name:\n${newsEn}`,
         filings.length ? `Public filings in cache:\n${filings.join('\n')}` : 'No cached filing rows for this ticker.',
-        'No consensus, no target price, no predicted candles.',
       ].join('\n\n'),
       zh: [
-        `走勢：${symbol} ${name} 倉儲最新 ${last}。美股在本桌為延遲報價。`,
-        `論點只依日線倉儲：${lean === 'add' ? '偏多' : lean === 'trim' ? '偏空' : '觀望'}。不是預測路徑，也不是機構目標價。`,
+        `走勢：${symbol} ${name} 最新 ${last}。`,
+        `論點：${lean === 'add' ? '偏多' : lean === 'trim' ? '偏空' : '觀望'}。${projZh}`,
         `這一窗官方公布：\n${printLines(events, 'zh')}`,
         `點到這檔的標題：\n${newsZh}`,
         filings.length ? `倉內公開申報：\n${filings.join('\n')}` : '倉內沒有這檔的申報列。',
-        '沒有共識、沒有目標價、沒有預測 K 線。',
       ].join('\n\n'),
     },
   };
@@ -188,10 +203,11 @@ async function generateNameNote(
   const name = row?.payload.name ?? symbol;
   const news = newsForName(cache, symbol, name);
   const filings = filingsForName(cache, symbol);
+  const { en: projEn } = projectionLines(row);
   const user = [
     `NAME ${symbol} ${name}`,
     `warehouse last=${row ? formatPx(row.payload.last, row.payload.currency) : 'n/a'} change=${row ? formatPct(row.payload.changePct) : 'n/a'}`,
-    'U.S. last sale on this desk is delayed.',
+    projEn ? `PROJECTION ${projEn}` : 'PROJECTION n/a',
     formatAdvisorCalendar(cache.calendar, desk),
     'HEADLINES mentioning this name:',
     news.length ? news.map((item) => `- ${item.source}: ${item.title} | ${item.title_zh}`).join('\n') : '(none)',
@@ -204,7 +220,7 @@ async function generateNameNote(
       {
         role: 'system',
         content:
-          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). Use only the warehouse last, official prints, cached headlines, and cached public filings. No price target, no consensus, no predicted candles, no invented earnings, no "institutions are buying". Stance is add/trim/wait from what already printed, not a future path. U.S. last sale is delayed. Tight. No emoji.',
+          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). Use only the warehouse last, the PROJECTION line (a statistical extrapolation of the daily bars, quote it as the model path), official prints, cached headlines, and cached public filings. Take a clear add/trim/wait stance and say why. Never invent earnings, analyst targets, or "institutions are buying". Tight. No emoji. No disclaimer line.',
       },
       { role: 'user', content: user.slice(0, 4000) },
     ],

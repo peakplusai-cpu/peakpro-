@@ -25,8 +25,8 @@ import { PeakProLearnDesk } from '@/components/peakpro/learn-desk';
 import { PeakProConceptsDesk } from '@/components/peakpro/concepts-desk';
 import { PeakProTapeDesk } from '@/components/peakpro/tape-desk';
 import { PeakProPaywall } from '@/components/peakpro/paywall';
+import { PeakProForecastDesk } from '@/components/peakpro/forecast-desk';
 import { PeakProMacroDesk } from '@/components/peakpro/macro-desk';
-import { PeakProNameNotePicker } from '@/components/peakpro/name-note-picker';
 import { eventsForDesk } from '@/lib/peakpro/macro-calendar';
 import { pricedTrending } from '@/lib/peakpro/market-trending';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -227,24 +227,11 @@ export function PeakProModuleView({
     return (
       <div className="space-y-8">
         {tier === 'premium' ? (
-          <>
-            <PeakProNameNotePicker locale={locale} desk={desk ?? 'tw'} />
-            <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
-          </>
+          <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
         ) : (
           <section className="space-y-4">
             <div>
-              <h2 className="peakpro-kicker">{tPeakpro(locale, 'nameTitle')}</h2>
-              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'nameLead')}</p>
-            </div>
-            <PeakProPaywall locale={locale} body={tPeakpro(locale, 'nameLocked')} />
-            <div>
               <h2 className="peakpro-kicker">{tPeakpro(locale, 'calendarTitle')}</h2>
-              {tPeakpro(locale, 'calendarLead') ? (
-                <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">
-                  {tPeakpro(locale, 'calendarLead')}
-                </p>
-              ) : null}
             </div>
             <PeakProPaywall locale={locale} body={tPeakpro(locale, 'calendarLocked')} />
           </section>
@@ -445,6 +432,12 @@ export function PeakProModuleView({
 
   if (moduleId === 'tape') {
     return <PeakProTapeDesk locale={locale} />;
+  }
+
+  if (moduleId === 'forecast') {
+    return (
+      <PeakProForecastDesk locale={locale} desk={desk} rows={cache.equities} usdTwd={cache.usdTwd} />
+    );
   }
 
   if (moduleId === 'learn') {

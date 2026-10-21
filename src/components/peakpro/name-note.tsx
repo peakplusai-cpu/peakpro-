@@ -5,6 +5,7 @@ import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { Delta } from '@/components/peakpro/delta';
+import { PeakProProjectedCandles } from '@/components/peakpro/projected-candles';
 import { displayPx } from '@/lib/peakpro/format';
 import { formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MarketDataRow, NameDeskNote, NewsCacheRow } from '@/lib/peakpro/types';
@@ -42,9 +43,9 @@ export function PeakProNameNote({
   if (!row && !note) {
     return (
       <div className="space-y-6">
-        <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
+        <Link href="/app/forecast" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
           <ArrowLeft className="h-4 w-4" />
-          {tPeakpro(locale, 'backToDesk')}
+          {tPeakpro(locale, 'nameTitle')}
         </Link>
         <div className="peakpro-panel px-6 py-16 text-center text-sm text-zinc-500">
           {tPeakpro(locale, 'nameMissing')}
@@ -55,13 +56,13 @@ export function PeakProNameNote({
 
   return (
     <div className="space-y-8">
-      <Link href="/app" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
+      <Link href="/app/forecast" className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
         <ArrowLeft className="h-4 w-4" />
-        {tPeakpro(locale, 'backToDesk')}
+        {tPeakpro(locale, 'nameTitle')}
       </Link>
 
       <article className="peakpro-panel peakpro-frame p-6 md:p-8">
-        <p className="peakpro-kicker">{symbol}</p>
+        <p className="peakpro-kicker">{tPeakpro(locale, 'projLabel')} · {symbol}</p>
         <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <h1 className="font-peakpro text-3xl font-bold leading-snug text-ice md:text-4xl">{title}</h1>
           {row ? (
@@ -73,8 +74,18 @@ export function PeakProNameNote({
             </div>
           ) : null}
         </div>
-        <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'nameLead')}</p>
-        <p className="mt-2 text-xs text-zinc-600">{tPeakpro(locale, 'nameDelayed')}</p>
+
+        {row && row.payload.bars.length >= 20 ? (
+          <div className="mt-8">
+            <PeakProProjectedCandles
+              locale={locale}
+              bars={row.payload.bars}
+              timeframe={row.timeframe}
+              currency={row.payload.currency}
+              usdTwd={usdTwd}
+            />
+          </div>
+        ) : null}
 
         {note ? (
           <p
