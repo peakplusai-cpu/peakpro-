@@ -30,6 +30,11 @@ function resolveRedirect(value: FormDataEntryValue | null, fallback = '/app'): s
   return fallback;
 }
 
+function resolveSignupRedirect(value: FormDataEntryValue | null): string {
+  if (typeof value === 'string' && value.startsWith('/app')) return value;
+  return '/app';
+}
+
 export async function peakproSignIn(formData: FormData) {
   const email = formData.get('email');
   const password = formData.get('password');
@@ -55,7 +60,7 @@ export async function peakproSignUp(formData: FormData) {
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) redirect(loginPath(formatAuthError(error.message)));
   if (data.user) await ensurePeakProProfile(data.user.id, data.user.email ?? email);
-  redirect(resolveRedirect(formData.get('redirect'), '/subscribe'));
+  redirect(resolveSignupRedirect(formData.get('redirect')));
 }
 
 export async function peakproSignOut() {
