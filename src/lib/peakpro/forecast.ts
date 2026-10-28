@@ -253,6 +253,24 @@ export function leanFromProjection(projection: Projection | null, changePct?: nu
   return 'wait';
 }
 
+/** 1–4 bear, 5 mid, 6–10 bull. Maps strategy.score ∈ [-1, 1]. */
+export function biasRankFromScore(score: number): number {
+  if (!Number.isFinite(score)) return 5;
+  return Math.min(10, Math.max(1, Math.round(5 + score * 5)));
+}
+
+export function biasBand(rank: number): 'bear' | 'mid' | 'bull' {
+  if (rank <= 4) return 'bear';
+  if (rank >= 6) return 'bull';
+  return 'mid';
+}
+
+export function biasRankFromBars(bars: OhlcBar[], context: ForecastContext = {}): number | null {
+  const closes = bars.map((bar) => bar.c).filter((value) => Number.isFinite(value) && value > 0);
+  if (closes.length < MIN_BARS) return null;
+  return biasRankFromScore(scoreStrategy(closes, context).score);
+}
+
 export function strategyLine(strategy: StrategyRead, locale: 'en' | 'zh'): string {
   const bits: string[] = [];
   if (strategy.bbPctB != null) {

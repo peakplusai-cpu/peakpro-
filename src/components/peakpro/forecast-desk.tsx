@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { PeakProBiasMeter } from '@/components/peakpro/bias-meter';
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Notice } from '@/components/peakpro/notice';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
@@ -11,7 +12,7 @@ import type { Locale } from '@/i18n/locale';
 import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
-import { projectBars, strategyLine } from '@/lib/peakpro/forecast';
+import { biasRankFromScore, projectBars, strategyLine } from '@/lib/peakpro/forecast';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarketDataRow } from '@/lib/peakpro/types';
 import { isTaiwanSymbol, type EquityMarket } from '@/lib/peakpro/yahoo';
@@ -72,9 +73,12 @@ function ForecastCard({
         </div>
       ) : null}
       {projection ? (
-        <p className="mt-3 font-mono text-[10px] tracking-wide text-zinc-500">
-          {strategyLine(projection.strategy, locale)}
-        </p>
+        <div className="mt-4 space-y-3">
+          <PeakProBiasMeter locale={locale} rank={biasRankFromScore(projection.strategy.score)} size="sm" />
+          <p className="font-mono text-[10px] tracking-wide text-zinc-500">
+            {strategyLine(projection.strategy, locale)}
+          </p>
+        </div>
       ) : null}
     </Link>
   );

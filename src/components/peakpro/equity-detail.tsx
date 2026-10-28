@@ -4,7 +4,9 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 
+import { PeakProBarsBiasMeter } from '@/components/peakpro/bias-meter';
 import { SparkCandles } from '@/components/peakpro/charts';
+import { PeakProCryptoBitgetPanel } from '@/components/peakpro/crypto-bitget';
 import { Delta } from '@/components/peakpro/delta';
 import { PeakProProjectedCandles } from '@/components/peakpro/projected-candles';
 import { PeakProTapeStrip } from '@/components/peakpro/tape-strip';
@@ -106,6 +108,11 @@ export function PeakProEquityDetail({
           <h2 className="mt-2 font-peakpro text-3xl font-bold text-ice">{title}</h2>
           <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'missingSymbol')}</p>
         </header>
+        {market === 'crypto' ? (
+          <div className="peakpro-panel px-5 py-4">
+            <PeakProCryptoBitgetPanel locale={locale} symbol={symbol} />
+          </div>
+        ) : null}
         <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} />
       </div>
     );
@@ -143,13 +150,15 @@ export function PeakProEquityDetail({
           <h1 className="mt-2 font-peakpro text-4xl font-bold tracking-tight text-ice">{payload.name}</h1>
           <p className="mt-2 text-xs uppercase tracking-[0.2em] text-zinc-500">
             {payload.exchange ??
-              (market === 'taiwan' ? 'TWSE' : market === 'crypto' ? tPeakpro(locale, 'navCrypto') : 'U.S.')}
+              (market === 'taiwan' ? 'TWSE' : market === 'crypto' ? tPeakpro(locale, 'bitgetVenue') : 'U.S.')}
           </p>
         </div>
-        <div className="text-left md:text-right">
-          <p className="font-mono text-4xl text-ice">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
-          <Delta value={payload.changePct} className="font-mono text-lg" />
-        </div>
+        {market === 'crypto' ? null : (
+          <div className="text-left md:text-right">
+            <p className="font-mono text-4xl text-ice">{displayPx(payload.last, payload.currency, locale, usdTwd)}</p>
+            <Delta value={payload.changePct} className="font-mono text-lg" />
+          </div>
+        )}
       </header>
 
       <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -160,6 +169,20 @@ export function PeakProEquityDetail({
           </div>
         ))}
       </dl>
+
+      {market === 'crypto' ? (
+        <div className="peakpro-panel px-5 py-4">
+          <PeakProCryptoBitgetPanel locale={locale} symbol={symbol} />
+        </div>
+      ) : (
+        <div className="peakpro-panel px-5 py-4">
+          <PeakProBarsBiasMeter
+            locale={locale}
+            bars={payload.bars}
+            context={{ changePct: payload.changePct }}
+          />
+        </div>
+      )}
 
       {market !== 'crypto' ? (
         <Link

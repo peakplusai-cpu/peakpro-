@@ -1,7 +1,8 @@
+import { PeakProBiasMeter } from '@/components/peakpro/bias-meter';
 import { SparkCandles } from '@/components/peakpro/charts';
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import { projectBars, strategyLine, type ForecastContext } from '@/lib/peakpro/forecast';
+import { biasRankFromScore, projectBars, strategyLine, type ForecastContext } from '@/lib/peakpro/forecast';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarketTimeframe, OhlcBar } from '@/lib/peakpro/types';
 import { cn } from '@/lib/utils';
@@ -49,7 +50,8 @@ export function PeakProProjectedCandles({
         height={360}
         className={cn('h-64 w-full md:h-80', className)}
       />
-      <div className="mt-4 space-y-2 border-t border-signal/10 pt-4">
+      <div className="mt-4 space-y-3 border-t border-signal/10 pt-4">
+        <PeakProBiasMeter locale={locale} rank={biasRankFromScore(projection.strategy.score)} />
         <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
           <p className={cn('font-mono text-xs uppercase tracking-[0.18em]', tone)}>
             {arrow} {dirLabel} · {formatPct(projection.movePct)}

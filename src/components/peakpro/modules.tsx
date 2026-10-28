@@ -15,7 +15,9 @@ import type {
   TrendingItem,
   TrendingPayload,
 } from '@/lib/peakpro/types';
+import { PeakProRowBiasMeter } from '@/components/peakpro/bias-meter';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
+import { PeakProCryptoDesk } from '@/components/peakpro/crypto-bitget';
 import { Delta } from '@/components/peakpro/delta';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
@@ -64,6 +66,11 @@ function SeriesCard({
       <div className="mt-4">
         <SparkCandles bars={payload.bars} />
       </div>
+      {row.asset_class === 'crypto' ? null : (
+        <div className="mt-4">
+          <PeakProRowBiasMeter locale={locale} row={row} />
+        </div>
+      )}
       {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
         <p className="mt-4 text-sm leading-relaxed text-zinc-400">
           {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
@@ -241,11 +248,7 @@ export function PeakProModuleView({
             </div>
           )}
         </section>
-        <div className="grid gap-4 md:grid-cols-2">
-          {cache.crypto.slice(0, 2).map((row) => (
-            <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
-          ))}
-        </div>
+        <PeakProCryptoDesk locale={locale} rows={cache.crypto} heading={false} limit={6} />
       </div>
     );
   }
@@ -266,18 +269,7 @@ export function PeakProModuleView({
   }
 
   if (moduleId === 'crypto') {
-    return (
-      <div className="space-y-6">
-        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">{tPeakpro(locale, 'cryptoTitle')}</h2>
-        {cache.crypto.length === 0 ? <EmptyCache locale={locale} /> : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {cache.crypto.map((row) => (
-              <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
-            ))}
-          </div>
-        )}
-      </div>
-    );
+    return <PeakProCryptoDesk locale={locale} rows={cache.crypto} />;
   }
 
   if (moduleId === 'gold') {

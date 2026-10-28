@@ -26,13 +26,31 @@ export const CRYPTO_UNIVERSE = [
   { symbol: 'ETH', name: 'Ethereum', id: 'ethereum' },
 ] as const;
 
-export type CryptoSymbol = (typeof CRYPTO_UNIVERSE)[number]['symbol'];
+export type CryptoSymbol = string;
+
+const CRYPTO_ALIASES: Record<string, string> = {
+  BITCOIN: 'BTC',
+  XBT: 'BTC',
+  ETHEREUM: 'ETH',
+  比特幣: 'BTC',
+  比特: 'BTC',
+  以太坊: 'ETH',
+  以太: 'ETH',
+  狗狗幣: 'DOGE',
+  狗狗: 'DOGE',
+  索拉納: 'SOL',
+  瑞波: 'XRP',
+};
 
 export function normalizeCryptoSymbol(query: string): { symbol: CryptoSymbol; error?: 'invalid' } {
-  const key = query.trim().toUpperCase().replace(/\s+/g, '').replace(/-USD$/, '');
-  if (key === 'BTC' || key === 'BITCOIN' || key === 'XBT') return { symbol: 'BTC' };
-  if (key === 'ETH' || key === 'ETHEREUM') return { symbol: 'ETH' };
-  return { symbol: 'BTC', error: 'invalid' };
+  const trimmed = query.trim().replace(/\s+/g, '');
+  const aliased = CRYPTO_ALIASES[trimmed] ?? CRYPTO_ALIASES[trimmed.toUpperCase()];
+  let key = (aliased ?? trimmed).toUpperCase().replace(/-USD$/, '').replace(/\.P$/, '');
+  if (key === 'BITCOIN' || key === 'XBT') key = 'BTC';
+  if (key === 'ETHEREUM') key = 'ETH';
+  key = key.replace(/USDT$/, '');
+  if (!/^[A-Z0-9]{2,20}$/.test(key)) return { symbol: '', error: 'invalid' };
+  return { symbol: key };
 }
 
 export const GOLD_SYMBOL = 'XAUUSD';

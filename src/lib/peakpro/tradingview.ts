@@ -41,7 +41,8 @@ export function toTradingViewSymbol(market: ChartMarket, symbol: string, exchang
   const raw = symbol.trim().toUpperCase();
   if (market === 'crypto') {
     const parsed = normalizeCryptoSymbol(raw);
-    return parsed.symbol === 'ETH' ? 'BINANCE:ETHUSDT' : 'BINANCE:BTCUSDT';
+    const base = parsed.error ? raw.replace(/USDT$/i, '') : parsed.symbol;
+    return `BITGET:${base}USDT`;
   }
   if (market === 'taiwan') {
     const code = raw.replace(/\.(TW|TWO)$/i, '');

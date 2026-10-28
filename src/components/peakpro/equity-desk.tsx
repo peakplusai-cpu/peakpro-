@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { PeakProRowBiasMeter } from '@/components/peakpro/bias-meter';
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Delta } from '@/components/peakpro/delta';
 import { usePeakPro } from '@/components/peakpro/provider';
@@ -65,6 +66,9 @@ function SeriesCard({
           <SparkCandles bars={payload.bars} />
         </div>
       ) : null}
+      <div className="mt-4">
+        <PeakProRowBiasMeter locale={locale} row={row} />
+      </div>
       {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis) ? (
         <p className="mt-4 text-sm leading-relaxed text-zinc-400">
           {publicThesis(locale === 'zh' ? payload.thesisZh : payload.thesis)}
