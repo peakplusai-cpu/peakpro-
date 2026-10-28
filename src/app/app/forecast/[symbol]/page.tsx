@@ -16,6 +16,7 @@ import {
   noteFits,
   readStoredNameNote,
 } from '@/lib/peakpro/name-note';
+import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { ingestEquitySymbol } from '@/lib/peakpro/scraper';
 import { readEquityRows } from '@/lib/peakpro/cache';
 import { isTaiwanSymbol } from '@/lib/peakpro/yahoo';
@@ -32,7 +33,11 @@ export default async function ForecastSymbolPage({
   const blocked = !symbol || (desk === 'us' && isTaiwanSymbol(symbol));
 
   let rows = blocked ? [] : cache.equities.filter((row) => row.symbol === symbol);
-  if (!blocked && rows.length === 0 && session.tier === 'premium') {
+  if (
+    !blocked &&
+    rows.length === 0 &&
+    (session.tier === 'premium' || EQUITY_UNIVERSE.some((row) => row.symbol === symbol))
+  ) {
     await ingestEquitySymbol(symbol);
     rows = await readEquityRows(symbol);
   }

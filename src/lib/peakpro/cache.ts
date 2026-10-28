@@ -1,6 +1,6 @@
 import { unstable_cache } from 'next/cache';
 
-import { canAccessEquity, effectiveTier } from '@/lib/peakpro/access';
+import { effectiveTier } from '@/lib/peakpro/access';
 import { MACRO_CALENDAR_SYMBOL, USDTWD_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
 import { calendarFromRow } from '@/lib/peakpro/macro-calendar';
@@ -109,18 +109,11 @@ export function filterCacheForTier(
   tier: PeakProTier,
 ): PeakProCacheSnapshot {
   if (tier === 'premium') return snapshot;
-
   return {
     ...snapshot,
-    equities: snapshot.equities.filter((row) => canAccessEquity(tier, row.symbol, row.timeframe)),
-    crypto: [],
-    gold: [],
     news: [],
-    fearGreed: null,
-    trending: null,
     filings: null,
-    calendar: null,
-    briefs: [],
+    fearGreed: null,
   };
 }
 

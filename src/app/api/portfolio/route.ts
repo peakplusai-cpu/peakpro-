@@ -10,7 +10,6 @@ import {
   totalsByCurrency,
   type PortfolioLot,
 } from '@/lib/peakpro/portfolio';
-import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { resolveEquityLookup } from '@/lib/peakpro/symbol-search';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -32,9 +31,6 @@ function asLot(row: Record<string, unknown>): PortfolioLot {
 export async function GET() {
   const { user } = await requireAuthUser();
   if (!user) return NextResponse.json({ error: 'login' }, { status: 401 });
-  const session = await loadPeakProSession(user.id, user.email ?? null);
-  if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
-
   const admin = createAdminClient();
   const { data, error } = await admin
     .from('peakpro_lots')
@@ -59,9 +55,6 @@ export async function GET() {
 export async function POST(request: Request) {
   const { user } = await requireAuthUser();
   if (!user) return NextResponse.json({ error: 'login' }, { status: 401 });
-  const session = await loadPeakProSession(user.id, user.email ?? null);
-  if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
-
   const body = (await request.json().catch(() => null)) as {
     book?: unknown;
     query?: unknown;

@@ -226,16 +226,7 @@ export function PeakProModuleView({
     );
     return (
       <div className="space-y-8">
-        {tier === 'premium' ? (
-          <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
-        ) : (
-          <section className="space-y-4">
-            <div>
-              <h2 className="peakpro-kicker">{tPeakpro(locale, 'calendarTitle')}</h2>
-            </div>
-            <PeakProPaywall locale={locale} body={tPeakpro(locale, 'calendarLocked')} />
-          </section>
-        )}
+        <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
         <section>
           <h2 className="peakpro-kicker mb-4">
             {tPeakpro(locale, 'monthlyOnly')}
@@ -250,15 +241,11 @@ export function PeakProModuleView({
             </div>
           )}
         </section>
-        {tier === 'free' ? (
-          <PeakProPaywall locale={locale} />
-        ) : (
-          <div className="grid gap-4 md:grid-cols-2">
-            {cache.crypto.slice(0, 2).map((row) => (
-              <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
-            ))}
-          </div>
-        )}
+        <div className="grid gap-4 md:grid-cols-2">
+          {cache.crypto.slice(0, 2).map((row) => (
+            <SeriesCard key={row.id} locale={locale} row={row} usdTwd={cache.usdTwd} />
+          ))}
+        </div>
       </div>
     );
   }

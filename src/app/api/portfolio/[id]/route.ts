@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
-import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { createAdminClient } from '@/lib/supabase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -12,9 +11,6 @@ export async function PATCH(
 ) {
   const { user } = await requireAuthUser();
   if (!user) return NextResponse.json({ error: 'login' }, { status: 401 });
-  const session = await loadPeakProSession(user.id, user.email ?? null);
-  if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
-
   const { id } = await context.params;
   const body = (await request.json().catch(() => null)) as {
     quantity?: unknown;
@@ -62,9 +58,6 @@ export async function DELETE(
 ) {
   const { user } = await requireAuthUser();
   if (!user) return NextResponse.json({ error: 'login' }, { status: 401 });
-  const session = await loadPeakProSession(user.id, user.email ?? null);
-  if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
-
   const { id } = await context.params;
   const admin = createAdminClient();
   const { error } = await admin.from('peakpro_lots').delete().eq('id', id).eq('user_id', user.id);

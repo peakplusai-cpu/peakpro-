@@ -1,10 +1,8 @@
 import { after } from 'next/server';
 
 import { PeakProAppShell } from '@/components/peakpro/app-shell';
-import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { PeakProPrintReport } from '@/components/peakpro/print-report';
 import { getLocale } from '@/i18n/server';
-import { tPeakpro } from '@/lib/peakpro/copy';
 import { emptyReports, eventsForDesk, eventStatus, reportFits } from '@/lib/peakpro/macro-calendar';
 import { loadPeakProDesk } from '@/lib/peakpro/load-desk';
 import { buildFallbackPrintReport, ensureDeskPrintReport } from '@/lib/peakpro/print-report';
@@ -22,7 +20,7 @@ export default async function PrintReportPage({
   const current = listed ? { ...listed, status: eventStatus(listed.scheduledAt) } : null;
   let event = current;
 
-  if (current && session.tier === 'premium' && current.status !== 'upcoming') {
+  if (current && current.status !== 'upcoming') {
     if (!reportFits(current, desk)) {
       event = {
         ...current,
@@ -32,20 +30,18 @@ export default async function PrintReportPage({
         },
       };
     }
-    after(() =>
-      ensureDeskPrintReport(current, desk, cache, { upgradeTemplate: true }).catch((error) => {
-        console.warn('[peakpro/prints] report fill failed', error);
-      }),
-    );
+    if (session.tier === 'premium') {
+      after(() =>
+        ensureDeskPrintReport(current, desk, cache, { upgradeTemplate: true }).catch((error) => {
+          console.warn('[peakpro/prints] report fill failed', error);
+        }),
+      );
+    }
   }
 
   return (
     <PeakProAppShell locale={locale} session={session} moduleId="overview" cache={cache}>
-      {session.tier === 'premium' ? (
-        <PeakProPrintReport locale={locale} desk={desk} event={event} />
-      ) : (
-        <PeakProPaywall locale={locale} body={tPeakpro(locale, 'calendarLocked')} />
-      )}
+      <PeakProPrintReport locale={locale} desk={desk} event={event} />
     </PeakProAppShell>
   );
 }

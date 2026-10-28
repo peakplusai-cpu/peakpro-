@@ -1,7 +1,4 @@
-import {
-  FREE_MONTHLY_SYMBOLS,
-  type PeakProModule,
-} from '@/lib/peakpro/constants';
+import type { PeakProModule } from '@/lib/peakpro/constants';
 import type { PeakProProfile, PeakProTier } from '@/lib/peakpro/types';
 
 export function isPremiumActive(profile: Pick<PeakProProfile, 'tier' | 'expires_at'> | null): boolean {
@@ -24,22 +21,29 @@ export function effectiveTier(profile: Pick<PeakProProfile, 'tier' | 'expires_at
   return isPremiumActive(profile) ? 'premium' : 'free';
 }
 
+const PREMIUM_MODULES: PeakProModule[] = [
+  'forecast',
+  'geopolitics',
+  'filings',
+  'sentiment',
+  'advisor',
+];
+
 export function canAccessModule(tier: PeakProTier, moduleId: PeakProModule): boolean {
   if (tier === 'premium') return true;
-  return moduleId === 'overview' || moduleId === 'us' || moduleId === 'learn';
+  return !PREMIUM_MODULES.includes(moduleId);
 }
 
-export function canAccessEquity(tier: PeakProTier, symbol: string, timeframe: string): boolean {
-  if (tier === 'premium') return true;
-  return (
-    timeframe === 'monthly' &&
-    (FREE_MONTHLY_SYMBOLS as readonly string[]).includes(symbol)
-  );
+export function canAccessEquity(_tier: PeakProTier, _symbol: string, _timeframe: string): boolean {
+  return true;
 }
 
-export function canOpenEquity(tier: PeakProTier, symbol: string): boolean {
-  if (tier === 'premium') return true;
-  return (FREE_MONTHLY_SYMBOLS as readonly string[]).includes(symbol);
+export function canOpenEquity(_tier: PeakProTier, _symbol: string): boolean {
+  return true;
+}
+
+export function canIngestCustomEquity(tier: PeakProTier): boolean {
+  return tier === 'premium';
 }
 
 export function premiumExpiresInDays(expiresAt: string | null): number | null {

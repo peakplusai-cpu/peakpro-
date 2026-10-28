@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Delta } from '@/components/peakpro/delta';
-import { PeakProPaywall } from '@/components/peakpro/paywall';
 import { usePeakPro } from '@/components/peakpro/provider';
 import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import type { Locale } from '@/i18n/locale';
@@ -232,18 +231,9 @@ export function PeakProEquityDesk({
         <p className="mt-2 text-xs text-zinc-500">{tPeakpro(locale, 'searchHint')}</p>
         {message ? <p className="mt-2 text-sm text-ice">{message}</p> : null}
       </div>
-      {tier === 'premium' ? (
-        <>
-          <TimeframeBlock locale={locale} market={market} titleKey="dailyTrends" rows={daily} highlight={highlight} />
-          <TimeframeBlock locale={locale} market={market} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
-          <TimeframeBlock locale={locale} market={market} titleKey="annualOutlook" rows={annual} highlight={highlight} />
-        </>
-      ) : (
-        <>
-          <TimeframeBlock locale={locale} market={market} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
-          <PeakProPaywall locale={locale} />
-        </>
-      )}
+      <TimeframeBlock locale={locale} market={market} titleKey="dailyTrends" rows={daily} highlight={highlight} />
+      <TimeframeBlock locale={locale} market={market} titleKey="monthlyTrends" rows={monthly} highlight={highlight} />
+      <TimeframeBlock locale={locale} market={market} titleKey="annualOutlook" rows={annual} highlight={highlight} />
     </div>
   );
 }

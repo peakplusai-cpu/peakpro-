@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
-import { canAccessEquity } from '@/lib/peakpro/access';
+import { canIngestCustomEquity } from '@/lib/peakpro/access';
+import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { ingestEquitySymbol } from '@/lib/peakpro/scraper';
@@ -55,8 +56,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'not_found' }, { status: 404 });
   }
 
-  const freeVisible = canAccessEquity(session.tier, resolved.symbol, 'monthly');
-  if (session.tier !== 'premium' && !freeVisible) {
+  const inUniverse = EQUITY_UNIVERSE.some((row) => row.symbol === resolved.symbol);
+  if (!canIngestCustomEquity(session.tier) && !inUniverse) {
     return NextResponse.json({ error: 'premium' }, { status: 403 });
   }
 

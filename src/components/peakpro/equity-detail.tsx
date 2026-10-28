@@ -33,7 +33,7 @@ function LiveTape({
   symbol: string;
   exchange?: string;
 }) {
-  if (tier !== 'premium') {
+  if (!symbol) {
     return <p className="text-xs text-zinc-500">{tPeakpro(locale, 'tvLocked')}</p>;
   }
   const tvSymbol = toTradingViewSymbol(market, symbol, exchange);
@@ -170,7 +170,7 @@ export function PeakProEquityDetail({
         </Link>
       ) : null}
 
-      {tier === 'premium' && market !== 'crypto' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
+      {market !== 'crypto' ? <PeakProTapeStrip locale={locale} symbol={symbol} /> : null}
 
       <LiveTape locale={locale} tier={tier} market={market} symbol={symbol} exchange={payload.exchange} />
 
@@ -197,10 +197,6 @@ export function PeakProEquityDetail({
           );
         })}
       </div>
-      {tier === 'free' ? (
-        <p className="text-xs text-zinc-500">{tPeakpro(locale, 'monthlyOnlyChart')}</p>
-      ) : null}
-
       <div className="peakpro-panel p-4 md:p-6">
         {tier === 'premium' ? (
           <PeakProProjectedCandles

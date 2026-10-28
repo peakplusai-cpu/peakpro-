@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
-import { canOpenEquity } from '@/lib/peakpro/access';
+import { canIngestCustomEquity } from '@/lib/peakpro/access';
+import { EQUITY_UNIVERSE } from '@/lib/peakpro/constants';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { searchEquitySymbols } from '@/lib/peakpro/symbol-search';
@@ -28,8 +29,9 @@ export async function GET(request: Request) {
   }
 
   const matches = await searchEquitySymbols(query, market, 8);
-  const visible =
-    session.tier === 'premium' ? matches : matches.filter((hit) => canOpenEquity(session.tier, hit.symbol));
+  const visible = canIngestCustomEquity(session.tier)
+    ? matches
+    : matches.filter((hit) => EQUITY_UNIVERSE.some((row) => row.symbol === hit.symbol));
 
   return NextResponse.json({ ok: true, matches: visible });
 }

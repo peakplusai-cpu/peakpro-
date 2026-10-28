@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 import { requireAuthUser } from '@/lib/auth';
 import { readPeakProCache } from '@/lib/peakpro/cache';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
-import { loadPeakProSession } from '@/lib/peakpro/profile';
 import { loadTapeDesk } from '@/lib/peakpro/tape-store';
 import { isTaiwanSymbol, normalizeEquityQuery } from '@/lib/peakpro/yahoo';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -13,9 +12,6 @@ export const dynamic = 'force-dynamic';
 export async function GET(request: Request) {
   const { user } = await requireAuthUser();
   if (!user) return NextResponse.json({ error: 'login' }, { status: 401 });
-  const session = await loadPeakProSession(user.id, user.email ?? null);
-  if (session.tier !== 'premium') return NextResponse.json({ error: 'premium' }, { status: 403 });
-
   const region = await getDeskRegion();
   const url = new URL(request.url);
   const raw = url.searchParams.get('symbol')?.trim() ?? '';
