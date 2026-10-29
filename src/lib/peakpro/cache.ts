@@ -93,7 +93,7 @@ export function slimCacheForModule(
   snapshot: PeakProCacheSnapshot,
   moduleId: string,
 ): PeakProCacheSnapshot {
-  const chartModules = new Set(['overview', 'forecast', 'taiwan', 'us', 'gold']);
+  const chartModules = new Set(['overview', 'forecast', 'taiwan', 'us', 'crypto', 'gold']);
   if (chartModules.has(moduleId)) return snapshot;
 
   return {

@@ -4,7 +4,6 @@ export function safeInternalPath(value: string | null | undefined, fallback = '/
   if (
     value === '/' ||
     value.startsWith('/app') ||
-    value.startsWith('/trade') ||
     value.startsWith('/subscribe') ||
     value.startsWith('/api/')
   ) {

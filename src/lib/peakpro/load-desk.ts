@@ -12,7 +12,7 @@ import {
 } from '@/lib/peakpro/cache';
 import type { PeakProModule } from '@/lib/peakpro/constants';
 import { calendarNeedsPrintRefresh, calendarNeedsReportFill } from '@/lib/peakpro/macro-calendar';
-import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { asEquityDesk, modulesForDesk, stripTaiwanCache } from '@/lib/peakpro/desk-region';
 import { fillDeskPrintReports } from '@/lib/peakpro/print-report';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { loadPeakProSession } from '@/lib/peakpro/profile';
@@ -41,6 +41,14 @@ export async function loadPeakProDesk(options?: {
   if (desk === 'us' && options?.moduleId === 'taiwan') {
     redirect('/app/us');
   }
+  if (
+    desk === 'crypto' &&
+    options?.moduleId &&
+    options.moduleId !== 'overview' &&
+    !modulesForDesk('crypto').includes(options.moduleId)
+  ) {
+    redirect('/app/crypto');
+  }
   if (session.revoked && !options?.allowRevoked) {
     redirect('/subscribe?revoked=1');
   }
@@ -55,9 +63,9 @@ export async function loadPeakProDesk(options?: {
   }
 
   if (session.tier === 'premium') {
-    if (calendarNeedsReportFill(raw.calendar, desk)) {
+    if (calendarNeedsReportFill(raw.calendar, asEquityDesk(desk))) {
       after(() =>
-        fillDeskPrintReports(desk).catch((error) => {
+        fillDeskPrintReports(asEquityDesk(desk)).catch((error) => {
           console.warn('[peakpro/desk] print reports failed', error);
         }),
       );

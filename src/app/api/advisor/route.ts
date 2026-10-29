@@ -4,7 +4,7 @@ import { requireAuthUser } from '@/lib/auth';
 import { getOpenRouterApiKey, streamOpenRouterText } from '@/lib/peakpro/advisor-openrouter';
 import { liveContextOrFallback, settleWithTimeout } from '@/lib/peakpro/advisor-live';
 import { advisorSystemPrompt, buildAdvisorDeskContext } from '@/lib/peakpro/advisor-prompt';
-import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { asEquityDesk, stripTaiwanCache } from '@/lib/peakpro/desk-region';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { consumeAdvisorQuota, readAdvisorQuota } from '@/lib/peakpro/advisor-quota';
 import { ADVISOR_MAX_HISTORY, ADVISOR_MAX_INPUT } from '@/lib/peakpro/constants';
@@ -98,7 +98,7 @@ export async function POST(request: Request) {
     const [live, tapeBlock] = await Promise.all([
       liveContextOrFallback(last.content, 2_500, region),
       settleWithTimeout(
-        tapeContextOrFallback(user.id, cache.equities, region),
+        tapeContextOrFallback(user.id, cache.equities, asEquityDesk(region)),
         2_000,
         'SESSION_TAPE: skipped this turn',
       ),

@@ -47,7 +47,11 @@ export async function GET() {
   const desk = await getDeskRegion();
   const lots = ((data ?? []) as Record<string, unknown>[])
     .map(asLot)
-    .filter((lot) => desk !== 'us' || lot.book !== 'taiwan');
+    .filter((lot) => {
+      if (desk === 'crypto') return lot.book === 'crypto' || lot.book === 'gold';
+      if (desk === 'us') return lot.book !== 'taiwan';
+      return true;
+    });
   const marked = await markLots(lots);
   return NextResponse.json({ ok: true, lots: marked, totals: totalsByCurrency(marked) });
 }
@@ -67,6 +71,9 @@ export async function POST(request: Request) {
   }
   const desk = await getDeskRegion();
   if (desk === 'us' && body.book === 'taiwan') {
+    return NextResponse.json({ error: 'wrong_market' }, { status: 400 });
+  }
+  if (desk === 'crypto' && body.book !== 'crypto' && body.book !== 'gold') {
     return NextResponse.json({ error: 'wrong_market' }, { status: 400 });
   }
   const rawQuery = typeof body.query === 'string' ? body.query : '';

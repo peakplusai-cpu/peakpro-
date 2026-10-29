@@ -38,7 +38,7 @@ const NAME_ALIASES: Array<{ needle: RegExp; symbols: string[] }> = [
 export function collectAdvisorSymbols(text: string, desk: DeskRegion = 'tw'): string[] {
   const found = new Set<string>();
   const upper = text.toUpperCase();
-  const us = desk === 'us';
+  const us = desk !== 'tw';
 
   for (const alias of NAME_ALIASES) {
     if (!alias.needle.test(text)) continue;

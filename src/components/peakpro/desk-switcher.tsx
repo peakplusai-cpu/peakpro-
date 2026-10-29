@@ -4,9 +4,17 @@ import { useTransition } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 
 import type { Locale } from '@/i18n/locale';
-import type { DeskRegion } from '@/lib/peakpro/desk-region';
+import { destinationForDeskSwitch, type DeskRegion } from '@/lib/peakpro/desk-region';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { cn } from '@/lib/utils';
+
+const DESKS: DeskRegion[] = ['tw', 'us', 'crypto'];
+
+function deskLabelKey(desk: DeskRegion): 'deskTw' | 'deskUs' | 'deskCrypto' {
+  if (desk === 'us') return 'deskUs';
+  if (desk === 'crypto') return 'deskCrypto';
+  return 'deskTw';
+}
 
 export function PeakProDeskSwitcher({
   locale,
@@ -29,8 +37,9 @@ export function PeakProDeskSwitcher({
         body: JSON.stringify({ desk: next }),
       });
       if (!res.ok) return;
-      if (next === 'us' && pathname.startsWith('/app/taiwan')) {
-        window.location.assign('/app/us');
+      const dest = destinationForDeskSwitch(pathname, next);
+      if (dest) {
+        window.location.assign(dest);
         return;
       }
       router.refresh();
@@ -47,26 +56,19 @@ export function PeakProDeskSwitcher({
       role="group"
       aria-label={tPeakpro(locale, 'deskAria')}
     >
-      <button
-        type="button"
-        onClick={() => setDesk('tw')}
-        className={cn(
-          'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          desk === 'tw' ? 'bg-signal text-void' : 'text-zinc-400 hover:text-signal',
-        )}
-      >
-        {tPeakpro(locale, 'deskTw')}
-      </button>
-      <button
-        type="button"
-        onClick={() => setDesk('us')}
-        className={cn(
-          'px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.16em] transition-colors',
-          desk === 'us' ? 'bg-signal text-void' : 'text-zinc-400 hover:text-signal',
-        )}
-      >
-        {tPeakpro(locale, 'deskUs')}
-      </button>
+      {DESKS.map((id) => (
+        <button
+          key={id}
+          type="button"
+          onClick={() => setDesk(id)}
+          className={cn(
+            'px-2 py-1 font-mono text-[10px] uppercase tracking-[0.14em] transition-colors',
+            desk === id ? 'bg-signal text-void' : 'text-zinc-400 hover:text-signal',
+          )}
+        >
+          {tPeakpro(locale, deskLabelKey(id))}
+        </button>
+      ))}
     </div>
   );
 }

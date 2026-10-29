@@ -3,8 +3,7 @@ import { buildAdvisorDeskContext } from '@/lib/peakpro/advisor-prompt';
 import { readPeakProCache } from '@/lib/peakpro/cache';
 import { MACRO_CALENDAR_SYMBOL } from '@/lib/peakpro/constants';
 import { peakproAdmin } from '@/lib/peakpro/db';
-import type { DeskRegion } from '@/lib/peakpro/desk-region';
-import { stripTaiwanCache } from '@/lib/peakpro/desk-region';
+import { asEquityDesk, stripTaiwanCache, type DeskRegion } from '@/lib/peakpro/desk-region';
 import {
   emptyReports,
   eventStatus,
@@ -165,6 +164,7 @@ async function writeCalendarPayload(payload: MacroCalendarPayload) {
 async function patchEventReport(eventId: string, desk: DeskRegion, report: MacroPrintReport) {
   const payload = await readCalendarPayload();
   if (!payload) return;
+  const key = asEquityDesk(desk);
   await writeCalendarPayload({
     ...payload,
     events: payload.events.map((event) => {
@@ -173,7 +173,7 @@ async function patchEventReport(eventId: string, desk: DeskRegion, report: Macro
         ...event,
         reports: {
           ...(event.reports ?? emptyReports()),
-          [desk]: report,
+          [key]: report,
         },
       };
     }),
@@ -191,21 +191,22 @@ export async function ensureDeskPrintReport(
     return { ...event, status, reports: { tw: null, us: null } };
   }
   const current = { ...event, status };
-  const existing = current.reports?.[desk];
+  const key = asEquityDesk(desk);
+  const existing = current.reports?.[key];
   if (reportFits(current, desk) && existing) {
     const skipUpgrade =
       existing.source === 'model' || !options?.upgradeTemplate || !getOpenRouterApiKey();
     if (skipUpgrade) return current;
   }
 
-  const key = `${event.id}:${desk}`;
-  const pending = inflight.get(key);
+  const inflightKey = `${event.id}:${key}`;
+  const pending = inflight.get(inflightKey);
   const run = pending ??
     (async () => {
       const snapshot = cache ?? (await readPeakProCache());
       return generatePrintReport(current, desk, snapshot);
     })();
-  if (!pending) inflight.set(key, run);
+  if (!pending) inflight.set(inflightKey, run);
 
   try {
     const report = await run;
@@ -214,20 +215,21 @@ export async function ensureDeskPrintReport(
       ...current,
       reports: {
         ...(current.reports ?? emptyReports()),
-        [desk]: report,
+        [key]: report,
       },
     };
   } finally {
-    inflight.delete(key);
+    inflight.delete(inflightKey);
   }
 }
 
 export async function fillDeskPrintReports(desk: DeskRegion): Promise<number> {
   const [payload, cache] = await Promise.all([readCalendarPayload(), readPeakProCache()]);
   if (!payload) return 0;
+  const key = asEquityDesk(desk);
   let filled = 0;
   for (const event of payload.events) {
-    if (!event.desks.includes(desk)) continue;
+    if (!event.desks.includes(key)) continue;
     const status = eventStatus(event.scheduledAt);
     if (status === 'upcoming') continue;
     if (reportFits(event, desk)) continue;

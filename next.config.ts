@@ -6,8 +6,9 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      { source: '/app/crypto', destination: '/trade/app', permanent: false },
-      { source: '/app/crypto/:symbol', destination: '/trade/app/:symbol', permanent: false },
+      { source: '/trade', destination: '/app/crypto', permanent: false },
+      { source: '/trade/app', destination: '/app/crypto', permanent: false },
+      { source: '/trade/app/:symbol', destination: '/app/crypto/:symbol', permanent: false },
     ];
   },
 };

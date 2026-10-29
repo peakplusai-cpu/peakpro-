@@ -230,7 +230,7 @@ async function queryBitgetCryptoDesk(): Promise<BitgetCryptoDesk> {
   };
 }
 
-export const loadBitgetCryptoDesk = unstable_cache(queryBitgetCryptoDesk, ['bitget-crypto-hunter-v1'], {
+export const loadBitgetCryptoDesk = unstable_cache(queryBitgetCryptoDesk, ['bitget-crypto-hunter-v2'], {
   revalidate: 45,
 });
 

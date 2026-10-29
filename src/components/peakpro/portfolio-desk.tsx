@@ -5,7 +5,6 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
-import { TRADE_APP_PATH } from '@/lib/peakpro/constants';
 import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { Delta } from '@/components/peakpro/delta';
 import { Notice } from '@/components/peakpro/notice';
@@ -14,8 +13,9 @@ import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarkedLot, PortfolioBook } from '@/lib/peakpro/portfolio';
 
-const BOOKS_TW: PortfolioBook[] = ['taiwan', 'us', 'gold'];
-const BOOKS_US: PortfolioBook[] = ['us', 'gold'];
+const BOOKS_TW: PortfolioBook[] = ['taiwan', 'us', 'crypto', 'gold'];
+const BOOKS_US: PortfolioBook[] = ['us', 'crypto', 'gold'];
+const BOOKS_CRYPTO: PortfolioBook[] = ['crypto', 'gold'];
 
 type Totals = {
   TWD: { cost: number; market: number; pnl: number };
@@ -26,14 +26,14 @@ function lotHref(lot: MarkedLot) {
   if (lot.book === 'taiwan') return `/app/taiwan/${encodeURIComponent(lot.symbol)}`;
   if (lot.book === 'us') return `/app/us/${encodeURIComponent(lot.symbol)}`;
   if (lot.book === 'crypto') {
-    return `${TRADE_APP_PATH}/${encodeURIComponent(lot.symbol.replace(/USDT$/i, ''))}`;
+    return `/app/crypto/${encodeURIComponent(lot.symbol.replace(/USDT$/i, ''))}`;
   }
   return '/app/gold';
 }
 
 export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
   const { usdTwd, desk } = usePeakPro();
-  const books = desk === 'us' ? BOOKS_US : BOOKS_TW;
+  const books = desk === 'crypto' ? BOOKS_CRYPTO : desk === 'us' ? BOOKS_US : BOOKS_TW;
   const [lots, setLots] = useState<MarkedLot[]>([]);
   const [totals, setTotals] = useState<Totals>({
     TWD: { cost: 0, market: 0, pnl: 0 },
@@ -42,7 +42,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [book, setBook] = useState<PortfolioBook>(desk === 'us' ? 'us' : 'taiwan');
+  const [book, setBook] = useState<PortfolioBook>(desk === 'crypto' ? 'crypto' : desk === 'us' ? 'us' : 'taiwan');
   const [query, setQuery] = useState('');
   const [quantity, setQuantity] = useState('');
   const [cost, setCost] = useState('');
@@ -140,7 +140,7 @@ export function PeakProPortfolioDesk({ locale }: { locale: Locale }) {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
-        {(desk === 'us' ? (['USD'] as const) : (['TWD', 'USD'] as const)).map((ccy) => {
+        {(desk === 'tw' ? (['TWD', 'USD'] as const) : (['USD'] as const)).map((ccy) => {
           const row = totals[ccy];
           const pct = row.cost > 0 ? (row.pnl / row.cost) * 100 : 0;
           return (

@@ -3,7 +3,7 @@ import { ArrowLeft, ExternalLink } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
 import { tPeakpro } from '@/lib/peakpro/copy';
-import type { DeskRegion } from '@/lib/peakpro/desk-region';
+import { asEquityDesk, type DeskRegion } from '@/lib/peakpro/desk-region';
 import { PEAKPRO_DISCLAIMER_EN, PEAKPRO_DISCLAIMER_ZH } from '@/lib/peakpro/disclaimer';
 import { formatEventStamp } from '@/lib/peakpro/macro-calendar';
 import type { MacroEvent, MacroEventStatus, MacroFigure } from '@/lib/peakpro/types';
@@ -42,7 +42,7 @@ export function PeakProPrintReport({
     );
   }
 
-  const report = event.reports?.[desk];
+  const report = event.reports?.[asEquityDesk(desk)];
   const title = locale === 'zh' ? report?.title.zh ?? event.title?.zh : report?.title.en ?? event.title?.en;
   const body = locale === 'zh' ? report?.body.zh : report?.body.en;
   const upcoming = event.status === 'upcoming';

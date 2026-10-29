@@ -25,8 +25,18 @@ function crossIn(fast: number[], slow: number[], lookback: number): 1 | -1 | 0 {
 }
 
 function zeroCross(series: number[], lookback: number): 1 | -1 | 0 {
-  const zeros = series.map(() => 0);
-  return crossIn(series, zeros, lookback);
+  if (series.length < 3) return 0;
+  const window = series.slice(-24).map(Math.abs);
+  const floor = Math.max(mean(window) * 0.2, 1e-12);
+  const last = series.length - 1;
+  for (let offset = 0; offset < lookback; offset += 1) {
+    const cur = last - offset;
+    const prev = cur - 1;
+    if (prev < 0) break;
+    if (series[prev] <= 0 && series[cur] > floor) return 1;
+    if (series[prev] >= 0 && series[cur] < -floor) return -1;
+  }
+  return 0;
 }
 
 function squeezeBreak(closes: number[]): number {
@@ -118,8 +128,10 @@ export function hunterScoreFromBars(bars: OhlcBar[]): number | null {
   let macdCross: 1 | -1 | 0 = 0;
   if (macd) {
     macdCross = zeroCross(macd.histSeries, 3);
-    if (macd.hist > 0 && macd.hist >= macd.prevHist) macdScore = 0.62;
-    else if (macd.hist < 0 && macd.hist <= macd.prevHist) macdScore = -0.62;
+    // Expanding only counts while the histogram is already on that side.
+    // A tiny zero-line tick on a linear trend is not a 做空/做多 impulse.
+    if (macd.hist > 0 && macd.prevHist >= 0 && macd.hist >= macd.prevHist) macdScore = 0.62;
+    else if (macd.hist < 0 && macd.prevHist <= 0 && macd.hist <= macd.prevHist) macdScore = -0.62;
     else if (macd.hist > 0) macdScore = 0.22;
     else if (macd.hist < 0) macdScore = -0.22;
     if (macdCross === 1) macdScore = 0.9;

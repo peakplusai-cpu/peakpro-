@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { requireAuthUser } from '@/lib/auth';
+import { asEquityDesk } from '@/lib/peakpro/desk-region';
 import { getDeskRegion } from '@/lib/peakpro/desk-region-server';
 import { gradeQuiz, readQuizToken, startQuiz } from '@/lib/peakpro/learn-quiz';
 import { consumeQuizQuota, readQuizQuota } from '@/lib/peakpro/learn-quiz-quota';
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     const quota = await consumeQuizQuota(user.id);
     if (!quota.ok) return NextResponse.json({ error: 'limit', ...quota }, { status: 429 });
     const desk = await getDeskRegion();
-    const pack = startQuiz(user.id, desk);
+    const pack = startQuiz(user.id, asEquityDesk(desk));
     return NextResponse.json({
       ok: true,
       used: quota.used,

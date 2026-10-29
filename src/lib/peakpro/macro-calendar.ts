@@ -1,4 +1,8 @@
 import type { DeskRegion } from '@/lib/peakpro/desk-region';
+
+function equityDesk(desk: DeskRegion): 'tw' | 'us' {
+  return desk === 'tw' ? 'tw' : 'us';
+}
 import type {
   MacroCalendarPayload,
   MacroEvent,
@@ -31,7 +35,7 @@ const MONTHS: Record<string, number> = {
 };
 
 type KindMeta = {
-  desks: DeskRegion[];
+  desks: Array<'tw' | 'us'>;
   timezone: string;
   hour: number;
   minute: number;
@@ -174,7 +178,7 @@ export function figuresHash(event: Pick<MacroEvent, 'previous' | 'actual' | 'sou
 }
 
 export function reportFits(event: MacroEvent, desk: DeskRegion): boolean {
-  const report = event.reports?.[desk];
+  const report = event.reports?.[equityDesk(desk)];
   return Boolean(report && report.figuresHash === figuresHash(event));
 }
 
@@ -184,7 +188,7 @@ export function calendarNeedsReportFill(
   nowMs = Date.now(),
 ): boolean {
   return (payload?.events ?? []).some((event) => {
-    if (!event.desks.includes(desk)) return false;
+    if (!event.desks.includes(equityDesk(desk))) return false;
     const status = eventStatus(event.scheduledAt, nowMs);
     if (status === 'upcoming') return false;
     return !reportFits(event, desk);
@@ -245,7 +249,8 @@ export function monthNumber(name: string): number | null {
 }
 
 export function eventsForDesk(payload: MacroCalendarPayload | null | undefined, desk: DeskRegion): MacroEvent[] {
-  return windowEvents((payload?.events ?? []).filter((event) => event.desks.includes(desk)));
+  const key = equityDesk(desk);
+  return windowEvents((payload?.events ?? []).filter((event) => event.desks.includes(key)));
 }
 
 export function calendarNeedsPrintRefresh(

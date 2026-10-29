@@ -17,6 +17,7 @@ import type {
 } from '@/lib/peakpro/types';
 import { PeakProRowBiasMeter } from '@/components/peakpro/bias-meter';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
+import { PeakProCryptoDesk } from '@/components/peakpro/crypto-bitget';
 import { Delta } from '@/components/peakpro/delta';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
@@ -46,7 +47,9 @@ function SeriesCard({
   const href =
     row.asset_class === 'equity'
       ? `/app/${isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us'}/${encodeURIComponent(row.symbol)}`
-      : null;
+      : row.asset_class === 'crypto'
+        ? `/app/crypto/${encodeURIComponent(row.symbol)}`
+        : null;
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -222,6 +225,14 @@ export function PeakProModuleView({
   }
 
   if (moduleId === 'overview') {
+    if (desk === 'crypto') {
+      return (
+        <div className="space-y-8">
+          <PeakProMacroDesk locale={locale} events={eventsForDesk(cache.calendar, desk)} />
+          <PeakProCryptoDesk locale={locale} rows={cache.crypto} />
+        </div>
+      );
+    }
     const deskSymbols = new Set<string>(
       EQUITY_UNIVERSE.filter((row) => desk !== 'us' || row.region !== 'Taiwan').map((row) => row.symbol),
     );
@@ -262,6 +273,10 @@ export function PeakProModuleView({
         highlight={highlight}
       />
     );
+  }
+
+  if (moduleId === 'crypto') {
+    return <PeakProCryptoDesk locale={locale} rows={cache.crypto} />;
   }
 
   if (moduleId === 'gold') {
@@ -325,8 +340,17 @@ export function PeakProModuleView({
             <p className="mt-3 max-w-3xl text-sm leading-relaxed text-zinc-400">{tPeakpro(locale, 'fearLead')}</p>
           ) : null}
         </div>
-        {!hasAnything ? (
+        {!hasAnything && desk !== 'crypto' ? (
           <EmptyCache locale={locale} />
+        ) : desk === 'crypto' ? (
+          <div className="grid gap-4 md:grid-cols-1">
+            <SentimentCard
+              locale={locale}
+              titleKey="fearCrypto"
+              data={payload ?? null}
+              kind="crypto"
+            />
+          </div>
         ) : (
           <div className={desk === 'us' ? 'grid gap-4 md:grid-cols-1' : 'grid gap-4 md:grid-cols-2'}>
             {desk === 'us' ? null : (

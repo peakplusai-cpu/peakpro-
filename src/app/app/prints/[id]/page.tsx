@@ -3,6 +3,7 @@ import { after } from 'next/server';
 import { PeakProAppShell } from '@/components/peakpro/app-shell';
 import { PeakProPrintReport } from '@/components/peakpro/print-report';
 import { getLocale } from '@/i18n/server';
+import { asEquityDesk } from '@/lib/peakpro/desk-region';
 import { emptyReports, eventsForDesk, eventStatus, reportFits } from '@/lib/peakpro/macro-calendar';
 import { loadPeakProDesk } from '@/lib/peakpro/load-desk';
 import { buildFallbackPrintReport, ensureDeskPrintReport } from '@/lib/peakpro/print-report';
@@ -22,11 +23,12 @@ export default async function PrintReportPage({
 
   if (current && current.status !== 'upcoming') {
     if (!reportFits(current, desk)) {
+      const key = asEquityDesk(desk);
       event = {
         ...current,
         reports: {
           ...(current.reports ?? emptyReports()),
-          [desk]: current.reports?.[desk] ?? buildFallbackPrintReport(current),
+          [key]: current.reports?.[key] ?? buildFallbackPrintReport(current),
         },
       };
     }

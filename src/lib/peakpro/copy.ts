@@ -34,15 +34,16 @@ const en: CopyTree = {
   deskAria: 'Desk',
   deskTw: 'Taiwan desk',
   deskUs: 'U.S. desk',
+  deskCrypto: 'Crypto desk',
   clocksTitle: 'World Top 10 Economies Live Clock',
   clocksSub: 'Local session times across the largest economic blocs — 12-hour with AM/PM.',
   whyKicker: 'The problem',
   whyTitle: 'What PeakPro+ solves',
   why1Title: 'The tape is scattered',
   why1Body:
-    'Taiwan prints, U.S. names, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
+    'Taiwan prints, U.S. names, crypto, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
   why1BodyUs:
-    'U.S. names, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
+    'U.S. names, crypto, gold, news, filings, and sentiment live on separate tabs. The move is over before the screens agree.',
   why2Title: 'Feeds bury the session',
   why2Body:
     'Hot lists and social charts mix limit-up noise with the book you actually watch. A private desk should not look like a casino ticker.',
@@ -53,9 +54,9 @@ const en: CopyTree = {
   pickTitle: 'Why this desk',
   pick1Title: 'One screen for the complex',
   pick1Body:
-    'Taiwan and U.S. equities, concept names, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
+    'Taiwan and U.S. equities, concept names, BTC and ETH, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
   pick1BodyUs:
-    'U.S. equities, concept names, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
+    'U.S. equities, concept names, BTC and ETH, spot gold, geopolitics, sentiment, session tape, 13F and STOCK Act filings, plus a desk advisor.',
   pick2Title: 'One desk, curated',
   pick2Body:
     'The client reads a curated desk. You are not sent hunting across vendors, and the desk does not dump the entire market onto the page.',
@@ -241,11 +242,13 @@ const en: CopyTree = {
   close: 'Close',
   volume: 'Volume',
   advisorTitle: 'Desk Advisor',
-  advisorLead: 'Ask for a desk call — add, trim, or wait — on Taiwan or U.S. names, gold, or macro.',
-  advisorLeadUs: 'Ask for a desk call — add, trim, or wait — on U.S. names, gold, or macro.',
+  advisorLead: 'Ask for a desk call — add, trim, or wait — on Taiwan or U.S. names, crypto, gold, or macro.',
+  advisorLeadUs: 'Ask for a desk call — add, trim, or wait — on U.S. names, crypto, gold, or macro.',
+  advisorLeadCrypto: 'Ask for a desk call — long, short, or wait — on Bitget perps, BTC, ETH, gold, or macro.',
   advisorEmpty: '',
   advisorPlaceholder: 'Ask in any language — e.g. is NVDA still a buy, or 2330 適合買進嗎',
   advisorPlaceholderUs: 'Ask in any language — e.g. is NVDA still a buy?',
+  advisorPlaceholderCrypto: 'Ask in any language — e.g. is BTC still a long, or ETH 適合做空嗎',
   advisorSend: 'Send',
   advisorClear: 'Clear thread',
   advisorFoot: '',
@@ -326,11 +329,6 @@ const en: CopyTree = {
   tapeBookPulse: 'Tape turns',
   tapePrints: 'snapshots',
   footerProduct: 'PeakPro+ Market Intelligence',
-  tradeBrand: 'Trade',
-  tradeTagline: 'Long and short setups on Bitget crypto perps.',
-  tradeCta: 'Enter Trade',
-  tradeToStocks: 'PeakPro+ desk',
-  stocksToTrade: 'Crypto Trade',
   learnTitle: 'Beginner primer',
   learnLead:
     'How markets work, then how to read the prints on this desk.',
@@ -403,15 +401,16 @@ const zh: CopyTree = {
   deskAria: '桌面',
   deskTw: '台股桌',
   deskUs: '美股桌',
+  deskCrypto: '加密桌',
   clocksTitle: '全球十大經濟體即時時鐘',
   clocksSub: '十大經濟體當地時間，12 小時制並標示上午／下午。',
   whyKicker: '要解的問題',
   whyTitle: 'PeakPro+ 解決什麼',
   why1Title: '情報散在各處',
   why1Body:
-    '台股成交、美股、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
+    '台股成交、美股、加密、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
   why1BodyUs:
-    '美股、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
+    '美股、加密、黃金、新聞、申報與情緒各開一頁。等螢幕對齊，行情已經走完。',
   why2Title: '熱門把盤面蓋掉',
   why2Body:
     '漲停榜與社群圖把噪音和你真正在看的股票混在一起。私人投資桌不該長得像賭場跑馬燈。',
@@ -422,9 +421,9 @@ const zh: CopyTree = {
   pickTitle: '為什麼選 PeakPro+',
   pick1Title: '一個終端看完複合體',
   pick1Body:
-    '台股、美股、概念股、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
+    '台股、美股、概念股、比特幣與以太坊、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
   pick1BodyUs:
-    '美股、概念股、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
+    '美股、概念股、比特幣與以太坊、現貨黃金、國際財經、市場情緒、動能轉折、13F 與 STOCK Act 申報，外加桌面顧問。',
   pick2Title: '先整理再上桌',
   pick2Body:
     '客戶端只讀整理過的盤面。你不必自己串一堆來源，桌上也不會把全市場倒進來。',
@@ -606,11 +605,13 @@ const zh: CopyTree = {
   close: '收',
   volume: '量',
   advisorTitle: '桌面顧問',
-  advisorLead: '可直接問適不適合買進、減碼或觀望。台股、美股、黃金、總體都可以。',
-  advisorLeadUs: '可直接問適不適合買進、減碼或觀望。美股、黃金、總體都可以。',
+  advisorLead: '可直接問適不適合買進、減碼或觀望。台股、美股、加密、黃金、總體都可以。',
+  advisorLeadUs: '可直接問適不適合買進、減碼或觀望。美股、加密、黃金、總體都可以。',
+  advisorLeadCrypto: '可直接問做多、做空或觀望。Bitget 合約、BTC、ETH、黃金、總體都可以。',
   advisorEmpty: '',
   advisorPlaceholder: '用任何語言提問 — 例如 NVDA 還能買嗎、或 2330 適合買進嗎',
   advisorPlaceholderUs: '用任何語言提問 — 例如 NVDA 還能買嗎',
+  advisorPlaceholderCrypto: '用任何語言提問 — 例如 BTC 還能做多嗎、或 ETH 適合做空嗎',
   advisorSend: '送出',
   advisorClear: '清除對話',
   advisorFoot: '',
@@ -691,11 +692,6 @@ const zh: CopyTree = {
   tapeBookPulse: '量價轉折',
   tapePrints: '筆快照',
   footerProduct: 'PeakPro+ 市場情報',
-  tradeBrand: 'Trade',
-  tradeTagline: 'Bitget 加密合約做多／做空。',
-  tradeCta: '進入終端',
-  tradeToStocks: 'PeakPro+ 股桌',
-  stocksToTrade: '加密終端',
   learnTitle: '新手課',
   learnLead: '先懂市場怎麼運作，再學怎麼讀指標。',
   learnPrinciples: '股市原理',
@@ -747,9 +743,10 @@ export function tPeakpro(locale: Locale, key: string): string {
 }
 
 export function tPeakproDesk(locale: Locale, desk: DeskRegion, key: string): string {
-  if (desk === 'us') {
-    const us = tPeakpro(locale, `${key}Us`);
-    if (us !== `${key}Us`) return us;
+  const suffix = desk === 'us' ? 'Us' : desk === 'crypto' ? 'Crypto' : '';
+  if (suffix) {
+    const specific = tPeakpro(locale, `${key}${suffix}`);
+    if (specific !== `${key}${suffix}`) return specific;
   }
   return tPeakpro(locale, key);
 }
@@ -799,6 +796,7 @@ export const MODULE_HREF: Record<PeakProModule, string> = {
   taiwan: '/app/taiwan',
   us: '/app/us',
   concepts: '/app/concepts',
+  crypto: '/app/crypto',
   gold: '/app/gold',
   geopolitics: '/app/geopolitics',
   filings: '/app/filings',
@@ -818,6 +816,7 @@ export function moduleLabel(locale: Locale, moduleId: PeakProModule): string {
     taiwan: 'navTaiwan',
     us: 'navUs',
     concepts: 'navConcepts',
+    crypto: 'navCrypto',
     gold: 'navGold',
     geopolitics: 'navGeopolitics',
     filings: 'navFilings',

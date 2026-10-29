@@ -11,7 +11,6 @@ import { Delta } from '@/components/peakpro/delta';
 import { usePeakPro } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { BitgetCryptoDesk, BitgetNameTape, BitgetQuote, BitgetSearchHit } from '@/lib/peakpro/bitget';
-import { TRADE_APP_PATH } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { toDisplayAmount } from '@/lib/peakpro/format';
 import type { MarketDataRow } from '@/lib/peakpro/types';
@@ -225,7 +224,7 @@ function LeaderCard({
 }) {
   const { usdTwd } = usePeakPro();
   return (
-    <Link href={`${TRADE_APP_PATH}/${encodeURIComponent(row.symbol)}`} className="peakpro-panel block p-5">
+    <Link href={`/app/crypto/${encodeURIComponent(row.symbol)}`} className="peakpro-panel block p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.28em] text-signal">{row.symbol}</p>
@@ -293,7 +292,7 @@ function HunterColumn({
         <ul className="mt-2 divide-y divide-white/5">
           {rows.map((row) => (
             <li key={row.pair}>
-              <Link href={`${TRADE_APP_PATH}/${encodeURIComponent(row.symbol)}`} className="block py-3">
+              <Link href={`/app/crypto/${encodeURIComponent(row.symbol)}`} className="block py-3">
                 <div className="flex items-baseline justify-between gap-3">
                   <p className="font-mono text-sm text-signal">{row.symbol}</p>
                   <p className="font-mono text-sm tabular-nums text-ice">
@@ -364,7 +363,7 @@ export function PeakProCryptoDesk({
 
   function openSymbol(symbol: string) {
     setMessage(null);
-    router.push(`${TRADE_APP_PATH}/${encodeURIComponent(symbol)}`);
+    router.push(`/app/crypto/${encodeURIComponent(symbol)}`);
   }
 
   async function onSearch(event: FormEvent) {
@@ -439,7 +438,7 @@ export function PeakProCryptoDesk({
         </div>
       )}
       {limit ? (
-        <Link href={TRADE_APP_PATH} className="inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-signal">
+        <Link href="/app/crypto" className="inline-block font-mono text-[11px] uppercase tracking-[0.18em] text-signal">
           {tPeakpro(locale, 'cryptoAll')}
         </Link>
       ) : null}

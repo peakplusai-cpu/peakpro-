@@ -35,15 +35,20 @@ export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
   const desk = await getDeskRegion();
   const us = desk === 'us';
+  const crypto = desk === 'crypto';
   return {
     title: locale === 'zh' ? 'PeakPro+ 市場情報' : 'PeakPro+ Market Intelligence',
-    description: us
+    description: crypto
       ? locale === 'zh'
-        ? '機構級市場情報終端：美股、黃金、地緣風險與 AI 每週總結。'
-        : 'Institutional market intelligence: U.S. equities, gold, geopolitical risk, and an AI weekly summary.'
-      : locale === 'zh'
-        ? '機構級市場情報終端：台美股、黃金、地緣風險與 AI 每週總結。'
-        : 'Institutional market intelligence: equities, gold, geopolitical risk, and an AI weekly summary.',
+        ? '機構級市場情報終端：加密合約做多／做空、黃金、地緣風險與 AI 每週總結。'
+        : 'Institutional market intelligence: crypto long/short setups, gold, geopolitical risk, and an AI weekly summary.'
+      : us
+        ? locale === 'zh'
+          ? '機構級市場情報終端：美股、黃金、地緣風險與 AI 每週總結。'
+          : 'Institutional market intelligence: U.S. equities, gold, geopolitical risk, and an AI weekly summary.'
+        : locale === 'zh'
+          ? '機構級市場情報終端：台股、美股、黃金、地緣風險與 AI 每週總結。'
+          : 'Institutional market intelligence: Taiwan and U.S. equities, gold, geopolitical risk, and an AI weekly summary.',
   };
 }
 
