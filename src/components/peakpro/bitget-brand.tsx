@@ -3,6 +3,7 @@ import { tPeakpro } from '@/lib/peakpro/copy';
 import { cn } from '@/lib/utils';
 
 export const BITGET_HREF = 'https://www.bitget.com';
+export const BITGET_PARTNER_HREF = 'https://partner.bitget.com/bg/ZXCVW4';
 
 /** Official Bitget mark from https://www.bitget.com/baseasset/img/v3-home/logo-simple2.svg */
 export function BitgetMark({ className }: { className?: string }) {
@@ -55,5 +56,22 @@ export function BitgetAuthorizedLockup({
         {tPeakpro(locale, 'bitgetAuthorized')}
       </span>
     </a>
+  );
+}
+
+export function BitgetRegisterCta({ locale }: { locale: Locale }) {
+  return (
+    <div className="flex max-w-md flex-col gap-2">
+      <p className="text-sm leading-relaxed text-signal sm:text-base">{tPeakpro(locale, 'bitgetRegisterHint')}</p>
+      <a
+        href={BITGET_PARTNER_HREF}
+        target="_blank"
+        rel="noopener noreferrer sponsored"
+        className="peakpro-btn-bitget"
+      >
+        <BitgetMark className="h-7 w-7" />
+        {tPeakpro(locale, 'bitgetRegisterCta')}
+      </a>
+    </div>
   );
 }
