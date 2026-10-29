@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { BitgetAuthorizedLockup } from '@/components/peakpro/bitget-brand';
 import { IntroBoot } from '@/components/peakpro/intro-boot';
 import { PeakProFooter } from '@/components/peakpro/footer';
 import { PeakProLogo } from '@/components/peakpro/logo';
@@ -39,6 +40,9 @@ export function PeakProLanding({
             >
               {tPeakpro(locale, 'tagline')}
             </p>
+            <div className="peakpro-rise mt-5" style={{ '--i': 2 } as React.CSSProperties}>
+              <BitgetAuthorizedLockup locale={locale} />
+            </div>
             <div
               className="peakpro-rise mt-10 flex flex-wrap items-center gap-4"
               style={{ '--i': 3 } as React.CSSProperties}

@@ -5,6 +5,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { PeakProRowBiasMeter } from '@/components/peakpro/bias-meter';
+import { BitgetAuthorizedLockup } from '@/components/peakpro/bitget-brand';
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Delta } from '@/components/peakpro/delta';
 import { usePeakPro } from '@/components/peakpro/provider';
@@ -208,9 +209,12 @@ export function PeakProEquityDesk({
   return (
     <div className="space-y-10">
       <div>
-        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">
-          {tPeakpro(locale, market === 'taiwan' ? 'taiwanTitle' : 'usTitle')}
-        </h2>
+        <div className="flex flex-wrap items-center gap-4">
+          <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">
+            {tPeakpro(locale, market === 'taiwan' ? 'taiwanTitle' : 'usTitle')}
+          </h2>
+          {market === 'us' ? <BitgetAuthorizedLockup locale={locale} size="desk" /> : null}
+        </div>
         <form onSubmit={onLookup} className="mt-6 flex flex-col gap-3 sm:flex-row">
           <SymbolSearchField
             locale={locale}

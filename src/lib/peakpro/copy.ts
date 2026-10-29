@@ -7,6 +7,7 @@ type CopyTree = Record<string, string>;
 const en: CopyTree = {
   brand: 'PeakPro+',
   tagline: 'Institutional market intelligence, refined for the private desk.',
+  bitgetAuthorized: 'Bitget official authorized brand',
   navOverview: 'Command Desk',
   navLearn: 'Primer',
   navPortfolio: 'Book',
@@ -366,6 +367,7 @@ const en: CopyTree = {
 const zh: CopyTree = {
   brand: 'PeakPro+',
   tagline: '機構級市場情報，為私人投資桌重新淬鍊。',
+  bitgetAuthorized: 'Bitget 官方授權品牌',
   navOverview: '指揮台',
   navLearn: '新手課',
   navPortfolio: '組合',

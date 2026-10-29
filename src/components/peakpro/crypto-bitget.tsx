@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 
+import { BitgetAuthorizedLockup } from '@/components/peakpro/bitget-brand';
 import { PeakProBiasMeter } from '@/components/peakpro/bias-meter';
 import { SparkCandles } from '@/components/peakpro/charts';
 import { Delta } from '@/components/peakpro/delta';
@@ -334,9 +335,12 @@ export function PeakProCryptoDesk({
   return (
     <div className="space-y-6">
       {heading ? (
-        <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">
-          {tPeakpro(locale, 'cryptoTitle')}
-        </h2>
+        <div className="flex flex-wrap items-center gap-4">
+          <h2 className="font-peakpro text-3xl font-bold tracking-tight text-ice sm:text-4xl">
+            {tPeakpro(locale, 'cryptoTitle')}
+          </h2>
+          <BitgetAuthorizedLockup locale={locale} size="desk" />
+        </div>
       ) : null}
       <p className={cn('font-mono text-[10px] uppercase tracking-[0.2em] text-zinc-500', heading ? '' : 'pt-1')}>
         {tPeakpro(locale, 'cryptoTop50')}
