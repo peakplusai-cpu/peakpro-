@@ -19,6 +19,7 @@ import { usePeakPro } from '@/components/peakpro/provider';
 import { displayCap, displayPx, formatPct, publicThesis } from '@/lib/peakpro/format';
 import type { MarketDataRow, MarketTimeframe, PeakProTier } from '@/lib/peakpro/types';
 import { conceptNameForSymbol } from '@/lib/peakpro/concepts';
+import { TRADE_APP_PATH } from '@/lib/peakpro/constants';
 import { toTradingViewSymbol, tradingviewTimezone, type ChartMarket } from '@/lib/peakpro/tradingview';
 import { cn } from '@/lib/utils';
 
@@ -99,7 +100,10 @@ export function PeakProEquityDetail({
     const title = fallbackName ? (locale === 'zh' ? fallbackName.zh : fallbackName.en) : symbol;
     return (
       <div className="space-y-6">
-        <Link href={`/app/${market}`} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
+        <Link
+          href={market === 'crypto' ? TRADE_APP_PATH : `/app/${market}`}
+          className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal"
+        >
           <ArrowLeft className="h-4 w-4" />
           {tPeakpro(locale, 'backToDesk')}
         </Link>
@@ -139,7 +143,10 @@ export function PeakProEquityDetail({
 
   return (
     <div className="space-y-8">
-      <Link href={`/app/${market}`} className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal">
+      <Link
+        href={market === 'crypto' ? TRADE_APP_PATH : `/app/${market}`}
+        className="inline-flex items-center gap-2 text-sm text-zinc-400 hover:text-signal"
+      >
         <ArrowLeft className="h-4 w-4" />
         {tPeakpro(locale, 'backToDesk')}
       </Link>

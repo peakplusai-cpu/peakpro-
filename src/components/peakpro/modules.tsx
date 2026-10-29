@@ -17,7 +17,6 @@ import type {
 } from '@/lib/peakpro/types';
 import { PeakProRowBiasMeter } from '@/components/peakpro/bias-meter';
 import { FearGreedGauge, SparkCandles } from '@/components/peakpro/charts';
-import { PeakProCryptoDesk } from '@/components/peakpro/crypto-bitget';
 import { Delta } from '@/components/peakpro/delta';
 import { PeakProAdvisorChat } from '@/components/peakpro/advisor-chat';
 import { PeakProEquityDesk } from '@/components/peakpro/equity-desk';
@@ -47,9 +46,7 @@ function SeriesCard({
   const href =
     row.asset_class === 'equity'
       ? `/app/${isTaiwanSymbol(row.symbol) ? 'taiwan' : 'us'}/${encodeURIComponent(row.symbol)}`
-      : row.asset_class === 'crypto'
-        ? `/app/crypto/${encodeURIComponent(row.symbol)}`
-        : null;
+      : null;
   const body = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -248,7 +245,6 @@ export function PeakProModuleView({
             </div>
           )}
         </section>
-        <PeakProCryptoDesk locale={locale} rows={cache.crypto} heading={false} limit={6} />
       </div>
     );
   }
@@ -266,10 +262,6 @@ export function PeakProModuleView({
         highlight={highlight}
       />
     );
-  }
-
-  if (moduleId === 'crypto') {
-    return <PeakProCryptoDesk locale={locale} rows={cache.crypto} />;
   }
 
   if (moduleId === 'gold') {
@@ -336,7 +328,7 @@ export function PeakProModuleView({
         {!hasAnything ? (
           <EmptyCache locale={locale} />
         ) : (
-          <div className={desk === 'us' ? 'grid gap-4 md:grid-cols-2' : 'grid gap-4 md:grid-cols-3'}>
+          <div className={desk === 'us' ? 'grid gap-4 md:grid-cols-1' : 'grid gap-4 md:grid-cols-2'}>
             {desk === 'us' ? null : (
               <SentimentCard
                 locale={locale}
@@ -350,12 +342,6 @@ export function PeakProModuleView({
               titleKey="fearUs"
               data={usBias.sampleSize > 0 ? usBias : null}
               kind="desk"
-            />
-            <SentimentCard
-              locale={locale}
-              titleKey="fearCrypto"
-              data={payload ?? null}
-              kind="crypto"
             />
           </div>
         )}

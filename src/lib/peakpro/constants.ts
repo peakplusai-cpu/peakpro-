@@ -2,6 +2,8 @@ export const PEAKPRO_PATH = '/';
 export const PEAKPRO_APP_PATH = '/app';
 export const PEAKPRO_SUBSCRIBE_PATH = '/subscribe';
 export const PEAKPRO_LOGIN_PATH = '/login';
+export const TRADE_PATH = '/trade';
+export const TRADE_APP_PATH = '/trade/app';
 
 export const FREE_MONTHLY_SYMBOLS = ['TSM', 'NVDA', 'AAPL', 'MSFT', 'TSLA'] as const;
 export type FreeMonthlySymbol = (typeof FREE_MONTHLY_SYMBOLS)[number];
@@ -71,7 +73,6 @@ export const PEAKPRO_MODULES = [
   'taiwan',
   'us',
   'concepts',
-  'crypto',
   'gold',
   'geopolitics',
   'filings',

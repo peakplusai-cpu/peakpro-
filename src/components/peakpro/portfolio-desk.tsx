@@ -5,6 +5,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Loader2, Trash2 } from 'lucide-react';
 
 import type { Locale } from '@/i18n/locale';
+import { TRADE_APP_PATH } from '@/lib/peakpro/constants';
 import { tPeakpro, tPeakproDesk } from '@/lib/peakpro/copy';
 import { Delta } from '@/components/peakpro/delta';
 import { Notice } from '@/components/peakpro/notice';
@@ -13,8 +14,8 @@ import { SymbolSearchField } from '@/components/peakpro/symbol-search-field';
 import { displayPx, formatPct } from '@/lib/peakpro/format';
 import type { MarkedLot, PortfolioBook } from '@/lib/peakpro/portfolio';
 
-const BOOKS_TW: PortfolioBook[] = ['taiwan', 'us', 'crypto', 'gold'];
-const BOOKS_US: PortfolioBook[] = ['us', 'crypto', 'gold'];
+const BOOKS_TW: PortfolioBook[] = ['taiwan', 'us', 'gold'];
+const BOOKS_US: PortfolioBook[] = ['us', 'gold'];
 
 type Totals = {
   TWD: { cost: number; market: number; pnl: number };
@@ -25,8 +26,7 @@ function lotHref(lot: MarkedLot) {
   if (lot.book === 'taiwan') return `/app/taiwan/${encodeURIComponent(lot.symbol)}`;
   if (lot.book === 'us') return `/app/us/${encodeURIComponent(lot.symbol)}`;
   if (lot.book === 'crypto') {
-    const key = lot.symbol.toUpperCase().startsWith('ETH') ? 'ETH' : 'BTC';
-    return `/app/crypto/${key}`;
+    return `${TRADE_APP_PATH}/${encodeURIComponent(lot.symbol.replace(/USDT$/i, ''))}`;
   }
   return '/app/gold';
 }

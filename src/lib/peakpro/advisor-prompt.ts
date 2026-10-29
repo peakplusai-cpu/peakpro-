@@ -2,7 +2,7 @@ import type { DeskRegion } from '@/lib/peakpro/desk-region';
 import { formatPct, formatPx } from '@/lib/peakpro/format';
 import { formatAdvisorFilings } from '@/lib/peakpro/filings';
 import { formatAdvisorCalendar } from '@/lib/peakpro/macro-calendar';
-import type { FearGreedPayload, FilingsPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
+import type { FilingsPayload, PeakProCacheSnapshot } from '@/lib/peakpro/types';
 
 function line(symbol: string, name: string, last: number, currency: string, changePct: number) {
   return `${symbol} ${name}: ${formatPx(last, currency)} (${formatPct(changePct)})`;
@@ -16,21 +16,9 @@ export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot, desk: DeskR
       line(row.symbol, row.payload.name, row.payload.last, row.payload.currency, row.payload.changePct),
     );
 
-  const crypto = cache.crypto
-    .filter((row) => row.timeframe === 'daily' || row.timeframe === 'spot')
-    .slice(0, 8)
-    .map((row) =>
-      line(row.symbol, row.payload.name, row.payload.last, row.payload.currency, row.payload.changePct),
-    );
-
   const gold = cache.gold.slice(0, 4).map((row) =>
     line(row.symbol, row.payload.name, row.payload.last, row.payload.currency, row.payload.changePct),
   );
-
-  const fng = cache.fearGreed?.payload as unknown as FearGreedPayload | undefined;
-  const sentiment = fng
-    ? `Crypto Bitcoin Fear & Greed: ${fng.value} (${fng.classification} / ${fng.classificationZh})`
-    : 'Crypto Fear & Greed: not on the desk';
 
   const news = cache.news.slice(0, 6).map((item) => {
     const title = item.title_zh?.trim() ? `${item.title} | ${item.title_zh}` : item.title;
@@ -44,13 +32,8 @@ export function buildAdvisorDeskContext(cache: PeakProCacheSnapshot, desk: DeskR
     'Equities (daily):',
     dailyEquities.length ? dailyEquities.join('\n') : '(none)',
     '',
-    'Crypto:',
-    crypto.length ? crypto.join('\n') : '(none)',
-    '',
     'Gold:',
     gold.length ? gold.join('\n') : '(none)',
-    '',
-    sentiment,
     '',
     'Geopolitics headlines:',
     news.length ? news.join('\n') : '(none)',
@@ -73,7 +56,7 @@ Voice:
 - Traditional Chinese (Taiwan) if they wrote Chinese; English if they wrote English.
 - Tight. No emoji. No "as an AI". No "I cannot comment on markets". No "I cannot give investment advice" in the body. No sending them to TWSE, Yahoo, or a news site instead of answering.
 
-In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply.
+In scope: Taiwan and U.S. equities, ADRs, gold, rates, geopolitics as it hits risk, breadth, session volume-price turns, official after-close TWSE/TPEX institution nets, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply. Crypto perps and Bitget belong on the Trade desk — do not give long/short crypto calls here.
 If SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.
 If SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.
 Out of scope only: recipes, general coding, medical, homework unrelated to markets.
@@ -86,7 +69,7 @@ Do not:
 export function advisorSystemPrompt(desk: DeskRegion = 'tw') {
   if (desk !== 'us') return ADVISOR_SYSTEM_PROMPT;
   return ADVISOR_SYSTEM_PROMPT.replace(
-    'In scope: Taiwan and U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, official after-close TWSE/TPEX institution nets, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply.\nIf SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
-    'In scope: U.S. equities, ADRs, BTC/ETH, gold, rates, geopolitics as it hits risk, breadth, Fear & Greed, session volume-price turns, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply. Do not discuss Taiwan cash equities, TWSE, TPEX, 0050, or official three-institution nets.\nIf SESSION_TAPE is present, use those U.S. turns. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
+    'In scope: Taiwan and U.S. equities, ADRs, gold, rates, geopolitics as it hits risk, breadth, session volume-price turns, official after-close TWSE/TPEX institution nets, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply. Crypto perps and Bitget belong on the Trade desk — do not give long/short crypto calls here.\nIf SESSION_TAPE is present, use those turns and institution numbers. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
+    'In scope: U.S. equities, ADRs, gold, rates, geopolitics as it hits risk, breadth, session volume-price turns, public U.S. STOCK Act and 13F filings, scheduled high-impact prints, how to read the print. Never treat filings as a live copy-trade. Never mention delayed quotes, warehouse, cache lag, or a 15-minute delay in the reply. Crypto perps and Bitget belong on the Trade desk — do not give long/short crypto calls here. Do not discuss Taiwan cash equities, TWSE, TPEX, 0050, or official three-institution nets.\nIf SESSION_TAPE is present, use those U.S. turns. Never call them main-force, live chips, or a day-trade order.\nIf SESSION_CALENDAR is present, treat those official prints as session risk. Do not invent a consensus number.',
   );
 }

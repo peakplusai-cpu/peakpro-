@@ -39,11 +39,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title: locale === 'zh' ? 'PeakPro+ 市場情報' : 'PeakPro+ Market Intelligence',
     description: us
       ? locale === 'zh'
-        ? '機構級市場情報終端：美股、加密、黃金、地緣風險與 AI 每週總結。'
-        : 'Institutional market intelligence: U.S. equities, crypto, gold, geopolitical risk, and an AI weekly summary.'
+        ? '機構級市場情報終端：美股、黃金、地緣風險與 AI 每週總結。'
+        : 'Institutional market intelligence: U.S. equities, gold, geopolitical risk, and an AI weekly summary.'
       : locale === 'zh'
-        ? '機構級市場情報終端：台美股、加密、黃金、地緣風險與 AI 每週總結。'
-        : 'Institutional market intelligence: equities, crypto, gold, geopolitical risk, and an AI weekly summary.',
+        ? '機構級市場情報終端：台美股、黃金、地緣風險與 AI 每週總結。'
+        : 'Institutional market intelligence: equities, gold, geopolitical risk, and an AI weekly summary.',
   };
 }
 

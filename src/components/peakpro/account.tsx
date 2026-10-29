@@ -40,9 +40,18 @@ export function TierBadge({
   );
 }
 
-export function SignOutButton({ locale, className }: { locale: Locale; className?: string }) {
+export function SignOutButton({
+  locale,
+  className,
+  next,
+}: {
+  locale: Locale;
+  className?: string;
+  next?: string;
+}) {
   return (
     <form action={peakproSignOut}>
+      {next ? <input type="hidden" name="next" value={next} /> : null}
       <button
         type="submit"
         className={cn(

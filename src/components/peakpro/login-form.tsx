@@ -38,7 +38,7 @@ export function PeakProLoginForm({
         </button>
       </form>
       <form action={peakproSignUp} className="space-y-4 border-t border-signal/10 pt-6">
-        <input type="hidden" name="redirect" value="/app" />
+        <input type="hidden" name="redirect" value={redirectTo ?? '/app'} />
         <div>
           <label htmlFor="signup-email" className="mb-2 block font-mono text-[10px] uppercase tracking-[0.22em] text-zinc-500">
             {tPeakpro(locale, 'email')}

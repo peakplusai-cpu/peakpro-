@@ -1,6 +1,5 @@
 import Link from 'next/link';
 
-import { BitgetAuthorizedLockup, BitgetRegisterCta } from '@/components/peakpro/bitget-brand';
 import { IntroBoot } from '@/components/peakpro/intro-boot';
 import { PeakProFooter } from '@/components/peakpro/footer';
 import { PeakProLogo } from '@/components/peakpro/logo';
@@ -40,9 +39,6 @@ export function PeakProLanding({
             >
               {tPeakpro(locale, 'tagline')}
             </p>
-            <div className="peakpro-rise mt-5" style={{ '--i': 2 } as React.CSSProperties}>
-              <BitgetAuthorizedLockup locale={locale} />
-            </div>
             <div
               className="peakpro-rise mt-10 flex flex-wrap items-end gap-4"
               style={{ '--i': 3 } as React.CSSProperties}
@@ -53,7 +49,6 @@ export function PeakProLanding({
               <Link href="/subscribe" className="peakpro-btn-ghost">
                 {tPeakpro(locale, 'heroSecondary')}
               </Link>
-              <BitgetRegisterCta locale={locale} />
             </div>
           </div>
           <VenueRadar className="peakpro-rise" />

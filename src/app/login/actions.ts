@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation';
 
+import { safeInternalPath } from '@/lib/peakpro/paths';
 import { ensurePeakProProfile } from '@/lib/peakpro/profile';
 import { createClient } from '@/lib/supabase/server';
 
@@ -24,15 +25,11 @@ function formatAuthError(message: string): string {
 }
 
 function resolveRedirect(value: FormDataEntryValue | null, fallback = '/app'): string {
-  if (typeof value === 'string' && (value.startsWith('/app') || value.startsWith('/subscribe') || value.startsWith('/api/'))) {
-    return value;
-  }
-  return fallback;
+  return safeInternalPath(typeof value === 'string' ? value : null, fallback);
 }
 
 function resolveSignupRedirect(value: FormDataEntryValue | null): string {
-  if (typeof value === 'string' && value.startsWith('/app')) return value;
-  return '/app';
+  return safeInternalPath(typeof value === 'string' ? value : null, '/app');
 }
 
 export async function peakproSignIn(formData: FormData) {
@@ -63,8 +60,8 @@ export async function peakproSignUp(formData: FormData) {
   redirect(resolveSignupRedirect(formData.get('redirect')));
 }
 
-export async function peakproSignOut() {
+export async function peakproSignOut(formData: FormData) {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect('/');
+  redirect(safeInternalPath(typeof formData.get('next') === 'string' ? String(formData.get('next')) : null, '/'));
 }
