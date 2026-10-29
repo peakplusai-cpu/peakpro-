@@ -393,15 +393,15 @@ const BANK: QuizQuestion[] = [
       en: 'Why are 13F and U.S. politician filings not same-day copy-trades?',
     },
     choices: [
-      { zh: '因為依法是事後公布，本來就有延遲', en: 'They are delayed by design' },
+      { zh: '因為依法是事後公布，不是當日倉位', en: 'They are disclosed after the fact' },
       { zh: '因為他們從不交易股票', en: 'Because they never trade stocks' },
       { zh: '因為他們只申報私人公司', en: 'Because they only file private companies' },
       { zh: '因為數字是即時的，怕你搶先', en: 'Because the file is live and they fear front-running' },
     ],
     correct: 0,
     explain: {
-      zh: '政治人物申報可能延後約 45 天；13F 是季報，季末後還要再等。你看到的是曾經申報過什麼，不是此刻倉位。',
-      en: 'Political filings can lag ~45 days; 13F is quarterly plus another lag. You are reading a disclosure, not the live book.',
+      zh: '政治人物的申報通常要等到交易後約 45 天才看得到；13F 是季報，季末後才公開。你看到的是曾經申報過什麼，不是此刻倉位。',
+      en: 'Political filings typically become public about 45 days after the trade; 13F is quarterly and you see it after quarter-end. You are reading a disclosure, not the live book.',
     },
   },
   {
@@ -485,18 +485,18 @@ const BANK: QuizQuestion[] = [
     category: 'general',
     prompt: {
       zh: '在公開申報頁看到川普或某法人買了某檔，下一步最不該做的是？',
-      en: 'You see a delayed Trump or 13F buy. What is the worst next step?',
+      en: 'You see a Trump or 13F buy. What is the worst next step?',
     },
     choices: [
       { zh: '當成今天的即時跟單清單', en: 'Treat it as a live copy-trade list for today' },
-      { zh: '先記住這是法定延遲資料', en: 'Remember the file is delayed by statute' },
+      { zh: '先記住這是事後公開資料', en: 'Remember it is a public disclosure, not a live book' },
       { zh: '點進去看申報內容', en: 'Open the cell and read the disclosure' },
       { zh: '對照自己的風險承受度', en: 'Check it against your own risk' },
     ],
     correct: 0,
     explain: {
       zh: '那是事後公開資料。拿來當當日買賣清單，方向會反。教育用途可以看，不是內線、也不是即時單。',
-      en: 'It is a lagged public file. Using it as a same-day ticket is reading it backwards.',
+      en: 'It is a public disclosure after the fact. Using it as a same-day ticket is reading it backwards.',
     },
   },
   {
@@ -526,15 +526,15 @@ const BANK: QuizQuestion[] = [
       en: 'For a closer minute tape, what does the primer point you to?',
     },
     choices: [
-      { zh: '只看三小時快照就好，不要開圖', en: 'Only the three-hour snapshot; never open a chart' },
+      { zh: '只看盤面數字就好，不要開圖', en: 'Only the desk snapshot; never open a chart' },
       { zh: '點進個股頁的即時圖', en: 'Open the live chart on the name' },
       { zh: '等三大法人盤中更新', en: 'Wait for live institution IDs' },
       { zh: '看 13F 就等於分鐘線', en: 'Treat 13F as a minute chart' },
     ],
     correct: 1,
     explain: {
-      zh: '本桌多數數字大約三小時補一次。要看分鐘價，進個股或加密頁的 TradingView。',
-      en: 'Most desk prints refresh about every three hours. For a minute tape, open the TradingView chart on the name.',
+      zh: '要看分鐘價，進個股或加密頁的 TradingView。',
+      en: 'For a minute tape, open the TradingView chart on the name.',
     },
   },
 ];

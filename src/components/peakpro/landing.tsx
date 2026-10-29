@@ -31,7 +31,7 @@ export function PeakProLanding({
           <div>
             <p className="peakpro-kicker peakpro-rise" style={{ '--i': 0 } as React.CSSProperties}>
               <span className="peakpro-live" />
-              {locale === 'zh' ? '延遲倉儲 · 官方公布' : 'Delayed warehouse · official prints'}
+              {locale === 'zh' ? '機構情報 · 官方公布' : 'Desk intelligence · official prints'}
             </p>
             <PeakProLogo size="xl" align="left" className="peakpro-rise mt-6" />
             <p

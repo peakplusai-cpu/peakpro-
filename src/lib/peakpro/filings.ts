@@ -289,7 +289,7 @@ export function formatAdvisorFilings(payload: FilingsPayload | null | undefined)
     return `${book.principal}: ${names || 'empty'}`;
   });
   return [
-    'PUBLIC_FILINGS delayed U.S. STOCK Act and 13F — not live copies, not an order.',
+    'PUBLIC_FILINGS U.S. STOCK Act and 13F — not live copies, not an order.',
     trades.length ? trades.join('\n') : '(no politician trades)',
     books.length ? books.join('\n') : '(no 13F books)',
   ].join('\n');

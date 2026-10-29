@@ -107,14 +107,14 @@ export const LEARN_PRINCIPLES: LearnLesson[] = [
   },
   {
     id: 'filings',
-    title: { en: 'Public filings are delayed on purpose', zh: '公開申報不是即時跟單' },
+    title: { en: 'Public filings are not a same-day copy-trade', zh: '公開申報不是即時跟單' },
     body: {
       zh: [
-        '美國政治人物的持股異動、知名法人的 13F，都是依法事後公布。政治人物採購可能延後約 45 天；13F 是季報，季末後還有一段才看得到。',
+        '美國政治人物的持股異動、知名法人的 13F，都是依法事後公布。政治人物的申報通常要等到交易後約 45 天才看得到；13F 是季報，季末後才會出現在公開檔。',
         '你看到的是「他們曾經申報過什麼」，不是此刻他們的倉位。拿來當當日買賣清單，方向會反。',
       ],
       en: [
-        'U.S. politician trades and 13F books are delayed by design. Political filings can lag by about 45 days; 13F is quarterly, then another lag after quarter-end.',
+        'U.S. politician trades and 13F books are disclosed after the fact. Political filings typically become public about 45 days after the trade; 13F is quarterly, and you see it after quarter-end.',
         'You are reading what was disclosed, not the live book. Copy-trading that print as a same-day ticket is reading the file backwards.',
       ],
     },

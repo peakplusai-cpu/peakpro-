@@ -157,7 +157,7 @@ function printLines(events: MacroEvent[], locale: 'en' | 'zh'): string {
           ? event.actual.map((row) => `${locale === 'zh' ? row.label.zh : row.label.en} ${row.value}`).join(', ')
           : locale === 'zh'
             ? '尚無公布值'
-            : 'no actual in warehouse';
+            : 'no actual yet';
       return `${title} · ${event.status} · ${actual}`;
     })
     .join('\n');
@@ -176,10 +176,10 @@ export function buildFallbackNameNote(
   const events = eventsForDesk(cache.calendar, desk);
   const news = newsForName(cache, symbol, name);
   const filings = filingsForName(cache, symbol);
-  const newsEn = news.length ? news.map((item) => `- ${item.source}: ${item.title}`).join('\n') : 'None in cache for this name.';
+  const newsEn = news.length ? news.map((item) => `- ${item.source}: ${item.title}`).join('\n') : 'No headlines for this name on the desk.';
   const newsZh = news.length
     ? news.map((item) => `- ${item.source}: ${item.title_zh || item.title}`).join('\n')
-    : '倉內沒有點到這檔的標題。';
+    : '本桌沒有點到這檔的標題。';
 
   return {
     symbol,
@@ -197,14 +197,14 @@ export function buildFallbackNameNote(
         `Stance: ${lean}.${projEn ? ` ${projEn}` : ''}`,
         `Official prints in this window:\n${printLines(events, 'en')}`,
         `Headlines that mention this name:\n${newsEn}`,
-        filings.length ? `Public filings in cache:\n${filings.join('\n')}` : 'No cached filing rows for this ticker.',
+        filings.length ? `Public filings:\n${filings.join('\n')}` : 'No filing rows for this ticker on the desk.',
       ].join('\n\n'),
       zh: [
         `走勢：${symbol} ${name} 最新 ${last}。`,
         `論點：${lean === 'add' ? '偏多' : lean === 'trim' ? '偏空' : '觀望'}。${projZh}`,
         `這一窗官方公布：\n${printLines(events, 'zh')}`,
         `點到這檔的標題：\n${newsZh}`,
-        filings.length ? `倉內公開申報：\n${filings.join('\n')}` : '倉內沒有這檔的申報列。',
+        filings.length ? `公開申報：\n${filings.join('\n')}` : '本桌沒有這檔的申報列。',
       ].join('\n\n'),
     },
   };
@@ -239,12 +239,12 @@ async function generateNameNote(
   const { en: projEn } = projectionLines(cache, desk, symbol);
   const user = [
     `NAME ${symbol} ${name}`,
-    `warehouse last=${row ? formatPx(row.payload.last, row.payload.currency) : 'n/a'} change=${row ? formatPct(row.payload.changePct) : 'n/a'}`,
+    `last=${row ? formatPx(row.payload.last, row.payload.currency) : 'n/a'} change=${row ? formatPct(row.payload.changePct) : 'n/a'}`,
     projEn ? `STRATEGY ${projEn}` : 'STRATEGY n/a',
     formatAdvisorCalendar(cache.calendar, desk),
     'HEADLINES mentioning this name:',
     news.length ? news.map((item) => `- ${item.source}: ${item.title} | ${item.title_zh}`).join('\n') : '(none)',
-    'FILINGS in cache for this ticker:',
+    'FILINGS for this ticker:',
     filings.length ? filings.join('\n') : '(none)',
   ].join('\n');
 
@@ -253,7 +253,7 @@ async function generateNameNote(
       {
         role: 'system',
         content:
-          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). The STRATEGY line is the desk call: Bollinger %B, RSI versus its mean, tape, headlines, filings, and session bias. Quote those numbers. Follow that path: up → LEAN: add, down → LEAN: trim, flat or missing → LEAN: wait. Do not default to wait when the path has a direction. Never invent earnings, analyst targets, or "institutions are buying". Tight. No emoji. No disclaimer line.',
+          'You write a post-tape desk note for one listed name. First line exactly: LEAN: add  or LEAN: trim  or LEAN: wait. Then English with headings Tape, What hit it, Read. Then a line of ---. Then Traditional Chinese (Taiwan). The STRATEGY line is the desk call: Bollinger %B, RSI versus its mean, tape, headlines, filings, and session bias. Quote those numbers. Follow that path: up → LEAN: add, down → LEAN: trim, flat or missing → LEAN: wait. Do not default to wait when the path has a direction. Never invent earnings, analyst targets, or "institutions are buying". Never mention warehouse, delay, lag, or cache to the reader. Tight. No emoji. No disclaimer line.',
       },
       { role: 'user', content: user.slice(0, 4000) },
     ],

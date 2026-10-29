@@ -395,8 +395,8 @@ function newsRows(): NewsCacheRow[] {
     {
       id: 'n3',
       category: 'war',
-      title: 'Naval corridor disruption raises freight rates and delays just-in-time inventory.',
-      title_zh: '航道中斷推升運價並延遲即時庫存。',
+      title: 'Naval corridor disruption raises freight rates and stretches just-in-time inventory.',
+      title_zh: '航道中斷推升運價並拉長補貨時間。',
       summary:
         'Insurance premia and rerouting costs are the first-order hit. Secondary effects flow into goods inflation and regional equity multiples.',
       summary_zh: '保險溢價與改道成本是一階衝擊。二階效應傳導至商品通膨與區域股市本益比。',
@@ -437,8 +437,8 @@ function newsRows(): NewsCacheRow[] {
       title: 'Sanctions perimeter widened; correspondent-banking friction rises in adjacent FX.',
       title_zh: '制裁範圍擴大；周邊外匯的代理銀行摩擦上升。',
       summary:
-        'Settlement delays and basis widening are the tell. Gold and the dollar remain the cleanest hedge expressions in the cache.',
-      summary_zh: '結算延遲與基差走闊是訊號。黃金與美元仍是快取中最乾淨的避險表達。',
+        'Settlement friction and basis widening are the tell. Gold and the dollar remain the cleanest hedge expressions on the desk.',
+      summary_zh: '結算摩擦與基差走闊是訊號。黃金與美元仍是盤面上最乾淨的避險表達。',
       source: 'Sanctions Desk',
       url: 'https://peakpro.local/cache/geopolitics/sanctions',
       published_at: isoDaysAgo(5),

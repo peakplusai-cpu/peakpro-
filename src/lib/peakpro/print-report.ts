@@ -23,15 +23,15 @@ import type {
 const inflight = new Map<string, Promise<MacroPrintReport>>();
 
 function figureLine(locale: 'en' | 'zh', figures: MacroFigure[]): string {
-  if (figures.length === 0) return locale === 'zh' ? '倉儲尚無官方數列' : 'Official series not in the warehouse';
+  if (figures.length === 0) return locale === 'zh' ? '尚無官方數列' : 'Official series not on the desk';
   return figures.map((row) => `${locale === 'zh' ? row.label.zh : row.label.en} ${row.value}`).join(' · ');
 }
 
 function noInventedPrint(kind: MacroEvent['kind'], locale: 'en' | 'zh'): string {
   if (kind === 'nfp' || kind === 'cpi') {
     return locale === 'zh'
-      ? '非農／CPI 只寫 BLS 已進倉的公布值。沒有數列就不填數字，也不補市場預估。'
-      : 'NFP/CPI uses BLS figures already in the warehouse. No series, no invented print, no consensus.';
+      ? '非農／CPI 只寫 BLS 已公布的數字。沒有數列就不填數字，也不補市場預估。'
+      : 'NFP/CPI uses BLS figures already on the desk. No series, no invented print, no consensus.';
   }
   return locale === 'zh'
     ? 'FOMC、GDP、PCE 本桌不自填利率或成長數字。聲明以官方來源為準。'
@@ -43,8 +43,8 @@ export function buildFallbackPrintReport(event: MacroEvent): MacroPrintReport {
   const previousZh = figureLine('zh', event.previous);
   const actualEn = event.actual.length
     ? figureLine('en', event.actual)
-    : 'No official actual in the warehouse yet.';
-  const actualZh = event.actual.length ? figureLine('zh', event.actual) : '倉儲尚無公布值。';
+    : 'No official actual on the desk yet.';
+  const actualZh = event.actual.length ? figureLine('zh', event.actual) : '尚無公布值。';
 
   return {
     generatedAt: new Date().toISOString(),
@@ -62,7 +62,7 @@ export function buildFallbackPrintReport(event: MacroEvent): MacroPrintReport {
         `Previous: ${previousEn}`,
         `Actual: ${actualEn}`,
         noInventedPrint(event.kind, 'en'),
-        'Tape: warehouse last prints only.',
+        'Tape: last prints on this desk only.',
       ].join('\n\n'),
       zh: [
         `數據：${event.title.zh}（${event.agency.zh}）`,
@@ -71,7 +71,7 @@ export function buildFallbackPrintReport(event: MacroEvent): MacroPrintReport {
         `前值：${previousZh}`,
         `公布值：${actualZh}`,
         noInventedPrint(event.kind, 'zh'),
-        '走勢只引用倉儲最新價。',
+        '走勢只引用本桌最新價。',
       ].join('\n\n'),
     },
   };
@@ -113,11 +113,11 @@ async function generatePrintReport(
       {
         role: 'system',
         content:
-          'You are a sell-side desk writing a post-print note for a private terminal. Write English first, then a line of ---, then Traditional Chinese (Taiwan). Use only the PRINT block and the warehouse tape. Headings: Print, Tape, Read. If actual is NONE, say the official series is not in the warehouse yet — do not invent a rate, payrolls, CPI, GDP, or PCE figure, and do not invent consensus. Stance language is allowed (add / trim / wait). No disclaimer line. Tight. No emoji. No "as an AI".',
+          'You are a sell-side desk writing a post-print note for a private terminal. Write English first, then a line of ---, then Traditional Chinese (Taiwan). Use only the PRINT block and the desk tape. Headings: Print, Tape, Read. If actual is NONE, say the official series is not on the desk yet — do not invent a rate, payrolls, CPI, GDP, or PCE figure, and do not invent consensus. Never mention warehouse, delay, lag, or cache to the reader. Stance language is allowed (add / trim / wait). No disclaimer line. Tight. No emoji. No "as an AI".',
       },
       {
         role: 'user',
-        content: `${printBlock}\n\nWAREHOUSE TAPE:\n${buildAdvisorDeskContext(deskCache, desk).slice(0, 3500)}`,
+        content: `${printBlock}\n\nDESK TAPE:\n${buildAdvisorDeskContext(deskCache, desk).slice(0, 3500)}`,
       },
     ],
     { maxTokens: 900, timeoutMs: 12_000 },
