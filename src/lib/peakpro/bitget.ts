@@ -1,5 +1,7 @@
+import { unstable_cache } from 'next/cache';
+
 import { normalizeCryptoSymbol } from '@/lib/peakpro/constants';
-import { biasRankFromBars } from '@/lib/peakpro/forecast';
+import { hunterRankFromBars } from '@/lib/peakpro/crypto-hunter';
 import type { OhlcBar } from '@/lib/peakpro/types';
 
 const BITGET_REST = 'https://api.bitget.com';
@@ -122,24 +124,26 @@ function tickerToQuote(ticker: BitgetTicker | undefined, extras?: Partial<Bitget
 
 function candlesToBars(rows: BitgetCandle[] | null | undefined): OhlcBar[] {
   if (!rows?.length) return [];
-  return [...rows]
-    .map((row) => {
-      const t = Number(row[0]);
-      const o = Number(row[1]);
-      const h = Number(row[2]);
-      const l = Number(row[3]);
-      const c = Number(row[4]);
-      if (!Number.isFinite(t) || !Number.isFinite(c) || c <= 0) return null;
-      return {
-        t: new Date(t).toISOString(),
-        o: Number.isFinite(o) ? o : c,
-        h: Number.isFinite(h) ? h : c,
-        l: Number.isFinite(l) ? l : c,
-        c,
-      };
-    })
-    .filter((bar): bar is OhlcBar => Boolean(bar))
-    .sort((a, b) => a.t.localeCompare(b.t));
+  const bars: OhlcBar[] = [];
+  for (const row of rows) {
+    const t = Number(row[0]);
+    const o = Number(row[1]);
+    const h = Number(row[2]);
+    const l = Number(row[3]);
+    const c = Number(row[4]);
+    if (!Number.isFinite(t) || !Number.isFinite(c) || c <= 0) continue;
+    const volume = Number(row[5]);
+    const bar: OhlcBar = {
+      t: new Date(t).toISOString(),
+      o: Number.isFinite(o) ? o : c,
+      h: Number.isFinite(h) ? h : c,
+      l: Number.isFinite(l) ? l : c,
+      c,
+    };
+    if (Number.isFinite(volume) && volume > 0) bar.v = volume;
+    bars.push(bar);
+  }
+  return bars.sort((a, b) => a.t.localeCompare(b.t));
 }
 
 function isCryptoInstrument(row: BitgetInstrument) {
@@ -170,6 +174,20 @@ async function loadCandles(category: BitgetCategory, pair: string, interval: str
   return candlesToBars(rows);
 }
 
+async function mapLimit<T, R>(items: T[], limit: number, mapper: (item: T) => Promise<R>): Promise<R[]> {
+  const out = new Array<R>(items.length);
+  let cursor = 0;
+  async function worker() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      out[index] = await mapper(items[index]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, () => worker()));
+  return out;
+}
+
 function tapeFromTickers(
   instrument: BitgetInstrument,
   spot: BitgetTicker | undefined,
@@ -187,7 +205,7 @@ function tapeFromTickers(
   };
 }
 
-export async function loadBitgetCryptoDesk(): Promise<BitgetCryptoDesk> {
+async function queryBitgetCryptoDesk(): Promise<BitgetCryptoDesk> {
   const [instruments, spotTickers, perpTickers] = await Promise.all([
     loadCryptoInstruments(),
     loadTickers('SPOT'),
@@ -198,8 +216,23 @@ export async function loadBitgetCryptoDesk(): Promise<BitgetCryptoDesk> {
     .filter((row) => row.perp.last > 0 || row.spot.last > 0)
     .sort((a, b) => b.turnover - a.turnover)
     .slice(0, TOP_N);
-  return { asOf: new Date().toISOString(), venue: 'bitget', names };
+  const ranks = await mapLimit(names, 8, async (row) => {
+    const bars = await loadCandles('USDT-FUTURES', row.pair, PERP_INTERVAL);
+    return hunterRankFromBars(bars);
+  });
+  return {
+    asOf: new Date().toISOString(),
+    venue: 'bitget',
+    names: names.map((row, index) => ({
+      ...row,
+      perp: { ...row.perp, rank: ranks[index] },
+    })),
+  };
 }
+
+export const loadBitgetCryptoDesk = unstable_cache(queryBitgetCryptoDesk, ['bitget-crypto-hunter-v1'], {
+  revalidate: 45,
+});
 
 export async function loadBitgetName(symbol: string): Promise<BitgetNameTape | null> {
   const pair = pairFor(symbol);
@@ -217,11 +250,8 @@ export async function loadBitgetName(symbol: string): Promise<BitgetNameTape | n
 
   const spotTicker = spotTickers.get(pair);
   const perpTicker = perpTickers.get(pair);
-  const spotLast = spotBars[spotBars.length - 1]?.c;
-  const spotPrev = spotBars[spotBars.length - 2]?.c;
   const perpLast = perpBars[perpBars.length - 1]?.c;
   const perpPrev = perpBars[perpBars.length - 2]?.c;
-  const spotChange = spotLast && spotPrev ? ((spotLast - spotPrev) / spotPrev) * 100 : undefined;
   const perpChange = perpLast && perpPrev ? ((perpLast - perpPrev) / perpPrev) * 100 : undefined;
 
   const base = (instrument?.baseCoin ?? baseFromPair(pair)).toUpperCase();
@@ -231,12 +261,12 @@ export async function loadBitgetName(symbol: string): Promise<BitgetNameTape | n
     name: instrument?.fullName?.trim() || base,
     turnover: num(perpTicker?.turnover24h) ?? 0,
     spot: tickerToQuote(spotTicker, {
-      rank: biasRankFromBars(spotBars, { changePct: spotChange }),
+      rank: hunterRankFromBars(spotBars),
     }),
     perp: tickerToQuote(perpTicker, {
       last: perpLast ?? undefined,
       changePct: perpChange,
-      rank: biasRankFromBars(perpBars, { changePct: perpChange }),
+      rank: hunterRankFromBars(perpBars),
       fundingRate: num(perpTicker?.fundingRate),
     }),
   };

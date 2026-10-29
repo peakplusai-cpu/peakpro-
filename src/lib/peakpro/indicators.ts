@@ -70,3 +70,41 @@ export function rsiRead(closes: number[], period = 14, meanPeriod = 9): RsiRead 
     delta: rsiMean == null ? null : last - rsiMean,
   };
 }
+
+export function emaSeries(values: number[], period: number): number[] {
+  if (values.length === 0 || period < 1) return [];
+  const k = 2 / (period + 1);
+  const out = new Array<number>(values.length);
+  const seedAt = Math.min(period, values.length) - 1;
+  out[seedAt] = mean(values.slice(0, seedAt + 1));
+  for (let i = 0; i < seedAt; i += 1) out[i] = out[seedAt];
+  for (let i = seedAt + 1; i < values.length; i += 1) {
+    out[i] = values[i] * k + out[i - 1] * (1 - k);
+  }
+  return out;
+}
+
+export interface MacdRead {
+  line: number;
+  signal: number;
+  hist: number;
+  prevHist: number;
+  histSeries: number[];
+}
+
+export function macdRead(closes: number[], fast = 12, slow = 26, signalPeriod = 9): MacdRead | null {
+  if (closes.length < slow + signalPeriod) return null;
+  const fastEma = emaSeries(closes, fast);
+  const slowEma = emaSeries(closes, slow);
+  const line = fastEma.map((value, index) => value - slowEma[index]);
+  const signal = emaSeries(line, signalPeriod);
+  const histSeries = line.map((value, index) => value - signal[index]);
+  const last = histSeries.length - 1;
+  return {
+    line: line[last],
+    signal: signal[last],
+    hist: histSeries[last],
+    prevHist: histSeries[last - 1] ?? 0,
+    histSeries,
+  };
+}

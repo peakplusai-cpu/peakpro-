@@ -53,9 +53,11 @@ export function PeakProBiasMeter({
   return (
     <div className={cn('min-w-0', compact ? 'w-full' : 'w-full')}>
       <div className="flex items-baseline justify-between gap-3">
-        <p className={cn(compact ? 'font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500' : 'peakpro-kicker')}>
-          {title ?? tPeakpro(locale, 'biasTitle')}
-        </p>
+        {title === '' ? null : (
+          <p className={cn(compact ? 'font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500' : 'peakpro-kicker')}>
+            {title ?? tPeakpro(locale, 'biasTitle')}
+          </p>
+        )}
         <p className={cn('font-mono tabular-nums', compact ? 'text-[10px]' : 'text-xs', bandTone(rank))}>
           {rank}
           <span className="mx-1.5 text-zinc-700">·</span>

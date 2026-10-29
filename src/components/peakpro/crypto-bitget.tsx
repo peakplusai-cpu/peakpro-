@@ -247,12 +247,68 @@ function LeaderCard({
           <span className="text-ice">{row.perp.last ? cryptoPx(row.perp.last, locale, usdTwd) : '—'}</span>
         </p>
       </div>
+      {row.perp.rank != null ? (
+        <div className="mt-4">
+          <PeakProBiasMeter locale={locale} rank={row.perp.rank} size="sm" title={tPeakpro(locale, 'biasPerp')} />
+        </div>
+      ) : null}
       {spark && spark.payload.bars.length >= 2 ? (
         <div className="mt-4">
           <SparkCandles bars={spark.payload.bars} />
         </div>
       ) : null}
     </Link>
+  );
+}
+
+function hunterLists(names: BitgetNameTape[]) {
+  const scored = names.filter((row) => row.perp.rank != null);
+  return {
+    bull: scored
+      .filter((row) => (row.perp.rank ?? 5) >= 7)
+      .sort((a, b) => (b.perp.rank ?? 0) - (a.perp.rank ?? 0))
+      .slice(0, 6),
+    bear: scored
+      .filter((row) => (row.perp.rank ?? 5) <= 3)
+      .sort((a, b) => (a.perp.rank ?? 10) - (b.perp.rank ?? 10))
+      .slice(0, 6),
+  };
+}
+
+function HunterColumn({
+  locale,
+  title,
+  rows,
+}: {
+  locale: Locale;
+  title: string;
+  rows: BitgetNameTape[];
+}) {
+  const { usdTwd } = usePeakPro();
+  return (
+    <div className="peakpro-panel p-5">
+      <p className="peakpro-kicker">{title}</p>
+      {rows.length === 0 ? null : (
+        <ul className="mt-2 divide-y divide-white/5">
+          {rows.map((row) => (
+            <li key={row.pair}>
+              <Link href={`/app/crypto/${encodeURIComponent(row.symbol)}`} className="block py-3">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="font-mono text-sm text-signal">{row.symbol}</p>
+                  <p className="font-mono text-sm tabular-nums text-ice">
+                    {row.perp.last ? cryptoPx(row.perp.last, locale, usdTwd) : '—'}
+                  </p>
+                </div>
+                <Delta value={row.perp.changePct} className="font-mono text-[11px]" />
+                <div className="mt-2">
+                  <PeakProBiasMeter locale={locale} rank={row.perp.rank} size="sm" title="" />
+                </div>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
@@ -297,6 +353,7 @@ export function PeakProCryptoDesk({
   }, []);
 
   const names = (desk?.names ?? []).slice(0, limit);
+  const { bull, bear } = hunterLists(desk?.names ?? []);
   const filtered = query.trim()
     ? names.filter((row) => {
         const needle = query.trim().toUpperCase();
@@ -364,6 +421,12 @@ export function PeakProCryptoDesk({
         </p>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
+          {desk ? (
+            <>
+              <HunterColumn locale={locale} title={tPeakpro(locale, 'hunterBull')} rows={bull} />
+              <HunterColumn locale={locale} title={tPeakpro(locale, 'hunterBear')} rows={bear} />
+            </>
+          ) : null}
           {filtered.map((row) => (
             <LeaderCard
               key={row.pair}

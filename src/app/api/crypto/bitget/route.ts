@@ -5,6 +5,7 @@ import { loadBitgetCryptoDesk, loadBitgetName } from '@/lib/peakpro/bitget';
 import { normalizeCryptoSymbol } from '@/lib/peakpro/constants';
 
 export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
 
 export async function GET(request: Request) {
   const { user } = await requireAuthUser();
