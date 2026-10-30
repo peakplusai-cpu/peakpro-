@@ -11,6 +11,7 @@ import { Delta } from '@/components/peakpro/delta';
 import { usePeakPro } from '@/components/peakpro/provider';
 import type { Locale } from '@/i18n/locale';
 import type { BitgetCryptoDesk, BitgetNameTape, BitgetQuote, BitgetSearchHit } from '@/lib/peakpro/bitget';
+import { HUNTER_LONG_MIN, HUNTER_SHORT_MAX } from '@/lib/peakpro/constants';
 import { tPeakpro } from '@/lib/peakpro/copy';
 import { toDisplayAmount } from '@/lib/peakpro/format';
 import type { MarketDataRow } from '@/lib/peakpro/types';
@@ -265,11 +266,11 @@ function hunterLists(names: BitgetNameTape[]) {
   const scored = names.filter((row) => row.perp.rank != null);
   return {
     bull: scored
-      .filter((row) => (row.perp.rank ?? 5) >= 7)
+      .filter((row) => (row.perp.rank ?? 5) >= HUNTER_LONG_MIN)
       .sort((a, b) => (b.perp.rank ?? 0) - (a.perp.rank ?? 0))
       .slice(0, 6),
     bear: scored
-      .filter((row) => (row.perp.rank ?? 5) <= 3)
+      .filter((row) => (row.perp.rank ?? 5) <= HUNTER_SHORT_MAX)
       .sort((a, b) => (a.perp.rank ?? 10) - (b.perp.rank ?? 10))
       .slice(0, 6),
   };
@@ -288,7 +289,9 @@ function HunterColumn({
   return (
     <div className="peakpro-panel p-5">
       <p className="peakpro-kicker">{title}</p>
-      {rows.length === 0 ? null : (
+      {rows.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-500">{tPeakpro(locale, 'hunterEmpty')}</p>
+      ) : (
         <ul className="mt-2 divide-y divide-white/5">
           {rows.map((row) => (
             <li key={row.pair}>

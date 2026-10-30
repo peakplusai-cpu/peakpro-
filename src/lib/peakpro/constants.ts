@@ -81,6 +81,9 @@ export const PEAKPRO_MODULES = [
   'advisor',
 ] as const;
 
+export const HUNTER_LONG_MIN = 7;
+export const HUNTER_SHORT_MAX = 3;
+
 export const ADVISOR_DAILY_LIMIT = 30;
 export const ADVISOR_MAX_INPUT = 2000;
 export const ADVISOR_MAX_HISTORY = 12;
